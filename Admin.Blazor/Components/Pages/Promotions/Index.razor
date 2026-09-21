@@ -1,0 +1,663 @@
+﻿@page "/promotions"
+@using AutoMapper
+@using BLL.DTOs.Pagination
+@using BLL.DTOs.Promotion
+@using BLL.DTOs.Promotion.PromotionList
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.SignalR.Client
+@rendermode InteractiveServer
+@* @inject IPromotionService PromotionService *@
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>AdminPromotions - PromoManager</PageTitle>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container py-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Promotion</h1>
+        </div>
+
+        <button class="btn btn-danger px-4 py-2" @onclick="showCreate">
+            <i class="bi bi-plus-lg"></i>
+            Create Promotion
+        </button>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-secondary fw-semibold small mb-2">
+                        Total Promotions
+                    </p>
+                    <h1 class="fw-bold mb-0">@promotions?.Pagination.TotalCount</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-success fw-semibold small mb-2">
+                        Active
+                    </p>
+                    <h1 class="fw-bold text-success mb-0">@promotions?.ActiveCount</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-warning fw-semibold small mb-2">
+                        Upcoming
+                    </p>
+                    <h1 class="fw-bold text-warning mb-0">@promotions?.Upcoming</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-danger fw-semibold small mb-2">
+                        Expired
+                    </p>
+                    <h1 class="text-bold text-danger mb-0">@promotions?.ExpiredOrDisabledCount</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="mt-4">
+        <div class="card rounded-4 shadow-sm">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <!-- Search -->
+                    <div class="col-lg-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control border-start-0 bg-light"
+                                   placeholder="Search promotion name..." @bind="searchName" @bind:event="oninput" @onkeyup="LoadPromotions">
+                        </div>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="flex-grow-1">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">
+                                        <i class="bi bi-calendar3"></i>
+                                    </span>
+                                    <input type="datetime-local"
+                                           class="form-control"
+                                           placeholder="Start Date"
+                                           @bind="startAt"
+                                           @bind:event="oninput"
+                                           @onchange="LoadPromotions">
+                                </div>
+                            </div>
+                            <div class="px-1">
+                                <span class="fw-bold">—</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">
+                                        <i class="bi bi-calendar3"></i>
+                                    </span>
+                                    <input type="datetime-local"
+                                           class="form-control"
+                                           placeholder="End Date"
+                                           @bind="endAt"
+                                           @bind:event="oninput"
+                                           @onchange="LoadPromotions">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Filter Button -->
+                    <div class="col-lg-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary w-100" @onclick="ToggleFilterPopup">
+                                <i class="bi bi-funnel me-2"></i>
+                                Filter
+                                @if (showFilterPopup)
+                                {
+                                    <i class="bi bi-chevron-up ms-1"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-chevron-down ms-1"></i>
+                                }
+                            </button>
+                            <button class="btn btn-outline-secondary" @onclick="ClearFilters" title="Clear filters">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Popup -->
+                    @if (showFilterPopup)
+                    {
+                        <div class="row mt-3 pt-3 border-top">
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap gap-4">
+                                    <!-- Include Deleted -->
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="includeDeleted"
+                                               @bind="includeDeleted"
+                                               @bind:event="oninput"
+                                               @onchange="LoadPromotions">
+                                        <label class="form-check-label fw-semibold" for="includeDeleted">
+                                            <i class="bi bi-trash text-danger me-1"></i>
+                                            Include Deleted
+                                        </label>
+                                    </div>
+
+                                    <!-- Include Disabled -->
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="includeDisabled"
+                                               @bind="includeDisabled"
+                                               @bind:event="oninput"
+                                               @onchange="LoadPromotions">
+                                        <label class="form-check-label fw-semibold" for="includeDisabled">
+                                            <i class="bi bi-eye-slash text-secondary me-1"></i>
+                                            Include Disabled
+                                        </label>
+                                    </div>
+
+                                    <!-- Active Filters Display -->
+                                    @if (HasActiveFilters())
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-info text-dark">
+                                                <i class="bi bi-funnel-fill me-1"></i>
+                                                Active Filters
+                                            </span>
+                                            @if (includeDeleted)
+                                            {
+                                                <span class="badge bg-danger">Deleted</span>
+                                            }
+                                            @if (includeDisabled)
+                                            {
+                                                <span class="badge bg-secondary">Disabled</span>
+                                            }
+                                            @if (startAt.HasValue || endAt.HasValue)
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-calendar me-1"></i>
+                                                    @(startAt?.ToString("dd/MM/yyyy") ?? "∞") -
+                                                    @(endAt?.ToString("dd/MM/yyyy") ?? "∞")
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotions List -->
+<div class="card rounded-4 shadow-sm mt-4">
+    @if (promotions == null)
+    {
+        <div class="card-body text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (promotions.Pagination.Items.Count == 0)
+    {
+        <div class="card-body text-center">
+            <p class="text-secondary mb-0">No promotions found.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Index</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Stock</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @{
+                        int index = promotions.Pagination.StartIndex;
+                    }
+                    @foreach (var promotion in promotions.Pagination.Items)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@promotion.Name</td>
+                            <td>@promotion.PromotionType</td>
+                            @if (promotion.PromotionType == DAL.Enums.PromotionTypeEnum.Percentage)
+                            {
+                                <td>@promotion.Percentage %</td>
+                            }
+                            else
+                            {
+                                <td>@promotion.SalePrice</td>
+                            }
+
+                            @if (promotion.IsReservedStock == true)
+                            {
+                                <td>@promotion.MaxReservedStock</td>
+                            }
+                            else
+                            {
+                                <td class="col-3">Unlimited from @promotion.StartAt to @promotion.EndAt</td>
+                            }
+
+                            @if (promotion.StartAt.HasValue && promotion.EndAt.HasValue)
+                            {
+                                <td>@promotion.StartAt.Value.ToString("dd/MM/yyyy HH:mm:ss") - @promotion.EndAt.Value.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                            }
+                            else
+                            {
+                                <td>Unlimited</td>
+                            }
+
+                            <td>
+                                @switch (GetStatus(promotion).Result)
+                                {
+                                    case PromotionStatusEnum.Active:
+                                        <span class="badge bg-success">Active</span>
+                                        break;
+                                    case PromotionStatusEnum.Upcoming:
+                                        <span class="badge bg-warning text-dark">Upcoming</span>
+                                        break;
+                                    case PromotionStatusEnum.Expired:
+                                        <span class="badge bg-danger">Expired</span>
+                                        break;
+                                    case PromotionStatusEnum.Disabled:
+                                        <span class="badge bg-secondary">Disabled</span>
+                                        break;
+                                    case PromotionStatusEnum.Deleted:
+                                        <span class="badge bg-dark">Deleted</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (GetStatus(promotion).Result != PromotionStatusEnum.Deleted)
+                                {
+                                    <button class="btn btn-sm btn-primary me-2" @onclick="() => showEdit(promotion)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => showDelete(promotion)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-secondary">
+                        Showing @promotions.Pagination.StartIndex to @promotions.Pagination.EndIndex of @promotions.Pagination.TotalCount entries
+                    </span>
+                    <!-- Page Size -->
+                    <select class="form-select form-select-sm w-auto" @onchange="OnPageSizeChanged">
+                        <option value="10" selected="@(pageSize == 10)">10</option>
+                        <option value="25" selected="@(pageSize == 25)">25</option>
+                        <option value="50" selected="@(pageSize == 50)">50</option>
+                        <option value="100" selected="@(pageSize == 100)">100</option>
+                    </select>
+                </div>
+
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <!-- Previous -->
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="#" @onclick="() => OnPageChanged(currentPage - 1)" @onclick:preventDefault="true">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- First page -->
+                        @if (promotions.Pagination.TotalPages > 0)
+                        {
+                            <li class="page-item @(currentPage == 1 ? "active" : "")">
+                                <a class="page-link" href="#" @onclick="() => OnPageChanged(1)" @onclick:preventDefault="true">1</a>
+                            </li>
+                        }
+
+                        <!-- Ellipsis after first page -->
+                        @if (currentPage > 3 && promotions.Pagination.TotalPages > 4)
+                        {
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                        }
+
+                        <!-- Pages around current -->
+                        @for (int i = Math.Max(2, currentPage - 1); i <= Math.Min(promotions.Pagination.TotalPages - 1, currentPage + 1); i++)
+                        {
+                            if (i != 1 && i != promotions.Pagination.TotalPages)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" href="#" @onclick="() => OnPageChanged(i)" @onclick:preventDefault="true">@i</a>
+                                </li>
+                            }
+                        }
+
+                        <!-- Ellipsis before last page -->
+                        @if (currentPage < promotions.Pagination.TotalPages - 2 && promotions.Pagination.TotalPages > 4)
+                        {
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                        }
+
+                        <!-- Last page -->
+                        @if (promotions.Pagination.TotalPages > 1)
+                        {
+                            <li class="page-item @(currentPage == promotions.Pagination.TotalPages ? "active" : "")">
+                                <a class="page-link" href="#" @onclick="() => OnPageChanged(promotions.Pagination.TotalPages)" @onclick:preventDefault="true">@promotions.Pagination.TotalPages</a>
+                            </li>
+                        }
+
+                        <!-- Next -->
+                        <li class="page-item @(currentPage == promotions.Pagination.TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="#" @onclick="() => OnPageChanged(currentPage + 1)" @onclick:preventDefault="true">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+@if (showCreateModal)
+{
+    <!-- Show Create -->
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <CreatePromotion OnCreated="OnSaved" OnCancel="ClosePanels" />
+            </div>
+        </div>
+    </div>
+}
+@if (showEditModal && selectedPromotion != null)
+{
+
+    <!-- Show Edit -->
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <UpdatePromotion PromotionDto="selectedPromotion" OnEdited="OnSaved" OnCancel="ClosePanels" />
+            </div>
+        </div>
+    </div>
+}
+@if (showDeleteModal && selectedPromotion != null)
+{
+    <!-- Show Delete -->
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <DeletePromotion promotionId="selectedPromotion.PromotionId" OnDeleted="OnSaved" OnCancel="ClosePanels" />
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private PromotionListResponeDto? promotions;
+    private string searchName = string.Empty;
+    private DateTime? startAt;
+    private DateTime? endAt;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private bool showCreateModal = false;
+    private bool showEditModal = false;
+    private bool showDeleteModal = false;
+    private bool showDetailsModal = false;
+    private PromotionDto? selectedPromotion;
+    private bool showFilterPopup = false;
+    private bool includeDeleted = false;
+    private bool includeDisabled = false;
+    private HubConnection? _hubConnection;
+    private SemaphoreSlim _loadLock = new(1, 1);
+
+    // private bool _disposed;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadPromotions();
+
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On("PromotionChanged", async () =>
+    {
+
+        await InvokeAsync(async () =>
+        {
+            await LoadPromotions();
+            StateHasChanged();
+        });
+    });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch
+        {
+
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            _hubConnection.Remove("PromotionChanged");
+            await _hubConnection.StopAsync();
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+    private async Task LoadPromotions()
+    {
+        await _loadLock.WaitAsync();
+        try
+        {
+            var request = new PromotionListRequest
+            {
+                SearchTerm = searchName,
+                IncludeDeleted = includeDeleted,
+                StartAt = startAt,
+                EndAt = endAt,
+                IncludeDisable = includeDisabled,
+                Pagination = new PaginationRequest
+                {
+                    Page = currentPage,
+                    PageSize = pageSize
+                }
+            };
+
+            await using var scope = ScopeFactory.CreateAsyncScope();
+
+            var promotionService = scope.ServiceProvider.GetRequiredService<IPromotionService>();
+
+            promotions = await promotionService.GetPromotionsListAsync(request);
+            // promotions = await PromotionService.GetPromotionsListAsync(request);
+            
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        pageSize = int.Parse(e.Value!.ToString()!);
+        currentPage = 1;
+        await LoadPromotions();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        if (page >= 1 && page <= promotions?.Pagination.TotalPages)
+        {
+            currentPage = page;
+            await LoadPromotions();
+        }
+    }
+
+    private async Task OnSaved()
+    {
+        await LoadPromotions();
+        ClosePanels();
+    }
+
+    private void ClosePanels()
+    {
+        showCreateModal = showEditModal = showDetailsModal = showDeleteModal = false;
+        selectedPromotion = null;
+    }
+
+    private void showCreate()
+    {
+        showCreateModal = true;
+        showEditModal = showDetailsModal = showDeleteModal = false;
+        selectedPromotion = null;
+    }
+
+    private void showEdit(PromotionDto promotion)
+    {
+        selectedPromotion = promotion;
+        showEditModal = true;
+        showCreateModal = showDetailsModal = showDeleteModal = false;
+    }
+
+    private void showDelete(PromotionDto promotion)
+    {
+        selectedPromotion = promotion;
+        showEditModal = showCreateModal = showDetailsModal = false;
+        showDeleteModal = true;
+    }
+
+    private async Task<PromotionStatusEnum> GetStatus(PromotionDto promotion)
+    {
+        if (promotion.IsDeleted)
+        {
+            return PromotionStatusEnum.Deleted;
+        }
+
+        if (promotion.IsDisabled)
+        {
+            return PromotionStatusEnum.Disabled;
+        }
+
+        if (promotion.IsLimitedTime && promotion.StartAt.HasValue && promotion.EndAt.HasValue)
+        {
+            var currentDate = DateTime.UtcNow;
+
+            if (currentDate < promotion.StartAt.Value)
+            {
+                return PromotionStatusEnum.Upcoming;
+            }
+            else if (currentDate > promotion.EndAt.Value)
+            {
+                return PromotionStatusEnum.Expired;
+            }
+        }
+
+        if (promotion.IsReservedStock && promotion.MaxReservedStock.HasValue)
+        {
+            if (promotion.MaxReservedStock.Value <= 0)
+            {
+                return PromotionStatusEnum.Expired;
+            }
+        }
+
+        return await Task.FromResult(PromotionStatusEnum.Active);
+    }
+
+    private void ToggleFilterPopup()
+    {
+        showFilterPopup = !showFilterPopup;
+    }
+
+    private async Task ClearFilters()
+    {
+        searchName = string.Empty;
+        startAt = null;
+        endAt = null;
+        includeDeleted = false;
+        includeDisabled = false;
+        currentPage = 1;
+        showFilterPopup = false;
+        await LoadPromotions();
+    }
+
+    private bool HasActiveFilters()
+    {
+        return includeDeleted || includeDisabled ||
+               startAt.HasValue || endAt.HasValue || !string.IsNullOrEmpty(searchName);
+    }
+}

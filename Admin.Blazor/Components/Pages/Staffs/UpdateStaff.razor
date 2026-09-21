@@ -1,0 +1,209 @@
+﻿@page "/staff_management/update"
+@using Admin.Blazor.Hubs
+@using BLL.DTOs.Staff
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using FluentValidation
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IValidator<StaffUpdateDto> Validator
+@rendermode InteractiveServer
+@inject IStaffService StaffService
+@inject NavigationManager NavigationManager
+@inject IHubContext<AdminHub> HubContext
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="modal-header">
+    <h5 class="modal-title fw-bold">Update Staff</h5>
+
+    <button type="button"
+            class="btn-close"
+            @onclick="OnCancel">
+    </button>
+</div>
+
+<div class="modal-body">
+
+    <div class="row g-3">
+
+        <!-- email -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Staff Email <span class="text-danger">*</span>
+            </label>
+
+            <input class="form-control @(HasValidationError(nameof(staffUpdateDto.Email)) ? "is-invalid" : "")"
+                   placeholder="Enter staff email..." @bind="staffUpdateDto.Email" />
+            @if (HasValidationError(nameof(staffUpdateDto.Email)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(staffUpdateDto.Email))</div>
+            }
+        </div>
+
+        <!-- name -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Staff Full Name <span class="text-danger">*</span>
+            </label>
+            <input class="form-control @(HasValidationError(nameof(staffUpdateDto.FullName)) ? "is-invalid" : "")"
+                   placeholder="Enter staff full name..." @bind="staffUpdateDto.FullName" />
+            @if (HasValidationError(nameof(staffUpdateDto.FullName)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(staffUpdateDto.FullName))</div>
+            }
+        </div>
+
+        <!--role-->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Staff Role 
+            </label>
+            <select class=" form-control @(HasValidationError(nameof(staffUpdateDto.Role)) ? "is-invalid" : "")" @bind="staffUpdateDto.Role">
+                @foreach (var role in Enum.GetValues<RoleEnum>().Where(r => r != RoleEnum.Customer))
+                {
+                    <option selected="@IsRoleSelected(staffUpdateDto.Role, role)" value="@role">@role</option>
+                }
+            </select>
+            @if (HasValidationError(nameof(staffUpdateDto.Role)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(staffUpdateDto.Role))</div>
+            }
+        </div>
+
+        <!--isactive-->
+        <!--isactive-->
+        <div class="col-md-6">
+            <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" @bind="staffUpdateDto.IsActive" id="isActiveCheck" />
+                <label class="form-check-label fw-semibold" for="isActiveCheck">
+                    Staff Is Active
+                </label>
+            </div>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-md-12" style="color: red;">@errorMessage</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+
+    <button class="btn btn-secondary"
+            @onclick="OnCancel">
+        Cancel
+    </button>
+
+    <button class="btn btn-danger" @onclick="Update">
+        Update
+    </button>
+
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnEdited { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    private string errorMessage = string.Empty;
+
+    [Parameter] public StaffDto staffDto { get; set; } = new StaffDto();
+    private StaffUpdateDto staffUpdateDto = new StaffUpdateDto();
+    private Dictionary<string, List<string>> validationErrors = new();
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SignalER
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<int>("StaffDeleted", async (deletedId) =>
+        {
+            if (deletedId == staffDto.StaffId)
+            {
+                await InvokeAsync(() => NavigationManager.NavigateTo("/staff_management"));
+            }
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error connecting to hub: {ex.Message}";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (staffDto != null)
+        {
+            staffUpdateDto = new StaffUpdateDto
+            {
+                FullName = staffDto.FullName,
+                Email = staffDto.Email,
+                Role = staffDto.Role,
+                IsActive = staffDto.IsActive
+            };
+        }
+    }
+
+    private async Task Update()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            validationErrors.Clear();
+
+            var result = await Validator.ValidateAsync(staffUpdateDto);
+            if (!result.IsValid)
+            {
+                foreach (var err in result.Errors)
+                {
+                    if (!validationErrors.ContainsKey(err.PropertyName))
+                        validationErrors[err.PropertyName] = new List<string>();
+                    validationErrors[err.PropertyName].Add(err.ErrorMessage);
+                }
+
+                var first = result.Errors.FirstOrDefault();
+                if (first != null) errorMessage = $"Validation failed: {first.ErrorMessage}";
+                return;
+            }
+
+            await StaffService.UpdateStaffAsync(staffDto.StaffId, staffUpdateDto);
+            await OnEdited.InvokeAsync();
+            await HubContext.Clients.All.SendAsync("StaffChanged");
+        }
+        catch (FluentValidation.ValidationException vex)
+        {
+            foreach (var err in vex.Errors)
+            {
+                if (!validationErrors.ContainsKey(err.PropertyName))
+                    validationErrors[err.PropertyName] = new List<string>();
+                validationErrors[err.PropertyName].Add(err.ErrorMessage);
+            }
+            errorMessage = "Validation failed";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private bool HasValidationError(string field) => validationErrors.ContainsKey(field);
+    private string GetValidationError(string field) => validationErrors.TryGetValue(field, out var errs) ? string.Join(", ", errs) : string.Empty;
+
+    private bool IsRoleSelected(RoleEnum staff, RoleEnum role)
+    {
+        if (staff == role)
+        {
+            return true;    
+        }
+        return false;
+    }
+}

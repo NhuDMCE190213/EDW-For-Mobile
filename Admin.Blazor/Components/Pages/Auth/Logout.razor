@@ -1,0 +1,13 @@
+@page "/auth/logout"
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager Navigation
+
+@attribute [AllowAnonymous]
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Redirect to Razor Page handler that does the actual signout
+        Navigation.NavigateTo("/auth/logout-handler", forceLoad: true);
+    }
+}

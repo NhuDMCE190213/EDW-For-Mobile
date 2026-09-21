@@ -1,0 +1,417 @@
+﻿@page
+@model Staff.Razor.Pages.ProductVariants.IndexModel
+@{
+    ViewData["Title"] = "Product Variant Management";
+}
+
+<style>
+    /* ---- Design system tokens (scoped to this page) ---- */
+    .ds-heading-accent {
+        border-left: 4px solid #E24B4A;
+        padding-left: 12px;
+    }
+
+    .btn-ds-primary {
+        background-color: #E24B4A;
+        border: none;
+        color: #FFFFFF;
+        border-radius: 8px;
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+
+        .btn-ds-primary:hover,
+        .btn-ds-primary:focus {
+            background-color: #A32D2D;
+            color: #FFFFFF;
+        }
+
+    .btn-ds-secondary {
+        background-color: #FFFFFF;
+        border: 1px solid #E24B4A;
+        color: #A32D2D;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+        .btn-ds-secondary:hover {
+            background-color: #FCEBEB;
+            color: #A32D2D;
+        }
+
+    .btn-ds-neutral {
+        background-color: var(--color-background-secondary, #F0F0F0);
+        border: none;
+        color: var(--color-text-secondary, #555555);
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    .ds-card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .ds-action-btn {
+        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    /* Status badges — pill shape, design-system status colors */
+    .badge-pill-ds {
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-weight: 500;
+        font-size: 12px;
+    }
+
+    .badge-stock-ok {
+        background-color: #EAF3DE;
+        color: #27500A;
+    }
+
+    .badge-stock-low {
+        background-color: var(--color-background-warning, #FAEEDA);
+        color: var(--color-text-warning, #633806);
+    }
+
+    .badge-stock-out {
+        background-color: #FCEBEB;
+        color: #791F1F;
+    }
+
+    .badge-attribute {
+        background-color: var(--color-background-secondary, #F0F0F0);
+        color: var(--color-text-secondary, #555555);
+        border-radius: 999px;
+        font-weight: 400;
+        padding: 4px 12px;
+    }
+
+    .table-ds thead th {
+        font-weight: 500;
+        font-size: 12px;
+        color: var(--color-text-secondary, #888888);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .table-ds tbody td {
+        font-size: 13px;
+    }
+
+    .price-accent {
+        color: #A32D2D;
+        font-weight: 500;
+    }
+
+    .modal-content-ds {
+        border: none;
+        border-radius: 12px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0 fw-medium ds-heading-accent">Variant List</h2>
+
+    <div class="d-flex gap-2">
+        <a asp-page="Create" asp-route-productId="@Model.productId" class="btn-ds-primary d-inline-flex align-items-center shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i>Add Variant
+        </a>
+        <a asp-page="CreateVariants" asp-route-productId="@Model.productId" class="btn-ds-primary d-inline-flex align-items-center shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i>Add Matrix Variants
+        </a>
+    </div>
+</div>
+
+<div class="card ds-card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-borderless table-ds align-middle mb-0">
+                <thead class="border-bottom">
+                    <tr>
+                        <th class="py-3 px-4">SKU</th>
+                        <th>Basic Configuration</th>
+                        <th class="text-end">Price (VND)</th>
+                        <th class="text-center">Stock</th>
+                        <th>Promotion Name</th>
+                        <th class="text-center px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ProductVariants.Count == 0)
+                    {
+                        <tr><td colspan="6" class="text-center py-4 text-muted">No variant data yet.</td></tr>
+                    }
+                    @foreach (var variant in Model.ProductVariants)
+                    {
+                        <tr class="border-bottom">
+                            <td>
+                                <span class="badge badge-attribute me-1">@variant.Color</span>
+                                <span class="badge badge-attribute">@variant.Storage</span>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    @if (!string.IsNullOrEmpty(variant.Ram))
+                                    {
+                                        <span class="d-block"><b>RAM:</b> @variant.Ram</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(variant.Cpu))
+                                    {
+                                        <span class="d-block"><b>CPU:</b> @variant.Cpu</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(variant.ScreenSize))
+                                    {
+                                        <span class="d-block"><b>Screen:</b> @variant.ScreenSize</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-end price-accent">@variant.GetPrice().ToString("N0") VND</td>
+                            <td class="text-center">
+                                @if (variant.StockQuantity > 10)
+                                {
+                                    <span class="badge badge-pill-ds badge-stock-ok">@variant.StockQuantity</span>
+                                }
+                                else if (variant.StockQuantity > 0)
+                                {
+                                    <span class="badge badge-pill-ds badge-stock-low">@variant.StockQuantity</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-pill-ds badge-stock-out">Out of stock</span>
+                                }
+                            </td>
+                            <!--Promotion-->
+                            <td class="text-muted small">@variant.Promotion?.Name</td>
+                            <td class="text-center px-4">
+                                <button type="button" class="btn btn-outline-info btn-sm ds-action-btn"
+                                        data-id="@variant.ProductVariantId"
+                                        data-sku="@variant.Sku"
+                                        title="Restock">
+                                    <i class="bi bi-box-seam"></i>
+                                </button>
+                                <a asp-page="./Update" asp-route-id="@variant.ProductVariantId" asp-route-productId="@Model.productId" class="btn btn-outline-primary btn-sm ds-action-btn" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm ds-action-btn btn-delete"
+                                        data-id="@variant.ProductVariantId"
+                                        data-sku="@variant.Sku"
+                                        title="Delete variant">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-ds shadow">
+            <div class="modal-header bg-light border-bottom-0 py-3">
+                <h5 class="modal-title fw-medium text-dark"><i class="bi bi-shield-fill-exclamation text-danger me-2"></i>Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-trash3 text-danger display-4 mb-3 d-block"></i>
+                <p class="fs-5 mb-1 fw-medium">Are you sure you want to delete this variant?</p>
+                <p class="text-muted small">Product code: <b id="lblDeleteSku" class="text-danger"></b></p>
+                <p class="text-muted small mb-0 text-decoration-underline">Note:</p>
+                <span class="text-secondary small d-block">This will be a soft delete.</span>
+            </div>
+            <div class="modal-footer bg-light border-top-0 d-flex justify-content-center gap-2 py-3">
+                <button type="button" class="btn-ds-neutral px-4 py-2 animate-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnConfirmDelete" class="btn-ds-primary px-4 py-2">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RESTOCK MODAL -->
+<div class="modal fade" id="stockInModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content modal-content-ds shadow">
+            <div class="modal-header bg-light border-bottom-0 py-3">
+                <h5 class="modal-title fw-medium text-dark">
+                    <i class="bi bi-box-seam-fill text-info me-2"></i>Restock Variant
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p class="text-muted small mb-3 text-center">
+                    SKU: <b id="lblStockInSku" class="text-info"></b>
+                </p>
+
+                <div class="form-group mb-2">
+                    <label for="txtQuantity" class="fw-medium small mb-1">Quantity to add:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary"><i class="bi bi-plus-lg"></i></span>
+                        <input type="number" id="txtQuantity" class="form-control text-center fw-medium text-dark" min="1" value="1" oninput="this.value = !!this.value && Math.abs(this.value) >= 1 ? Math.abs(this.value) : 1" />
+                    </div>
+                    <span id="quantityError" class="text-danger small d-none">Quantity must be at least 1!</span>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top-0 d-flex justify-content-center gap-2 py-3">
+                <button type="button" class="btn-ds-neutral px-3 py-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnConfirmStockIn" class="btn btn-info text-dark fw-medium px-4" style="border-radius: 8px;">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STATUS TOAST -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+    <div id="statusToast" class="toast align-items-center text-white border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2 fw-medium">
+                <i id="toastIcon" class="bi fs-5"></i>
+                <span id="toastMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- HIDDEN FORM HOLDING THE .NET RAZOR PAGES ANTI-FORGERY TOKEN -->
+<form id="antiForgeryForm" method="post">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let idToDelete = null;
+            let idToStockIn = null;
+            let currentRow = null;
+
+            // 1. Listen for clicks on the trash icon
+            $('.btn-delete').on('click', function () {
+                idToDelete = $(this).data('id');
+                let sku = $(this).data('sku');
+                currentRow = $(this).closest('tr'); // Keep a reference to the clicked row for the removal animation
+
+                $('#lblDeleteSku').text(sku);
+                $('#deleteModal').modal('show'); // Open the confirmation modal
+            });
+
+            // 2. Listen for the "Delete" confirmation click inside the modal
+            $('#btnConfirmDelete').on('click', function () {
+                if (!idToDelete) return;
+
+                // Get the anti-forgery (CSRF) token
+                let token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '?handler=Delete', // Calls OnPostDeleteAsync directly
+                    type: 'POST',
+                    data: { id: idToDelete },
+                    headers: { "RequestVerificationToken": token },
+                    success: function (response) {
+                        $('#deleteModal').modal('hide'); // Close the modal immediately
+
+                        if (response.success) {
+                            showToast('success', response.message);
+                            // Fade out and remove the row without reloading the page
+                            currentRow.fadeOut(400, function () { $(this).remove(); });
+                        } else {
+                            showToast('danger', response.message);
+                        }
+                    },
+                    error: function () {
+                        $('#deleteModal').modal('hide');
+                        showToast('danger', 'Could not connect to the server. Please try again!');
+                    }
+                });
+            });
+
+
+            // Listen for clicks on the restock button
+            $('.btn-outline-info').on('click', function () {
+                idToStockIn = $(this).data('id')
+                let sku = $(this).data('sku');
+                currentRow = $(this).closest('tr');
+
+                $('#lblStockInSku').text(sku);
+                $('#txtQuantity').val(1); // reset quantity to 1
+                $('#quantityError').addClass('d-none');
+                $('#stockInModal').modal('show');
+            });
+
+            $('#btnConfirmStockIn').on('click', function () {
+                if (!idToStockIn) return;
+                let qty = parseInt($('#txtQuantity').val());
+
+                if (isNaN(qty) || qty < 1) {
+                    $('#quantityError').removeClass('d-none');
+                    return;
+                }
+
+                // Get the anti-forgery (CSRF) token
+                let token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '?handler=StockIn', // Calls OnPostStockInAsync directly
+                    type: 'POST',
+                    data: { id: idToStockIn, increaseAmount: qty },
+                    headers: { "RequestVerificationToken": token },
+                    success: function (response) {
+                        $('#stockInModal').modal('hide'); // Close the modal immediately
+
+                        if (response.success) {
+                            location.reload(); // Reload the page to reflect the updated stock quantity
+                        } else {
+                            showToast('danger', response.message);
+                        }
+                    },
+                    error: function () {
+                        $('#stockInModal').modal('hide');
+                        showToast('danger', 'Could not connect to the server. Please try again!');
+                    }
+                });
+            });
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                    <text>
+                    showToast('success', '@Html.Raw(TempData["SuccessMessage"])');
+                    </text>
+            }
+            else if (TempData["ErrorMessage"] != null)
+            {
+                    <text>
+                    showToast('danger', '@Html.Raw(TempData["ErrorMessage"])');
+                    </text>
+            }
+
+            // Renders the toast with the correct style based on status
+            function showToast(status, message) {
+                let toastEl = $('#statusToast');
+                let iconEl = $('#toastIcon');
+
+                toastEl.removeClass('bg-success bg-danger');
+                iconEl.removeClass('bi-check-circle-fill bi-x-circle-fill');
+
+                if (status === 'success') {
+                    toastEl.addClass('bg-success');
+                    iconEl.addClass('bi-check-circle-fill');
+                } else {
+                    toastEl.addClass('bg-danger');
+                    iconEl.addClass('bi-x-circle-fill');
+                }
+
+                $('#toastMessage').text(message);
+                let bsToast = new bootstrap.Toast(toastEl[0]);
+                bsToast.show();
+            }
+        });
+    </script>
+}

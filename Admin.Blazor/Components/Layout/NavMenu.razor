@@ -1,0 +1,56 @@
+<div class="top-row ps-3 navbar navbar-dark" style="background-color: rgba(0,0,0,0.2);">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white fw-bold" href="" style="font-size: 1.25rem;">
+            <span style="color: #d70018;">★</span> ECommerse <span class="badge bg-danger" style="font-size: 0.65rem; padding: 3px 6px;">ADMIN</span>
+        </a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="categories">
+                <span class="bi bi-category-nav-menu" aria-hidden="true"></span> Manage Categories
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="products">
+                <span class="bi bi-product-nav-menu" aria-hidden="true"></span> Manage Products
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reviews">
+                <span class="bi bi-review-nav-menu" aria-hidden="true"></span> Manage Reviews
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="promotions">
+                <span class="bi bi-promotion-nav-menu" aria-hidden="true"></span> Manage Promotions
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="staff_management">
+                <span class="bi bi-staff-nav-menu" aria-hidden="true"></span> Manage Staffs
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="customers">
+                <span class="bi bi-customer-nav-menu" aria-hidden="true"></span> Manage Customers
+            </NavLink>
+        </div>
+    </nav>
+</div>
+

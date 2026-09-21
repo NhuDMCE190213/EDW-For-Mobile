@@ -1,0 +1,58 @@
+@model BLL.DTOs.Customer.CustomerProfileDto
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header text-white" style="background-color: var(--color-primary);">
+                <h4 class="mb-0"><i class="bi bi-person-fill me-2"></i>My Profile</h4>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                }
+
+                <form asp-action="Index" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" value="@Model.Email" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="FullName" class="form-label">Full Name</label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="PhoneNumber" class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Points</label>
+                        <input class="form-control" value="@Model.Points" readonly />
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4 pt-2 border-top">
+                        <button type="submit" class="btn text-white mt-3" style="background-color: var(--color-primary);">Save Changes</button>
+                        <a asp-action="ChangePassword" class="btn btn-outline-secondary">Change Password</a>
+                        <a asp-controller="Auth" asp-action="Logout" class="btn btn-outline-danger">Logout</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

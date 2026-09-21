@@ -1,0 +1,438 @@
+@page "/order-items/{OrderIdParam}"
+@rendermode InteractiveServer
+@using BLL.DTOs.Order
+@using BLL.DTOs.OrderItem
+@using BLL.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@inject IOrderService OrderService
+@inject IOrderItemService OrderItemService
+@inject IProductVariantService ProductVariantService
+@inject NavigationManager Navigation
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Order Items - ElectroNexus Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Order Items Management</h2>
+            <p class="text-muted m-0">Add, edit, and manage items in this order.</p>
+        </div>
+        <div class="badge bg-danger px-3 py-2 fs-7" style="border-radius: 6px;">
+            Role: Administrator
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #2b8a3e !important;">
+            <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #e03131 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading order details...</p>
+        </div>
+    }
+    else if (currentOrder == null)
+    {
+        <div class="text-center py-5 border rounded bg-light">
+            <p class="text-muted m-0">Order not found.</p>
+            <button class="btn btn-primary mt-2"
+                    @onclick='() => Navigation.NavigateTo("/orders")'>
+                Back to Orders
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- Order Summary -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="admin-card p-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Order ID:</p>
+                            <p class="fw-bold text-dark" style="font-family: monospace;">@currentOrder.OrderId</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Status:</p>
+                            <span class="badge @GetStatusBadgeClass(currentOrder.Status)">@currentOrder.Status</span>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Customer ID:</p>
+                            <p class="fw-bold text-dark">@currentOrder.CustomerId</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Total Amount:</p>
+                            <p class="fw-bold text-dark" style="font-size: 1.1rem;">$@currentOrder.TotalAmount.ToString("N2")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items Table -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="admin-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold text-secondary m-0">Order Items (@currentOrder.OrderItems.Count)</h5>
+                        <button class="btn btn-cps d-flex align-items-center gap-2 py-1.5 px-3 fw-semibold shadow-sm text-white border-0" @onclick="OpenAddItemModal" style="background-color: #d70018;">
+                            <span>+</span> Add Item
+                        </button>
+                    </div>
+
+                    @if (!currentOrder.OrderItems.Any())
+                    {
+                        <div class="text-center py-5 border rounded bg-light">
+                            <p class="text-muted m-0">No items in this order.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table admin-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Variant Details</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Subtotal</th>
+                                        <th style="width: 140px; text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in currentOrder.OrderItems)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-dark">@item.ProductName</td>
+                                            <td class="text-secondary" style="font-size: 0.85rem;">@item.ProductVariantDetails</td>
+                                            <td class="text-center fw-bold">@item.Quantity</td>
+                                            <td class="text-right">$@item.PriceAtPurchase.ToString("N2")</td>
+                                            <td class="fw-bold text-dark">$@item.Subtotal.ToString("N2")</td>
+                                            <td style="text-align: right;">
+                                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditItem(item)" title="Edit">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteItem(item.OrderItemId, item.ProductName)" title="Delete">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Total:</td>
+                                        <td colspan="2" class="fw-bold text-dark" style="font-size: 1.1rem;">$@currentOrder.OrderItems.Sum(x => x.Subtotal).ToString("N2")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-4">
+            <button class="btn btn-secondary px-4 py-2"
+                    @onclick='() => Navigation.NavigateTo("/orders")'>
+                Back to Orders
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Modal Create / Update Order Item Form -->
+@if (showItemModal)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050; overflow-y: auto;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-dark text-white border-0 p-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold m-0">
+                        @(isEditingItem ? "Update Item" : "Add New Item")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseItemModal" aria-label="Close"></button>
+                </div>
+                <EditForm Model="@itemFormModel" OnValidSubmit="SaveItem" FormName="CreateOrderItemForm">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="admin-form-label fw-semibold mb-1" for="productVariantId">Product Variant ID <span class="text-danger">*</span></label>
+                                <InputText id="productVariantId" class="form-control admin-form-control" placeholder="Enter variant ID (GUID)" @bind-Value="itemFormModel.ProductVariantIdString" />
+                                <ValidationMessage For="@(() => itemFormModel.ProductVariantIdString)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="quantity">Quantity <span class="text-danger">*</span></label>
+                                <InputNumber id="quantity" class="form-control admin-form-control" @bind-Value="itemFormModel.Quantity" />
+                                <ValidationMessage For="@(() => itemFormModel.Quantity)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="priceAtPurchase">Price at Purchase ($) <span class="text-danger">*</span></label>
+                                <InputNumber id="priceAtPurchase" class="form-control admin-form-control" @bind-Value="itemFormModel.PriceAtPurchase" />
+                                <ValidationMessage For="@(() => itemFormModel.PriceAtPurchase)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-3 justify-content-end bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                        <button type="button" class="btn btn-secondary px-4 py-2 border" @onclick="CloseItemModal">Cancel</button>
+                        <button type="submit" class="btn btn-danger px-4 py-2 text-white border-0" style="background-color: #d70018;">
+                            @(isEditingItem ? "Update Item" : "Add Item")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Delete Item Confirmation -->
+@if (showDeleteItemConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-danger text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Delete Item</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDeleteItemConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to remove <strong>@itemToDeleteName</strong> from this order?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">This action will soft-delete the item. The order total will be recalculated.</p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseDeleteItemConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-danger px-4 py-2" @onclick="ExecuteDeleteItem">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string OrderIdParam { get; set; } = "";
+
+    private Guid currentOrderId = Guid.Empty;
+    private OrderDto? currentOrder = null;
+    private bool isLoading = true;
+    private string successMessage = "";
+    private string errorMessage = "";
+
+    // Modal & Form states
+    private bool showItemModal = false;
+    [SupplyParameterFromForm]
+    private OrderItemFormModel itemFormModel { get; set; } = new();
+    private bool isEditingItem = false;
+    private int editingItemId = 0;
+
+    // Delete confirmation states
+    private bool showDeleteItemConfirmation = false;
+    private int itemToDeleteId = 0;
+    private string itemToDeleteName = "";
+
+    public class OrderItemFormModel
+    {
+        public string ProductVariantIdString { get; set; } = "";
+        public int Quantity { get; set; }
+        public decimal PriceAtPurchase { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Guid.TryParse(OrderIdParam, out var orderId))
+        {
+            currentOrderId = orderId;
+            await LoadData();
+        }
+        else
+        {
+            errorMessage = "Invalid order ID format.";
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            currentOrder = await OrderService.GetOrderByIdAsync(currentOrderId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning-subtle text-warning",
+            "Processing" => "bg-info-subtle text-info",
+            "Completed" => "bg-success-subtle text-success",
+            "Cancelled" => "bg-danger-subtle text-danger",
+            _ => "bg-secondary-subtle text-secondary"
+        };
+    }
+
+    private void OpenAddItemModal()
+    {
+        ClearMessages();
+        isEditingItem = false;
+        editingItemId = 0;
+        itemFormModel = new OrderItemFormModel();
+        showItemModal = true;
+    }
+
+    private void CloseItemModal()
+    {
+        showItemModal = false;
+        isEditingItem = false;
+        editingItemId = 0;
+        itemFormModel = new OrderItemFormModel();
+    }
+
+    private void EditItem(OrderItemDto item)
+    {
+        ClearMessages();
+        isEditingItem = true;
+        editingItemId = item.OrderItemId;
+        itemFormModel = new OrderItemFormModel
+        {
+            ProductVariantIdString = item.ProductVariantId.ToString(),
+            Quantity = item.Quantity,
+            PriceAtPurchase = item.PriceAtPurchase
+        };
+        showItemModal = true;
+    }
+
+    private async Task SaveItem()
+    {
+        ClearMessages();
+
+        if (!Guid.TryParse(itemFormModel.ProductVariantIdString, out var variantId))
+        {
+            errorMessage = "Invalid Product Variant ID format. Must be a valid GUID.";
+            return;
+        }
+
+        try
+        {
+            if (isEditingItem)
+            {
+                var updateDto = new OrderItemUpdateDto
+                {
+                    OrderItemId = editingItemId,
+                    Quantity = itemFormModel.Quantity,
+                    PriceAtPurchase = itemFormModel.PriceAtPurchase
+                };
+                var result = await OrderItemService.UpdateOrderItemAsync(updateDto);
+                if (result)
+                {
+                    successMessage = "Item updated successfully!";
+                    CloseItemModal();
+                    await LoadData();
+                }
+                else
+                {
+                    errorMessage = "Failed to update item.";
+                }
+            }
+            else
+            {
+                var createDto = new OrderItemCreateDto
+                {
+                    ProductVariantId = variantId,
+                    Quantity = itemFormModel.Quantity,
+                    PriceAtPurchase = itemFormModel.PriceAtPurchase
+                };
+                var result = await OrderItemService.CreateOrderItemAsync(currentOrderId, createDto);
+                if (result != null)
+                {
+                    successMessage = "Item added successfully!";
+                    CloseItemModal();
+                    await LoadData();
+                }
+                else
+                {
+                    errorMessage = "Failed to add item.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void ConfirmDeleteItem(int itemId, string productName)
+    {
+        itemToDeleteId = itemId;
+        itemToDeleteName = productName;
+        showDeleteItemConfirmation = true;
+    }
+
+    private void CloseDeleteItemConfirmation()
+    {
+        showDeleteItemConfirmation = false;
+        itemToDeleteId = 0;
+        itemToDeleteName = "";
+    }
+
+    private async Task ExecuteDeleteItem()
+    {
+        ClearMessages();
+        try
+        {
+            var result = await OrderItemService.DeleteOrderItemAsync(itemToDeleteId);
+            if (result)
+            {
+                successMessage = "Item removed successfully!";
+                CloseDeleteItemConfirmation();
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Failed to delete item.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = "";
+        errorMessage = "";
+    }
+}

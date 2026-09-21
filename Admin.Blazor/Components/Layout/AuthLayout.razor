@@ -1,0 +1,128 @@
+@inherits LayoutComponentBase
+
+<div class="auth-shell">
+    <div class="auth-shell-inner">
+        <div class="auth-brand text-center mb-4 d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-star-fill text-danger fs-4"></i>
+            <h2 class="fw-bold mb-0 text-dark auth-brand-title">
+                ECommerce <span class="badge bg-danger fs-6 align-middle px-2 py-0.5 rounded-pill">ADMIN</span>
+            </h2>
+        </div>
+
+        <div class="auth-card card border-0 shadow-lg p-4 p-sm-5 text-center">
+            @Body
+        </div>
+
+        <p class="auth-footer text-center text-muted small mt-4 mb-0">
+            &copy; @DateTime.Now.Year Electronic Commerce &mdash; Admin Control Center
+        </p>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<style>
+    /* Standalone auth shell: fully independent from MainLayout (no sidebar/topbar),
+       but keeps the same brand look (red accent, soft gray radial background). */
+    .auth-shell {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        background: radial-gradient(circle, rgba(244,245,247,1) 0%, rgba(230,233,238,1) 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .auth-shell-inner {
+        width: 100%;
+        max-width: 460px;
+    }
+
+    .auth-brand-title {
+        letter-spacing: -0.5px;
+    }
+
+    .auth-card {
+        border-radius: 12px !important;
+        background-color: #ffffff;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .auth-footer {
+        font-size: 0.8rem;
+    }
+
+    /* Shared form styling reused by every auth page (Login, ForgotPassword, SetNewPassword) */
+    .auth-input-group .input-group-text,
+    .auth-input-group .form-control {
+        background-color: #f8f9fa !important;
+        border-color: #e9ecef !important;
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-size: 0.95rem;
+        color: #495057 !important;
+    }
+
+        .auth-input-group .form-control::placeholder {
+            color: #adb5bd;
+        }
+
+        .auth-input-group .form-control:focus {
+            box-shadow: none;
+            border-color: #dee2e6 !important;
+        }
+
+    .auth-checkbox {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        cursor: pointer;
+    }
+
+        .auth-checkbox:checked {
+            background-color: #d90429;
+            border-color: #d90429;
+        }
+
+    .auth-link {
+        color: #d90429;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+        .auth-link:hover {
+            color: #b30322;
+            text-decoration: underline !important;
+        }
+
+    .auth-btn-primary {
+        background-color: #d90429 !important;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: background-color 0.2s ease;
+    }
+
+        .auth-btn-primary:hover {
+            background-color: #b30322 !important;
+        }
+
+    .auth-alert-danger {
+        background-color: #fff5f5;
+        color: #e53e3e;
+        border-radius: 6px;
+    }
+
+    .auth-alert-success {
+        background-color: #f0fdf4;
+        color: #16a34a;
+        border-radius: 6px;
+    }
+</style>

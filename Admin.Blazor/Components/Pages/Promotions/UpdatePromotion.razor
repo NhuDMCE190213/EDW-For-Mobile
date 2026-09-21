@@ -1,0 +1,393 @@
+﻿@page "/promotions/update"
+@using Admin.Blazor.Hubs
+@using BLL.DTOs.Promotion
+@using BLL.DTOs.Validators.PromotionValidator
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using Microsoft.AspNetCore.Authorization
+@using FluentValidation
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@rendermode InteractiveServer
+@inject IPromotionService PromotionService
+@inject NavigationManager NavigationManager
+@inject IValidator<PromotionUpdateDto> Validator
+@inject IHubContext<AdminHub> HubContext
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="modal-header">
+    <h5 class="modal-title fw-bold">Update Promotion</h5>
+    <button type="button" class="btn-close" @onclick="OnCancel"></button>
+</div>
+
+<div class="modal-body">
+    <div class="row g-3">
+
+        <!-- Name -->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">
+                Promotion Name <span class="text-danger">*</span>
+            </label>
+            <input class="form-control @(HasValidationError(nameof(promotionUpdateDto.Name)) ? "is-invalid" : "")"
+                   placeholder="Enter promotion name..." @bind="promotionUpdateDto!.Name" />
+            @if (HasValidationError(nameof(promotionUpdateDto.Name)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.Name))</div>
+            }
+        </div>
+
+        <!-- Type -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Promotion Type <span class="text-danger">*</span>
+            </label>
+            <select class="form-select @(HasValidationError(nameof(promotionUpdateDto.PromotionType)) ? "is-invalid" : "")"
+                    @bind="promotionUpdateDto.PromotionType">
+                @foreach (var type in Enum.GetValues<PromotionTypeEnum>())
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
+            @if (HasValidationError(nameof(promotionUpdateDto.PromotionType)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.PromotionType))</div>
+            }
+        </div>
+
+        <!-- Value based on type -->
+        <div class="col-md-6">
+            @if (promotionUpdateDto.PromotionType == PromotionTypeEnum.Percentage)
+            {
+                <!--Percentage-->
+                <div>
+                    <label class="form-label fw-semibold">
+                        Percentage (%) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control @(HasValidationError(nameof(promotionUpdateDto.Percentage)) ? "is-invalid" : "")"
+                           placeholder="Enter percentage (0-100)" @bind="promotionUpdateDto.Percentage" />
+                    @if (HasValidationError(nameof(promotionUpdateDto.Percentage)))
+                    {
+                        <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.Percentage))</div>
+                    }
+                </div>
+            }
+            else if (promotionUpdateDto.PromotionType == PromotionTypeEnum.FixedAmount)
+            {
+                <!--Sale Price-->
+                <div>
+                    <label class="form-label fw-semibold">
+                        Sale Price <span class="text-danger">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control @(HasValidationError(nameof(promotionUpdateDto.SalePrice)) ? "is-invalid" : "")"
+                           placeholder="Enter sale price" @bind="promotionUpdateDto.SalePrice" />
+                    @if (HasValidationError(nameof(promotionUpdateDto.SalePrice)))
+                    {
+                        <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.SalePrice))</div>
+                    }
+                </div>
+
+                <!--ThresholdPrice-->
+                <div class="mt-3">
+                    <label class="form-label fw-semibold">
+                        Threshold Price <span class="text-danger">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control @(HasValidationError(nameof(promotionUpdateDto.ThresholdPrice)) ? "is-invalid" : "")"
+                           placeholder="Enter threshold price" @bind="promotionUpdateDto.ThresholdPrice" />
+                    @if (HasValidationError(nameof(promotionUpdateDto.ThresholdPrice)))
+                    {
+                        <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.ThresholdPrice))</div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-muted mt-2">
+                    <i class="bi bi-info-circle"></i> Please select a promotion type first
+                </div>
+            }
+        </div>
+
+        <!--Time-->
+        <div class="col-md-6">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" @bind="promotionUpdateDto.IsLimitedTime" id="isLimitedTime" />
+                <label class="form-check-label fw-semibold" for="isLimitedTime">
+                    Is Limited Time
+                </label>
+            </div>
+
+            <label class="form-label fw-semibold">
+                Duration @if (promotionUpdateDto.IsLimitedTime) {
+                <span class="text-danger">*</span>
+                                }
+            </label>
+
+            <div class="row g-2">
+                <div class="col">
+                    <input type="datetime-local"
+                           disabled="@(!promotionUpdateDto.IsLimitedTime)"
+                           class="form-control @(HasValidationError(nameof(promotionUpdateDto.StartAt)) ? "is-invalid" : "")"
+                           @bind="promotionUpdateDto.StartAt" />
+                    @if (HasValidationError(nameof(promotionUpdateDto.StartAt)))
+                    {
+                        <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.StartAt))</div>
+                    }
+                </div>
+
+                <div class="col-auto d-flex align-items-center">
+                    -
+                </div>
+
+                <div class="col">
+                    <input type="datetime-local"
+                           disabled="@(!promotionUpdateDto.IsLimitedTime)"
+                           class="form-control @(HasValidationError(nameof(promotionUpdateDto.EndAt)) ? "is-invalid" : "")"
+                           @bind="promotionUpdateDto.EndAt" />
+                    @if (HasValidationError(nameof(promotionUpdateDto.EndAt)))
+                    {
+                        <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.EndAt))</div>
+                    }
+                </div>
+            </div>
+            @if (HasValidationError(nameof(promotionUpdateDto.IsLimitedTime)))
+            {
+                <div class="text-danger small mt-1">@GetValidationError(nameof(promotionUpdateDto.IsLimitedTime))</div>
+            }
+        </div>
+
+        <!--Stock-->
+        <div class="col-md-6">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" @bind="promotionUpdateDto.IsReservedStock" id="isReservedStock" />
+                <label class="form-check-label fw-semibold" for="isReservedStock">
+                    Is Reserved Stock
+                </label>
+            </div>
+
+            <label class="form-label fw-semibold">
+                Stock @if (promotionUpdateDto.IsReservedStock) {
+                <span class="text-danger">*</span>
+                                }
+            </label>
+            <div>
+                <input type="number"
+                       disabled="@(!promotionUpdateDto.IsReservedStock)"
+                       class="form-control @(HasValidationError(nameof(promotionUpdateDto.MaxReservedStock)) ? "is-invalid" : "")"
+                       placeholder="Enter stock quantity" @bind="promotionUpdateDto.MaxReservedStock" />
+                @if (HasValidationError(nameof(promotionUpdateDto.MaxReservedStock)))
+                {
+                    <div class="invalid-feedback">@GetValidationError(nameof(promotionUpdateDto.MaxReservedStock))</div>
+                }
+            </div>
+            @if (HasValidationError(nameof(promotionUpdateDto.IsReservedStock)))
+            {
+                <div class="text-danger small mt-1">@GetValidationError(nameof(promotionUpdateDto.IsReservedStock))</div>
+            }
+        </div>
+
+        <!--id disable-->
+        <div class="col-md-6">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" @bind="promotionUpdateDto.IsDisable" id="isDisable" />
+                <label class="form-check-label fw-semibold" for="isDisable">
+                    Is Disable
+                </label>
+            </div>
+        </div>
+
+        <!-- Error Messages -->
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="col-12">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+                </div>
+            </div>
+        }
+
+        @if (validationErrors.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <strong>Please fix the following errors:</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach (var error in validationErrors)
+                        {
+                            @foreach (var message in error.Value)
+                            {
+                                <li>@message</li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-secondary" @onclick="OnCancel">
+        Cancel
+    </button>
+    <button class="btn btn-danger" @onclick="Update" disabled="@isSubmitting">
+        @if (isSubmitting)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        }
+        Update Promotion
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnEdited { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public PromotionDto? PromotionDto { get; set; }
+
+    private string errorMessage = string.Empty;
+    private bool isSubmitting = false;
+    private Dictionary<string, List<string>> validationErrors = new();
+    private PromotionUpdateDto? promotionUpdateDto = new PromotionUpdateDto();
+    private HubConnection? _hubConnection;
+    private AdminHub? _adminHub;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SignalER
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<Guid>("PromotionDeleted", async (deletedId) =>
+        {
+            if (deletedId == PromotionDto!.PromotionId)
+            {
+                await InvokeAsync(() => NavigationManager.NavigateTo("/promotions"));
+            }
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error connecting to hub: {ex.Message}";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (PromotionDto != null)
+        {
+            promotionUpdateDto = new PromotionUpdateDto
+            {
+                Name = PromotionDto.Name!,
+                PromotionType = PromotionDto.PromotionType,
+                Percentage = PromotionDto.Percentage,
+                SalePrice = PromotionDto.SalePrice,
+                ThresholdPrice = PromotionDto.ThresholdPrice,
+                IsLimitedTime = PromotionDto.IsLimitedTime,
+                StartAt = PromotionDto.StartAt,
+                EndAt = PromotionDto.EndAt,
+                IsReservedStock = PromotionDto.IsReservedStock,
+                MaxReservedStock = PromotionDto.MaxReservedStock,
+                IsDisable = PromotionDto.IsDisabled
+            };
+
+            ClearAllErrors();
+        }
+    }
+
+    private async Task Update()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = string.Empty;
+            validationErrors.Clear();
+
+            // Validate
+            var validationResult = await Validator.ValidateAsync(promotionUpdateDto!);
+
+            if (!validationResult.IsValid)
+            {
+                foreach (var error in validationResult.Errors)
+                {
+                    if (!validationErrors.ContainsKey(error.PropertyName))
+                    {
+                        validationErrors[error.PropertyName] = new List<string>();
+                    }
+                    validationErrors[error.PropertyName].Add(error.ErrorMessage);
+                }
+
+                var firstError = validationResult.Errors.FirstOrDefault();
+                if (firstError != null)
+                {
+                    errorMessage = $"Validation failed: {firstError.ErrorMessage}";
+                }
+                return;
+            }
+
+            // Update
+            await PromotionService.UpdatePromotionAsync(PromotionDto!.PromotionId, promotionUpdateDto!);
+
+            await OnEdited.InvokeAsync();
+            //SignalR
+            await _hubConnection!.InvokeAsync("BroadcastPromotionChanged");
+        }
+        catch (ValidationException ex)
+        {
+            // Handle validation exception
+            foreach (var error in ex.Errors)
+            {
+                if (!validationErrors.ContainsKey(error.PropertyName))
+                {
+                    validationErrors[error.PropertyName] = new List<string>();
+                }
+                validationErrors[error.PropertyName].Add(error.ErrorMessage);
+            }
+            errorMessage = "Validation failed. Please check the form.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private bool HasValidationError(string field)
+    {
+        return validationErrors.ContainsKey(field);
+    }
+
+    private string GetValidationError(string field)
+    {
+        if (validationErrors.TryGetValue(field, out var errors))
+        {
+            return string.Join(", ", errors);
+        }
+        return string.Empty;
+    }
+
+    private void ClearAllErrors()
+    {
+        validationErrors.Clear();
+        errorMessage = string.Empty;
+    }
+}

@@ -1,0 +1,39 @@
+@model BLL.DTOs.Customer.CustomerRegisterDto
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class="auth-card-header">
+    <h4>Create Your Account</h4>
+    <p>Join to start shopping phones, laptops and accessories</p>
+</div>
+
+<form asp-action="Register" asp-controller="Auth" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+    <div class="mb-3">
+        <label for="FullName" class="form-label small fw-semibold">Full Name</label>
+        <input asp-for="FullName" class="form-control" id="FullName" placeholder="Enter your full name" />
+        <span asp-validation-for="FullName" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label for="Email" class="form-label small fw-semibold">Email</label>
+        <input asp-for="Email" class="form-control" id="Email" placeholder="Enter your email" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label for="PhoneNumber" class="form-label small fw-semibold">Phone Number</label>
+        <input asp-for="PhoneNumber" class="form-control" id="PhoneNumber" placeholder="Enter your phone number" />
+        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label for="Password" class="form-label small fw-semibold">Password</label>
+        <input asp-for="Password" class="form-control" type="password" id="Password" placeholder="Enter your password" />
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+    <button type="submit" class="btn btn-auth-primary w-100 py-2">Create Account</button>
+    <div class="text-center mt-3">
+        <a asp-action="Login" asp-controller="Auth" class="auth-link">Already have an account? Sign in</a>
+    </div>
+</form>

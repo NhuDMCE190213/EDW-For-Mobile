@@ -1,0 +1,166 @@
+@inject BLL.Services.Interfaces.ICategoryService CategoryService
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ECommerse</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/StaffUser.Mvc.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <!-- ============ Primary nav (logo, search, account, cart) ============ -->
+        <nav class="customer-navbar">
+            <div class="container-fluid px-4">
+                <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <a class="customer-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-phone-vibrate"></i> ECommerse
+                    </a>
+
+                    <button class="navbar-toggler border-0 text-white d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse collapse d-lg-flex flex-grow-1 align-items-center gap-3">
+                        <!-- Search -->
+                        <form class="d-flex flex-grow-1" style="max-width: 520px;" action="@Url.Action("Index", "Home")" method="get">
+                            <input name="q" value="@Context.Request.Query["q"]" class="form-control customer-search" type="search" placeholder="Search for phones, laptops, accessories..." aria-label="Search" />
+                            <button class="customer-search-btn" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
+
+                        <!-- Icons: location / account / cart -->
+                        <div class="d-flex align-items-center gap-2 ms-auto">
+                            
+
+                            @if (User?.Identity?.IsAuthenticated ?? false)
+                            {
+                                <a class="customer-icon-link" asp-area="" asp-controller="Profile" asp-action="Index">
+                                    <i class="bi bi-person-fill"></i> @User.Identity?.Name
+                                </a>
+                                <a class="customer-icon-link" asp-area="" asp-controller="Orders" asp-action="Index">
+                                    <i class="bi bi-bag-check-fill"></i> My Orders
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="customer-icon-link" asp-area="" asp-controller="Auth" asp-action="Login">
+                                    <i class="bi bi-person-fill"></i> Account
+                                </a>
+                            }
+
+                            @{
+                                // var cartList = Context.Session.Get<List<CartItem>>("Cart") ?? new List<CartItem>();
+                                // var totalCartCount = cartList.Sum(item => item.Quantity);
+                            }
+                            <a class="customer-icon-link customer-cart-badge" href="@Url.Action("Index", "Cart")">
+                                <i class="bi bi-cart3"></i> Cart
+                                @* <span class="customer-cart-count" id="cart-count">@totalCartCount</span> *@
+                            </a>
+
+                            @if (User?.Identity?.IsAuthenticated ?? false)
+                            {
+                                <a class="customer-auth-link" asp-area="" asp-controller="Auth" asp-action="Logout">
+                                    Log out
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="customer-auth-link" asp-area="" asp-controller="Auth" asp-action="Register">
+                                    Sign up
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ============ Category sub-bar ============ -->
+        <nav class="customer-subnav">
+            <div class="container-fluid px-4">
+                <div class="d-flex overflow-auto">
+                    <a class="customer-subnav-link" href="@Url.Action("Index", "Home")">
+                        <i class="bi bi-grid-fill me-1"></i> All Products
+                    </a>
+                    @foreach (var cat in await CategoryService.GetAllCategoriesAsync())
+                    {
+                        var icon = cat.Name.ToLower() switch
+                        {
+                            "smartphones" or "phones" => "bi-phone",
+                            "laptops" => "bi-laptop",
+                            "tablets" => "bi-tablet",
+                            "accessories" => "bi-plug",
+                            _ => "bi-tag"
+                        };
+                        <a class="customer-subnav-link" href="@Url.Action("Index", "Home", new { categoryId = cat.Id })">
+                            <i class="bi @icon me-1"></i> @cat.Name
+                        </a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container customer-content">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="customer-footer">
+        <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <span>&copy; 2026 - <strong style="color: var(--color-primary-hover);">ECommerse</strong> - Electronics Store</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function showToast(message, type = 'success', title = 'Notification') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            let iconClass = 'bi-info-circle-fill';
+            if (type === 'success') iconClass = 'bi-check-circle-fill';
+            if (type === 'error') iconClass = 'bi-exclamation-triangle-fill';
+            if (type === 'info') iconClass = 'bi-info-circle-fill';
+
+            const toast = document.createElement('div');
+            toast.className = `custom-toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="bi ${iconClass} custom-toast-icon"></i>
+                <div class="custom-toast-content">
+                    <div class="custom-toast-title">${title}</div>
+                    <p class="custom-toast-message">${message}</p>
+                </div>
+                <button class="custom-toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 50);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

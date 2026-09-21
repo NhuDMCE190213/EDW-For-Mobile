@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ECommerse</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/StaffUser.Mvc.styles.css" asp-append-version="true" />
+
+    <style>
+        /* Standalone auth shell for Login/Register/ForgotPassword/SetNewPassword/Logout.
+           Intentionally does NOT include the storefront header, category bar or footer
+           from _Layout.cshtml, but reuses the same brand color so it still feels
+           like the same site. */
+        :root {
+            --color-primary: #E24B4A;
+            --color-primary-hover: #A32D2D;
+            --color-primary-active: #791F1F;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: radial-gradient(circle, #f7f4f4 0%, #efe7e7 100%);
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            font-weight: 600;
+            font-size: 20px;
+            color: #222222;
+            text-decoration: none;
+        }
+
+            .auth-brand i {
+                color: var(--color-primary);
+                font-size: 22px;
+            }
+
+        .auth-card {
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+        }
+
+        .auth-card-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+            .auth-card-header h4 {
+                font-weight: 700;
+                color: #222222;
+                margin-bottom: 4px;
+            }
+
+            .auth-card-header p {
+                color: #888888;
+                font-size: 0.85rem;
+                margin-bottom: 0;
+            }
+
+        .btn-auth-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #FFFFFF;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+
+            .btn-auth-primary:hover {
+                background-color: var(--color-primary-hover);
+                border-color: var(--color-primary-hover);
+                color: #FFFFFF;
+            }
+
+        .auth-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+            .auth-link:hover {
+                color: var(--color-primary-hover);
+                text-decoration: underline;
+            }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #999999;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="auth-wrapper">
+        <a class="auth-brand" asp-area="" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-phone-vibrate"></i>
+            <span>ECommerse</span>
+        </a>
+
+        <div class="auth-card">
+            @RenderBody()
+        </div>
+
+        <p class="auth-footer">&copy; @DateTime.Now.Year ECommerse &mdash; Electronics Store</p>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

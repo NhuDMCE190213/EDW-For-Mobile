@@ -1,0 +1,91 @@
+@page
+@model Staff.Razor.Pages.Products.IndexModel
+@{
+    ViewData["Title"] = "Product Management";
+}
+
+<style>
+    .ds-heading-accent {
+        border-left: 4px solid #E24B4A;
+        padding-left: 12px;
+    }
+
+    .ds-card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .table-ds thead th {
+        font-weight: 500;
+        font-size: 12px;
+        color: var(--color-text-secondary, #888888);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .table-ds tbody td {
+        font-size: 13px;
+    }
+
+    .price-accent {
+        color: #A32D2D;
+        font-weight: 500;
+    }
+
+    .btn-ds-secondary {
+        background-color: #FFFFFF;
+        border: 1px solid #E24B4A;
+        color: #A32D2D;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+        .btn-ds-secondary:hover {
+            background-color: #FCEBEB;
+            color: #A32D2D;
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0 fw-medium ds-heading-accent">Product List</h2>
+</div>
+
+<div class="card ds-card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-borderless table-ds align-middle mb-0">
+                <thead class="border-bottom">
+                    <tr>
+                        <th class="py-3 px-4">Product Name (ID)</th>
+                        <th>Category</th>
+                        <th class="text-end px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Products.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center py-4 text-muted">No product data yet.</td></tr>
+                    }
+                    @foreach (var product in Model.Products)
+                    {
+                        <tr class="border-bottom">
+                            <td class="px-4">
+                                <div class="fw-medium text-dark">@product.ProductName</div>
+                                <div class="text-muted small">ID: @product.ProductId</div>
+                            </td>
+                            <td>@product.CategoryName</td>
+                            <td class="text-end px-4">
+                                <a asp-page="/ProductVariants/Index" asp-route-productId="@product.ProductId" class="btn btn-sm btn-ds-secondary me-2">
+                                    <i class="bi bi-eye"></i> View Variants
+                                </a>
+                                <a asp-page="/Reviews/Index" asp-route-productId="@product.ProductId" class="btn btn-sm btn-ds-secondary">
+                                    <i class="bi bi-chat-square-text"></i> View Reviews
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,271 @@
+﻿@page "{id:guid}"
+@model Staff.Razor.Pages.ProductVariants.UpdateModel
+@{
+    ViewData["Title"] = "Update Product Variant";
+}
+
+<style>
+    .ds-heading-accent {
+        border-left: 4px solid #E24B4A;
+        padding-left: 12px;
+    }
+
+    .ds-back-btn {
+        background-color: #FFFFFF;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: var(--color-text-secondary, #555555);
+        border-radius: 999px; /* circular icon button */
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+        .ds-back-btn:hover {
+            background-color: var(--color-background-secondary, #F5F5F5);
+            color: #A32D2D;
+        }
+
+    .ds-card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .ds-section-title {
+        font-weight: 500;
+        color: var(--color-text-secondary, #555555);
+        font-size: 14px;
+    }
+
+    .ds-section-block {
+        background-color: var(--color-background-secondary, #F5F5F5);
+        border-radius: 12px;
+    }
+
+    .ds-label {
+        font-weight: 500;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    /* Inputs / selects: 8px radius per design system */
+    .form-control,
+    .input-group-text {
+        border-radius: 8px !important;
+        font-size: 13px;
+    }
+
+        .form-control:focus {
+            border-color: #E24B4A;
+            box-shadow: 0 0 0 0.2rem rgba(226, 75, 74, 0.15);
+        }
+
+    .btn-ds-primary {
+        background-color: #E24B4A;
+        border: none;
+        color: #FFFFFF;
+        border-radius: 8px;
+        font-size: 13px;
+        padding: 8px 24px;
+    }
+
+        .btn-ds-primary:hover,
+        .btn-ds-primary:focus {
+            background-color: #A32D2D;
+            color: #FFFFFF;
+        }
+
+    .btn-ds-neutral {
+        background-color: var(--color-background-secondary, #F0F0F0);
+        border: none;
+        color: var(--color-text-secondary, #555555);
+        border-radius: 8px;
+        font-size: 13px;
+        padding: 8px 24px;
+    }
+
+        .btn-ds-neutral:hover {
+            background-color: #E6E6E6;
+            color: var(--color-text-secondary, #555555);
+        }
+
+    .alert-ds-danger {
+        background-color: #FCEBEB;
+        color: #791F1F;
+        border: none;
+        border-radius: 12px;
+    }
+</style>
+
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a asp-page="./Index" asp-route-productId="@Model.Product?.ProductId" class="ds-back-btn shadow-sm" title="Back">
+        <i class="bi bi-arrow-left fs-5 lh-1"></i>
+    </a>
+    <h2 class="m-0 fw-medium ds-heading-accent">Update Product Variant</h2>
+</div>
+
+@if (Model.Product != null && Model.ProductVariant != null)
+{
+    <div class="card ds-card shadow-sm">
+        <div class="card-body p-4">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="alert-ds-danger p-3" role="alert"></div>
+                <input type="hidden" asp-for="ProductVariant.ProductVariantId" />
+
+                <h5 class="ds-section-title mb-3"><i class="bi bi-upc-scan me-2"></i>Identification</h5>
+                <div class="row ds-section-block p-3 mb-4 mx-0">
+                    <div class="col-md-6 form-group mb-3">
+                        <label class="ds-label">Product</label>
+                        <label class="form-control">@Model.Product?.ProductName</label>
+                        <input type="hidden" asp-for="ProductVariant.ProductId" value="@Model.Product?.ProductId" />
+                        <span asp-validation-for="ProductVariant.ProductId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <h5 class="ds-section-title mb-3"><i class="bi bi-cpu me-2"></i>Specifications</h5>
+                <div class="row ds-section-block p-3 mb-4 mx-0">
+                    <div class="col-md-3 form-group mb-3">
+                        <label class="ds-label">Color <span class="text-danger">*</span></label>
+                        <input asp-for="ProductVariant.Color" class="form-control" placeholder="Matte black, Titanium..." />
+                        <span asp-validation-for="ProductVariant.Color" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label class="ds-label">Storage</label>
+                        <input asp-for="ProductVariant.Storage" class="form-control" placeholder="128GB, 256GB..." />
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label class="ds-label">RAM</label>
+                        <input asp-for="ProductVariant.Ram" class="form-control" placeholder="8GB, 16GB..." />
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label class="ds-label">Screen Size</label>
+                        <input asp-for="ProductVariant.ScreenSize" class="form-control" placeholder="6.1 inch, 6.7 inch..." />
+                    </div>
+                    <div class="col-md-12 form-group mb-3">
+                        <label class="ds-label">CPU</label>
+                        <input asp-for="ProductVariant.Cpu" class="form-control" placeholder="Apple A17 Pro, Snapdragon 8 Gen 3..." />
+                    </div>
+                </div>
+
+                <h5 class="ds-section-title mb-3"><i class="bi bi-tag me-2"></i>Pricing &amp; Inventory</h5>
+                <div class="row ds-section-block p-3 mb-4 mx-0">
+                    <div class="col-md-4 form-group mb-3">
+                        <label class="ds-label">Price (VND) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="ProductVariant.Price" type="number" class="form-control" placeholder="29000000" />
+                            <span class="input-group-text fw-medium">VND</span>
+                        </div>
+                        <span asp-validation-for="ProductVariant.Price" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4 form-group mb-3">
+                        <label class="ds-label">Stock Quantity <span class="text-danger">*</span></label>
+                        <input asp-for="ProductVariant.StockQuantity" type="number" class="form-control" min="0" placeholder="Quantity in stock" />
+                        <span asp-validation-for="ProductVariant.StockQuantity" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4 form-group mb-3">
+                        <label class="ds-label">Image URL</label>
+                        <input asp-for="ProductVariant.ImageUrl" class="form-control" placeholder="https://..." />
+                    </div>
+                </div>
+
+                <h5 class="ds-section-title mb-3"><i class="bi bi bi-gift me-2"></i>Promotion</h5>
+                <div class="row ds-section-block p-3 mb-4 mx-0">
+                    @if (Model.PromotionDtos != null && Model.PromotionDtos.Count > 0)
+                    {
+
+                        <select class="form-select" asp-for="ProductVariant.PromotionId">
+                            @{var isSelected = false;}
+                            @if (Model.ProductVariant.PromotionId == null) { isSelected = true; }
+                            <option selected="@isSelected" value="">No Promotion</option>
+                            @if (isSelected) isSelected = false;
+                            @foreach (var promotion in Model.PromotionDtos)
+                            {
+                                if (promotion.PromotionId == Model.ProductVariant.PromotionId)
+                                {
+                                    isSelected = true;
+                                }
+                                <option selected="@isSelected" value="@promotion.PromotionId">Name: @promotion.Name, @if (promotion.PromotionType == DAL.Enums.PromotionTypeEnum.Percentage) { <text>Percentage: @promotion.Percentage.</text> } else { <text>(Price: @promotion.SalePrice,Threshold Price: @promotion.ThresholdPrice. )</text> }</option>
+
+                                if (isSelected) isSelected = false;
+                            }
+                        </select>
+                    } 
+                    else
+                    {
+                        <div class="text-muted" >No active or upcoming promotions available.</div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                    <a asp-page="./Index" asp-route-productId="@Model.Product?.ProductId" class="btn-ds-neutral d-inline-flex align-items-center">Cancel</a>
+                    <button type="submit" class="btn-ds-primary d-inline-flex align-items-center"><i class="bi bi-floppy me-2"></i> Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert-ds-danger d-flex align-items-center shadow-sm p-3 my-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-3 me-3" style="color: #791F1F;"></i>
+        <div>
+            <h6 class="fw-medium mb-1">No data found!</h6>
+            <div class="small" style="color: var(--color-text-secondary, #555555);">This product does not exist or has been removed from the system.</div>
+        </div>
+    </div>
+}
+
+<!-- STATUS TOAST -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+    <div id="statusToast" class="toast align-items-center text-white border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2 fw-medium">
+                <i id="toastIcon" class="bi fs-5"></i>
+                <span id="toastMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                            <text>
+                            showToast('success', '@Html.Raw(TempData["SuccessMessage"])');
+                            </text>
+            }
+            else if (TempData["ErrorMessage"] != null)
+            {
+                            <text>
+                            showToast('danger', '@Html.Raw(TempData["ErrorMessage"])');
+                            </text>
+            }
+
+            // Renders the toast with the correct style based on status
+            function showToast(status, message) {
+                let toastEl = $('#statusToast');
+                let iconEl = $('#toastIcon');
+
+                toastEl.removeClass('bg-success bg-danger');
+                iconEl.removeClass('bi-check-circle-fill bi-x-circle-fill');
+
+                if (status === 'success') {
+                    toastEl.addClass('bg-success');
+                    iconEl.addClass('bi-check-circle-fill');
+                } else {
+                    toastEl.addClass('bg-danger');
+                    iconEl.addClass('bi-x-circle-fill');
+                }
+
+                $('#toastMessage').text(message);
+                let bsToast = new bootstrap.Toast(toastEl[0]);
+                bsToast.show();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,453 @@
+@page "/reviews"
+@rendermode InteractiveServer
+@using BLL.DTOs.ProductReview
+@using BLL.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@inject IProductReviewService ProductReviewService
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Manage Reviews - ElectroNexus Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Manage Reviews</h2>
+            <p class="text-muted m-0">View and manage product reviews. Flag spam reviews for moderation.</p>
+        </div>
+    </div>
+
+    <!-- Stats Quick Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #d70018 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Total Reviews</h6>
+                    <h3 class="fw-bold text-dark m-0">@reviews.Count</h3>
+                </div>
+                <div class="bg-danger-subtle text-danger rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #ffe3e3;">
+                    <i class="fs-4">💬</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #ff922b !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Flagged Reviews</h6>
+                    <h3 class="fw-bold text-dark m-0">@flaggedReviewsCount</h3>
+                </div>
+                <div class="bg-warning-subtle text-warning rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #fff5e6;">
+                    <i class="fs-4">🚩</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #2b8a3e !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Average Rating</h6>
+                    <h3 class="fw-bold text-dark m-0">@averageRating.ToString("0.0")</h3>
+                </div>
+                <div class="bg-success-subtle text-success rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #e6fcf5;">
+                    <i class="fs-4">⭐</i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #2b8a3e !important;">
+            <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #e03131 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- List Reviews (Full width) -->
+        <div class="col-lg-12">
+            <div class="admin-card p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <h5 class="fw-bold text-secondary m-0">Review List (@filteredReviews.Count)</h5>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <!-- Status Filter -->
+                        <select class="form-select admin-form-control py-1.5" style="width: 170px;" @bind="filterStatus">
+                            <option value="all">All Reviews</option>
+                            <option value="flagged">Flagged Only</option>
+                            <option value="normal">Normal Only</option>
+                        </select>
+                        <!-- Search Box -->
+                        <input type="text" class="form-control admin-form-control py-1.5" style="width: 220px;" placeholder="Search reviews..." @bind="searchKeyword" @bind:event="oninput" />
+                    </div>
+                </div>
+
+                @if (isLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading review list...</p>
+                    </div>
+                }
+                else if (!filteredReviews.Any())
+                {
+                    <div class="text-center py-5 border rounded bg-light">
+                        <p class="text-muted m-0">No reviews found.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">ID</th>
+                                    <th>Customer</th>
+                                    <th>Product</th>
+                                    <th style="width: 120px;">Rating</th>
+                                    <th>Comment</th>
+                                    <th style="width: 100px;">Status</th>
+                                    <th style="width: 140px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var review in filteredReviews)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-secondary">#@review.Id</td>
+                                        <td>
+                                            <div class="fw-bold text-dark">@review.CustomerName</div>
+                                            <div class="text-muted small">ID: @review.CustomerId</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark">@review.ProductName</div>
+                                            <div class="text-muted small">ID: @review.ProductId</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-warning">
+                                                @for (int i = 1; i <= review.Rating; i++)
+                                                {
+                                                    <i class="bi bi-star-fill"></i>
+                                                }
+                                                @for (int i = review.Rating + 1; i <= 5; i++)
+                                                {
+                                                    <i class="bi bi-star"></i>
+                                                }
+                                            </div>
+                                            <div class="text-muted small">@review.Rating/5</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 300px;" title="@review.Comment">
+                                                @review.Comment
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (review.IsFlagged)
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning px-2 py-1" style="font-size: 0.75rem; font-weight: 550; background-color: #fff5e6; border: 1px solid #ffe8cc;">Flagged</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success-subtle text-success px-2 py-1" style="font-size: 0.75rem; font-weight: 550; background-color: #e6fcf5; border: 1px solid #b8f0d9;">Normal</span>
+                                            }
+                                        </td>
+                                        <td style="text-align: right;">
+                                            @if (!review.IsFlagged)
+                                            {
+                                                <button class="btn btn-sm btn-outline-warning me-2" @onclick="() => ConfirmFlag(review.Id, review.CustomerName)" title="Flag as spam">
+                                                    <i class="bi bi-flag"></i> Flag
+                                                </button>
+                                            } else {
+                                                <button class="btn btn-sm btn-outline-secondary me-2" @onclick="() => ConfirmUnflag(review.Id, review.CustomerName)" title="Unflag">
+                                                    <i class="bi bi-flag"></i> Unflag
+                                                </button>
+                                            }
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(review.Id, review.CustomerName)" title="Delete">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Flag Confirmation -->
+@if (showFlagConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-warning text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Flag Review</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseFlagConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to flag this review as spam?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Customer: <strong>@reviewToFlagName</strong></p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseFlagConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-warning px-4 py-2 text-white" @onclick="ExecuteFlag">Flag Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showUnflagConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-secondary text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Unflag Review</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseUnflagConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to unflag this review?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Customer: <strong>@reviewToFlagName</strong></p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseUnflagConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-secondary px-4 py-2 text-white" @onclick="ExecuteUnflag">Unflag Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Delete Confirmation -->
+@if (showDeleteConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-danger text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Delete Review</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDeleteConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to delete this review?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Customer: <strong>@reviewToDeleteName</strong></p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">This action will soft-delete the review.</p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseDeleteConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-danger px-4 py-2 text-white" @onclick="ExecuteDelete">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ProductReviewDto> reviews = new();
+    private string searchKeyword = "";
+    private string filterStatus = "all";
+    private bool isLoading = true;
+    private string successMessage = "";
+    private string errorMessage = "";
+
+    // Flag confirmation states
+    private bool showFlagConfirmation = false;
+    private bool showUnflagConfirmation = false;
+    private int reviewToFlagId = 0;
+    private string reviewToFlagName = "";
+
+    // Delete confirmation states
+    private bool showDeleteConfirmation = false;
+    private int reviewToDeleteId = 0;
+    private string reviewToDeleteName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            reviews = await ProductReviewService.GetAllProductReviewsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private int flaggedReviewsCount => reviews.Count(r => r.IsFlagged);
+    private double averageRating => reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+
+    private List<ProductReviewDto> filteredReviews
+    {
+        get
+        {
+            IEnumerable<ProductReviewDto> result = reviews;
+
+            // Filter by status
+            if (filterStatus == "flagged")
+            {
+                result = result.Where(r => r.IsFlagged);
+            }
+            else if (filterStatus == "normal")
+            {
+                result = result.Where(r => !r.IsFlagged);
+            }
+
+            // Search filter
+            if (!string.IsNullOrWhiteSpace(searchKeyword))
+            {
+                result = result.Where(r => 
+                    r.CustomerName.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) || 
+                    r.ProductName.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                    r.Comment.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            return result.ToList();
+        }
+    }
+
+    private void ConfirmFlag(int id, string customerName)
+    {
+        reviewToFlagId = id;
+        reviewToFlagName = customerName;
+        showFlagConfirmation = true;
+    }
+
+    private void ConfirmUnflag(int id, string customerName)
+    {
+        reviewToFlagId = id;
+        reviewToFlagName = customerName;
+        showUnflagConfirmation = true;
+    }
+
+    private void CloseUnflagConfirmation()
+    {
+        showUnflagConfirmation = false;
+        reviewToFlagId = 0;
+        reviewToFlagName = "";
+    }
+
+    private void CloseFlagConfirmation()
+    {
+        showFlagConfirmation = false;
+        reviewToFlagId = 0;
+        reviewToFlagName = "";
+    }
+
+    private async Task ExecuteFlag()
+    {
+        try
+        {
+            var result = await ProductReviewService.FlagProductReviewAsync(reviewToFlagId);
+            if (result)
+            {
+                successMessage = "Review flagged successfully!";
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Review not found or already flagged!";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            CloseFlagConfirmation();
+        }
+    }
+
+    private async Task ExecuteUnflag()
+    {
+        try
+        {
+            var result = await ProductReviewService.UnflagProductReviewAsync(reviewToFlagId);
+            if (result)
+            {
+                successMessage = "Review unflagged successfully!";
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Review not found or already unflagged!";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            CloseUnflagConfirmation();
+        }
+    }
+
+    private void ConfirmDelete(int id, string customerName)
+    {
+        reviewToDeleteId = id;
+        reviewToDeleteName = customerName;
+        showDeleteConfirmation = true;
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        showDeleteConfirmation = false;
+        reviewToDeleteId = 0;
+        reviewToDeleteName = "";
+    }
+
+    private async Task ExecuteDelete()
+    {
+        try
+        {
+            var result = await ProductReviewService.DeleteProductReviewAsync(reviewToDeleteId);
+            if (result)
+            {
+                successMessage = "Review deleted successfully!";
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Review not found or already deleted!";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            CloseDeleteConfirmation();
+        }
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = "";
+        errorMessage = "";
+    }
+}

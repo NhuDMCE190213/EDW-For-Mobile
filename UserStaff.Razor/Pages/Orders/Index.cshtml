@@ -1,0 +1,248 @@
+@page
+@model Staff.Razor.Pages.Orders.IndexModel
+@{
+    ViewData["Title"] = "Order Processing";
+}
+
+<style>
+    .ds-heading-accent {
+        border-left: 4px solid #E24B4A;
+        padding-left: 12px;
+    }
+
+    .ds-card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .table-ds thead th {
+        font-weight: 500;
+        font-size: 12px;
+        color: var(--color-text-secondary, #888888);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .table-ds tbody td {
+        font-size: 13px;
+    }
+
+    .btn-ds-secondary {
+        background-color: #FFFFFF;
+        border: 1px solid #E24B4A;
+        color: #A32D2D;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+        .btn-ds-secondary:hover {
+            background-color: #FCEBEB;
+            color: #A32D2D;
+        }
+
+    .status-pill {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h2 class="m-0 fw-medium ds-heading-accent">Order Processing</h2>
+        <p class="text-muted mb-0 mt-2">View orders and update order status from a Razor Page workflow.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-left: 4px solid #2b8a3e !important;">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-left: 4px solid #e03131 !important;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card ds-card shadow-sm h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Total Orders</div>
+                    <div class="fs-3 fw-semibold">@Model.TotalOrders</div>
+                </div>
+                <i class="bi bi-bag-check-fill fs-2 text-danger"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card ds-card shadow-sm h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Pending</div>
+                    <div class="fs-3 fw-semibold">@Model.PendingOrders</div>
+                </div>
+                <i class="bi bi-hourglass-split fs-2 text-warning"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card ds-card shadow-sm h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Processing</div>
+                    <div class="fs-3 fw-semibold">@Model.ProcessingOrders</div>
+                </div>
+                <i class="bi bi-arrow-repeat fs-2 text-info"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card ds-card shadow-sm h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Revenue</div>
+                    <div class="fs-3 fw-semibold">@Model.TotalRevenue.ToString("N0")</div>
+                </div>
+                <i class="bi bi-cash-stack fs-2 text-success"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card ds-card shadow-sm">
+    <div class="card-body p-0">
+        @if (Model.Orders.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">
+                No orders found.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover table-borderless table-ds align-middle mb-0">
+                    <thead class="border-bottom">
+                        <tr>
+                            <th class="py-3 px-4">Order ID</th>
+                            <th>Customer ID</th>
+                            <th>Items</th>
+                            <th class="text-end">Total</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-end px-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            var collapseId = $"order-details-{order.OrderId:N}";
+                            <tr class="border-bottom">
+                                <td class="px-4">
+                                    <div class="fw-medium text-dark">@order.OrderId.ToString().Substring(0, 8)</div>
+                                    <div class="text-muted small">@order.OrderId</div>
+                                </td>
+                                <td>@order.CustomerId</td>
+                                <td><span class="badge bg-light text-dark border">@order.OrderItems.Count item(s)</span></td>
+                                <td class="text-end fw-medium">@order.TotalAmount.ToString("N0")</td>
+                                <td>
+                                    <span class="badge @Model.GetStatusBadgeClass(order.Status) status-pill">@order.Status</span>
+                                </td>
+                                <td>@order.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                <td class="text-end px-4">
+                                    <button class="btn btn-sm btn-ds-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                                        View & Update
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="border-bottom bg-light">
+                                <td colspan="7" class="p-0">
+                                    <div class="collapse" id="@collapseId">
+                                        <div class="p-4">
+                                            <div class="row g-4">
+                                                <div class="col-lg-7">
+                                                    <h6 class="fw-semibold mb-3">Order Items</h6>
+                                                    @if (order.OrderItems.Count == 0)
+                                                    {
+                                                        <div class="text-muted">No items in this order.</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-borderless align-middle mb-0">
+                                                                <thead class="border-bottom">
+                                                                    <tr>
+                                                                        <th>Product</th>
+                                                                        <th>Variant</th>
+                                                                        <th class="text-end">Qty</th>
+                                                                        <th class="text-end">Price</th>
+                                                                        <th class="text-end">Subtotal</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var item in order.OrderItems)
+                                                                    {
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="fw-medium">@item.ProductName</div>
+                                                                                <div class="text-muted small">@item.ProductVariantId</div>
+                                                                            </td>
+                                                                            <td>@item.ProductVariantDetails</td>
+                                                                            <td class="text-end">@item.Quantity</td>
+                                                                            <td class="text-end">@item.PriceAtPurchase.ToString("N0")</td>
+                                                                            <td class="text-end fw-semibold">@item.Subtotal.ToString("N0")</td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="col-lg-5">
+                                                    <div class="card ds-card border">
+                                                        <div class="card-body">
+                                                            <h6 class="fw-semibold mb-3">Change Order Status</h6>
+                                                            <form method="post" asp-page-handler="UpdateStatus">
+                                                                <input type="hidden" name="orderId" value="@order.OrderId" />
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small text-muted">Current Status</label>
+                                                                    <select class="form-select" name="status">
+                                                                        @foreach (var status in Model.StatusOptions)
+                                                                        {
+                                                                            <option value="@status" selected="@(status == order.Status)">@status</option>
+                                                                        }
+                                                                    </select>
+                                                                </div>
+                                                                <div class="d-flex flex-wrap gap-2">
+                                                                    <button type="submit" class="btn btn-primary">Save Status</button>
+                                                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#@collapseId">Close</button>
+                                                                </div>
+                                                            </form>
+                                                            <hr />
+                                                            <div class="small text-muted">
+                                                                <div class="mb-1"><span class="fw-semibold">Updated:</span> @(order.UpdatedAt?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</div>
+                                                                <div><span class="fw-semibold">Promotion ID:</span> @(order.PromotionId?.ToString() ?? "N/A")</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,109 @@
+﻿@page "/promotions/delete"
+@using Admin.Blazor.Hubs
+@using BLL.DTOs.Promotion
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@rendermode InteractiveServer
+@inject IPromotionService PromotionService
+@inject NavigationManager NavigationManager
+@inject IHubContext<AdminHub> HubContext
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="modal-header">
+    <h5 class="modal-title fw-bold">Delete Promotion</h5>
+
+    <button type="button"
+            class="btn-close"
+            @onclick="OnCancel">
+    </button>
+</div>
+<div class="p-6">
+    <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+            <span class="material-symbols-outlined text-red-600">
+                Delete Promotion
+            </span>
+        </div>
+
+        <div>
+            <p class="font-medium">
+                Are you sure you want to delete this promotion?
+            </p>
+
+            <p class="text-sm text-gray-500 mt-2">
+                This action cannot be undone.
+            </p>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+
+    <button class="btn btn-secondary"
+            @onclick="OnCancel">
+        Cancel
+    </button>
+
+    <button class="btn btn-danger" @onclick="Delete">
+        Delete Promotion
+    </button>
+
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnDeleted { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    private string errorMessage = string.Empty;
+    [Parameter] public Guid promotionId { get; set; }
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SignalER
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<Guid>("PromotionDeleted", async (deletedId) =>
+        {
+            if (deletedId == promotionId)
+            {
+                await InvokeAsync(() => NavigationManager.NavigateTo("/promotions"));
+            }
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error connecting to hub: {ex.Message}";
+        }
+    }
+
+    private async Task Delete()
+    {
+        try
+        {
+            // Delete
+            await PromotionService.DeletePromotionAsync(promotionId);
+            //SignalR
+            await HubContext.Clients.All.SendAsync("PromotionDeleted", promotionId);
+            await HubContext.Clients.All.SendAsync("PromotionChanged");
+            // Close modal
+            await OnDeleted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+}

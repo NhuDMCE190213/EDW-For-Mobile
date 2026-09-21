@@ -1,0 +1,491 @@
+﻿@using System.Globalization
+@model StaffUser.Mvc.Models.HomeIndexViewModel
+@{
+    ViewData["Title"] = "Premium Electronic Store";
+    var activeCategory = Context.Request.Query["categoryId"].ToString();
+    var searchQuery = Context.Request.Query["q"].ToString();
+}
+
+<!-- Custom Styles for Home Page -->
+<link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+
+<div class="row">
+    <div class="col-12">
+        <!-- Hero Slideshow Banner -->
+        <div id="homeHeroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel" data-bs-interval="6000">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active hero-gradient-1">
+                    <div class="carousel-content px-5">
+                        <span class="badge bg-warning text-dark mb-2 fw-bold text-uppercase">Exclusive Launch</span>
+                        <h2>PocketPhone Pro</h2>
+                        <p>Power, beauty, and octa-core processor compiled in a stunning 6.7" bezel-less display. Starting at just $999.99.</p>
+                        <a href="#products-list" class="btn btn-hero">Explore Smartphones</a>
+                    </div>
+                </div>
+                <div class="carousel-item hero-gradient-2">
+                    <div class="carousel-content px-5">
+                        <span class="badge bg-light text-danger mb-2 fw-bold text-uppercase">Ultimate Performance</span>
+                        <h2>XtremeBook 16</h2>
+                        <p>Engineered for professionals. Powered by Intel i9, 32GB RAM, and 1TB SSD. Run your builds instantly.</p>
+                        <a href="#products-list" class="btn btn-hero btn-hero-red">View Laptops</a>
+                    </div>
+                </div>
+                <div class="carousel-item hero-gradient-3">
+                    <div class="carousel-content px-5">
+                        <span class="badge bg-info text-dark mb-2 fw-bold text-uppercase">Audiophile Grade</span>
+                        <h2>SoundBuds Pro</h2>
+                        <p>Wireless sound, active noise cancellation, and up to 30 hours of continuous premium music streaming.</p>
+                        <a href="#products-list" class="btn btn-hero">See Accessories</a>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic Category Cards -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h4 class="section-title">Shop By Categories</h4>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <a href="@Url.Action("Index", "Home")" class="category-card @(string.IsNullOrEmpty(activeCategory) ? "active" : "")">
+            <i class="bi bi-grid-fill"></i>
+            <h6>All Categories</h6>
+        </a>
+    </div>
+    @foreach (var cat in Model.Categories)
+    {
+        var icon = cat.Name.ToLower() switch
+        {
+            "smartphones" or "phones" => "bi-phone",
+            "laptops" => "bi-laptop",
+            "tablets" => "bi-tablet",
+            "accessories" => "bi-plug",
+            _ => "bi-tag"
+        };
+        <div class="col-6 col-md-3 mb-3">
+            <a href="@Url.Action("Index", "Home", new { categoryId = cat.Id })" class="category-card @(activeCategory == cat.Id.ToString() ? "active" : "")">
+                <i class="bi @icon"></i>
+                <h6>@cat.Name</h6>
+            </a>
+        </div>
+    }
+</div>
+
+<!-- Flash Sales / Active Coupons -->
+@if (Model.Promotions.Any())
+{
+    <div class="row mb-5">
+        <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+            <h4 class="section-title m-0">Flash Sale Vouchers</h4>
+            <span class="badge bg-danger text-uppercase px-3 py-2 fw-semibold"><i class="bi bi-lightning-charge-fill me-1"></i> Active Now</span>
+        </div>
+        @foreach (var promo in Model.Promotions.Take(3))
+        {
+            var discountType = promo.PromotionType == DAL.Enums.PromotionTypeEnum.Percentage ? $"{promo.Percentage}% OFF" : $"Fixed {promo.SalePrice:C} OFF";
+            var promoCode = $"NX-{promo.PromotionId.ToString().Substring(0, 5).ToUpper()}";
+            <div class="col-md-4 mb-3">
+                <div class="voucher-card">
+                    <span class="voucher-badge">Limited Time Offer</span>
+                    <h5 class="fw-bold text-dark mb-1">@discountType</h5>
+                    <p class="text-muted small mb-3">@promo.Name (Reserved stock limit applies)</p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        @if (promo.EndAt.HasValue)
+                        {
+                            var remaining = promo.EndAt.Value - DateTime.Now;
+                            var remainingText = remaining.TotalSeconds <= 0
+                            ? "Expired"
+                            : remaining.TotalDays >= 1
+                            ? $"Ends in {(int)remaining.TotalDays} day(s)"
+                            : remaining.TotalHours >= 1
+                            ? $"Ends in {(int)remaining.TotalHours}h {(remaining.Minutes)}m"
+                            : $"Ends in {(int)remaining.TotalMinutes}m";
+                            <span class="text-danger small fw-semibold"><i class="bi bi-clock-history"></i> @remainingText</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Featured Products Listing -->
+<div class="row mb-5" id="products-list">
+    <div class="col-12 d-flex justify-content-between align-items-end mb-4">
+        <div>
+            @if (!string.IsNullOrEmpty(searchQuery))
+            {
+                <h4 class="section-title m-0">Search Results for "@searchQuery"</h4>
+                <p class="text-muted m-0">Found @Model.Products.Count products matching your search.</p>
+            }
+            else if (!string.IsNullOrEmpty(activeCategory))
+            {
+                var catName = Model.Categories.FirstOrDefault(c => c.Id.ToString() == activeCategory)?.Name ?? "Category";
+                <h4 class="section-title m-0">@catName Products</h4>
+                <p class="text-muted m-0">Displaying products in category @catName.</p>
+            }
+            else
+            {
+                <h4 class="section-title m-0">Featured Products</h4>
+                <p class="text-muted m-0">Explore our best devices in ElectroNexus.</p>
+            }
+        </div>
+        @if (!string.IsNullOrEmpty(searchQuery) || !string.IsNullOrEmpty(activeCategory))
+        {
+            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                Reset Filters
+            </a>
+        }
+    </div>
+
+    @if (!Model.Products.Any())
+    {
+        <div class="col-12">
+            <div class="text-center py-5 bg-white border rounded shadow-sm">
+                <i class="bi bi-search-heart text-muted" style="font-size: 3rem; display: block; margin-bottom: 15px;"></i>
+                <h5 class="fw-bold text-dark">No Products Found</h5>
+                <p class="text-muted">Try using different keywords or check out other categories.</p>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-cps px-4 text-white border-0 py-2" style="background-color: var(--color-primary);">Back to All Products</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var prod in Model.Products)
+        {
+            var firstImage = !string.IsNullOrEmpty(prod.ImageUrl)
+            ? prod.ImageUrl.Split(';', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()
+            : null;
+            <div class="col-6 col-md-4 col-lg-3 mb-4">
+                <div class="product-grid-card">
+                    <div class="product-img-wrapper">
+                        @if (firstImage != null)
+                        {
+                            <img src="/@firstImage" class="product-img" alt="@prod.ProductName" />
+                        }
+                        else
+                        {
+                            <!-- Fallback premium inline SVG illustration of a phone/laptop -->
+                            <svg class="product-img text-muted" style="color: #dee2e6;" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="5" y="2" width="14" height="20" rx="2" />
+                                <circle cx="12" cy="18" r="1" />
+                            </svg>
+                        }
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-brand">@prod.Brand</span>
+                        <h6 class="product-title" title="@prod.ProductName">@prod.ProductName</h6>
+
+                        <!-- Specifications badges -->
+                        <div class="mb-2">
+                            @foreach (var spec in prod.Features.Take(3))
+                            {
+                                <span class="spec-badge">@spec</span>
+                            }
+                        </div>
+
+                        <div class="product-price-box">
+                            <div class="product-price-label">Price starting from</div>
+                            @if (prod.IsOnSale)
+                            {
+                                <div>
+                                    <span class="text-muted text-decoration-line-through small">
+                                        @prod.BasePrice.ToString("N0") đ
+                                    </span>
+                                    <div class="product-price text-danger fw-bold">
+                                        @prod.FinalPrice.ToString("N0") đ
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="product-price">@prod.BasePrice.ToString("N0") đ </div>
+                            }
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("Index", "Product", new { id = prod.ProductId })" class="btn btn-sm btn-outline-secondary w-50 py-1.5 fw-semibold" style="border-radius: 8px; font-size: 0.82rem;">
+                                Details
+                            </a>
+                            <a href="@Url.Action("Index", "Product", new { id = prod.ProductId })#reviews" class="btn btn-sm btn-outline-warning w-50 py-1.5 fw-semibold" style="border-radius: 8px; font-size: 0.82rem; border-color: #ffc107; color: #856404;">
+                                <i class="bi bi-chat-square-text me-1"></i> Review
+                            </a>
+                            <button class="btn btn-sm btn-danger w-50 py-1.5 fw-semibold text-white border-0" style="background-color: var(--color-primary); border-radius: 8px; font-size: 0.82rem;" onclick="openAddToCartModal('@prod.ProductId')">
+                                <i class="bi bi-cart-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<!-- Trust & Benefits Badges -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-3">
+        <div class="trust-badge-card">
+            <i class="bi bi-truck-flatbed text-success"></i>
+            <h6>Free Shipping</h6>
+            <p class="text-muted small m-0">Complimentary delivery for all order purchases above $500.00.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="trust-badge-card">
+            <i class="bi bi-shield-check text-primary"></i>
+            <h6>Safe & Secure Payments</h6>
+            <p class="text-muted small m-0">100% encrypted checkout process integrated with secure local payments.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="trust-badge-card">
+            <i class="bi bi-headset text-danger"></i>
+            <h6>24/7 Dedicated Support</h6>
+            <p class="text-muted small m-0">Expert assistance available directly via support tickets and chat lines.</p>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Product Quickview Modal -->
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-info-circle text-primary" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold text-dark mt-3" id="modalProductName">Product Details</h5>
+                <p class="text-muted mt-2">Product pages and variant selection details are currently being customized. Select variant and buy operations will be integrated soon!</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add To Cart Variant Selector Modal -->
+<div class="modal fade" id="addToCartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-dark m-0" id="cartModalTitle">Select Specs & Color</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-start">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div id="cartModalImgWrapper" style="width: 70px; height: 70px; border-radius: 8px; border: 1px solid #f1f3f5; display: flex; align-items: center; justify-content: center; background-color: #fafafa; padding: 4px;">
+                        <!-- dynamic img -->
+                    </div>
+                    <div>
+                        <span id="cartModalBrand" class="product-brand" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: #888888;">BRAND</span>
+                        <h6 id="cartModalProductName" class="fw-bold text-dark mb-1">Product Name</h6>
+                        <span id="cartModalPrice" class="fw-bold text-danger fs-5">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark">Available Variants:</label>
+                    <div id="variantsOptionsContainer">
+                        <!-- dynamic radio variants -->
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-semibold text-dark">Quantity:</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="qty-control" style="display: flex; align-items: center; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; width: 110px;">
+                            <button type="button" class="qty-btn" style="background-color: #f8f9fa; border: none; width: 32px; height: 32px; font-weight: bold;" onclick="adjustModalQty(-1)">-</button>
+                            <input type="number" id="modalQtyInput" value="1" min="1" max="99" style="width: 46px; height: 32px; text-align: center; border: none; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6; font-size: 0.9rem;" />
+                            <button type="button" class="qty-btn" style="background-color: #f8f9fa; border: none; width: 32px; height: 32px; font-weight: bold;" onclick="adjustModalQty(1)">+</button>
+                        </div>
+                        <span id="modalStockStatus" class="small text-muted">Stock: 0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                <button type="button" id="confirmAddToCartBtn" class="btn btn-danger px-4 py-2 text-white border-0" style="background-color: var(--color-primary); border-radius: 8px;" onclick="confirmAddToCart()">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentModalProductId = null;
+        let selectedVariantId = null;
+
+        function copyVoucher(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast("Voucher code '" + code + "' copied to clipboard!", "success", "Voucher Copied");
+            }).catch(err => {
+                console.error("Could not copy text: ", err);
+            });
+        }
+
+        function viewProductDetails(productId, productName) {
+            document.getElementById("modalProductName").innerText = productName;
+            var myModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+            myModal.show();
+        }
+
+        function subscribeNewsletter() {
+            showToast("Thank you for subscribing to our newsletter!", "success", "Newsletter");
+        }
+
+        function openAddToCartModal(productId) {
+            currentModalProductId = productId;
+            $("#variantsOptionsContainer").html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-danger" role="status"></div></div>');
+            $("#modalQtyInput").val(1);
+            $("#confirmAddToCartBtn").prop("disabled", true);
+
+            var myModal = new bootstrap.Modal(document.getElementById('addToCartModal'));
+            myModal.show();
+
+            $.ajax({
+                url: '@Url.Action("GetProductVariants", "Cart")',
+                type: 'GET',
+                data: { productId: productId },
+                success: function(response) {
+                    $("#cartModalProductName").text(response.productName);
+                    $("#cartModalBrand").text(response.brand);
+
+                    let variantsHtml = '';
+                    if (response.variants && response.variants.length > 0) {
+                        response.variants.forEach((v, index) => {
+                            let specs = [v.color];
+                            if (v.cpu) specs.push(v.cpu);
+                            if (v.ram) specs.push(v.ram + " RAM");
+                            if (v.storage) specs.push(v.storage);
+                            let specLabel = specs.join(" / ");
+
+                            let isDisabled = v.stockQuantity <= 0 ? 'disabled' : '';
+                            let badgeHtml = v.stockQuantity <= 0 ? '<span class="badge bg-secondary ms-2">Out of Stock</span>' : '';
+
+                            let priceHtml = v.isOnSale
+                                ? `<span class="text-muted text-decoration-line-through small me-1">${v.price.toLocaleString('vi-VN')} đ</span><span class="fw-bold text-danger">${v.finalPrice.toLocaleString('vi-VN')} đ</span>`
+                                : `<span class="fw-bold text-danger">${v.price.toLocaleString('vi-VN')} đ</span>`;
+
+                            variantsHtml += `
+                                <div class="form-check border rounded p-3 mb-2 cursor-pointer variant-option-row ${isDisabled ? 'bg-light text-muted' : ''}"
+                                     onclick="selectVariantRow('${v.productVariantId}', ${v.finalPrice}, ${v.stockQuantity}, '${v.imageUrl}')">
+                                    <input class="form-check-input ms-0 me-2 variant-radio" type="radio" name="variantRadio" id="var-${v.productVariantId}" value="${v.productVariantId}" ${isDisabled} />
+                                    <label class="form-check-label fw-semibold cursor-pointer" for="var-${v.productVariantId}">
+                                        ${specLabel} ${badgeHtml}
+                                    </label>
+                                    <span class="float-end">${priceHtml}</span>
+                                </div>
+                            `;
+                        });
+
+                        // Set image
+                        let firstImg = response.variants[0].imageUrl;
+                        if (!firstImg) {
+                            $("#cartModalImgWrapper").html('<svg class="text-muted" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2" /><circle cx="12" cy="18" r="1" /></svg>');
+                        } else {
+                            $("#cartModalImgWrapper").html(`<img src="/${firstImg}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />`);
+                        }
+
+                        // Select first available variant automatically
+                        setTimeout(() => {
+                            const firstAvailable = response.variants.find(v => v.stockQuantity > 0);
+                            if (firstAvailable) {
+                                selectVariantRow(firstAvailable.productVariantId, firstAvailable.price, firstAvailable.stockQuantity, firstAvailable.imageUrl);
+                            }
+                        }, 50);
+
+                    } else {
+                        variantsHtml = '<div class="text-center text-muted py-2">No variants available.</div>';
+                    }
+                    $("#variantsOptionsContainer").html(variantsHtml);
+                },
+                error: function() {
+                    $("#variantsOptionsContainer").html('<div class="text-center text-danger py-2">Error loading variants.</div>');
+                }
+            });
+        }
+
+        function selectVariantRow(variantId, price, stock, imageUrl) {
+            if (stock <= 0) return;
+            selectedVariantId = variantId;
+            $("#var-" + variantId).prop("checked", true);
+
+            // Highlight selected row borders
+            $(".variant-option-row").css("border-color", "#dee2e6");
+            $("#var-" + variantId).closest(".variant-option-row").css("border-color", "var(--color-primary)");
+
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+            $("#cartModalPrice").text(formatter.format(price));
+            $("#modalStockStatus").text("Stock: " + stock);
+            $("#modalQtyInput").attr("max", stock);
+            $("#confirmAddToCartBtn").prop("disabled", false);
+
+            if (imageUrl) {
+                $("#cartModalImgWrapper").html(`<img src="/${imageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />`);
+            }
+        }
+
+        function adjustModalQty(change) {
+            const input = $("#modalQtyInput");
+            let val = parseInt(input.val()) || 1;
+            let target = val + change;
+            const max = parseInt(input.attr("max")) || 99;
+
+            if (target < 1) target = 1;
+            if (target > max) {
+                showToast("Only " + max + " items are available in stock.", "info", "Stock Limit");
+                target = max;
+            }
+            input.val(target);
+        }
+
+        function confirmAddToCart() {
+            if (!selectedVariantId) return;
+            const qty = parseInt($("#modalQtyInput").val()) || 1;
+
+            $.ajax({
+                url: '@Url.Action("AddToCart", "Cart")',
+                type: 'POST',
+                data: { variantId: selectedVariantId, quantity: qty },
+                success: function(response) {
+                    if (response.success) {
+                        // Update cart count badge
+                        $("#cart-count").text(response.totalCount);
+
+                        // Close modal
+                        var myModal = bootstrap.Modal.getInstance(document.getElementById('addToCartModal'));
+                        myModal.hide();
+
+                        showToast(response.message, "success", "Cart Updated");
+                    } else {
+                        showToast(response.message, "error", "Add to Cart Failed");
+                    }
+                },
+                error: function() {
+                    showToast("Error communicating with cart.", "error", "Connection Error");
+                }
+            });
+        }
+    </script>
+}

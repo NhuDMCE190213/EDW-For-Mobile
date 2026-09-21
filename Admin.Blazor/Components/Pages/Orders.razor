@@ -1,0 +1,591 @@
+@page "/orders"
+@rendermode InteractiveServer
+@using BLL.DTOs.Order
+@using BLL.DTOs.Product
+@using BLL.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@inject IOrderService OrderService
+@inject IOrderItemService OrderItemService
+@inject IProductVariantService ProductVariantService
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Manage Orders - ElectroNexus Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Manage Orders</h2>
+            <p class="text-muted m-0">View, manage, and track customer orders in real-time.</p>
+        </div>
+        <div class="badge bg-danger px-3 py-2 fs-7" style="border-radius: 6px;">
+            Role: Administrator
+        </div>
+    </div>
+
+    <!-- Stats Quick Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #d70018 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Total Orders</h6>
+                    <h3 class="fw-bold text-dark m-0">@orders.Count</h3>
+                </div>
+                <div class="bg-danger-subtle text-danger rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #ffe3e3;">
+                    <i class="fs-4">📦</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #1b6ec2 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Pending Orders</h6>
+                    <h3 class="fw-bold text-dark m-0">@orders.Count(o => o.Status == "Pending")</h3>
+                </div>
+                <div class="bg-primary-subtle text-primary rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #e7f5ff;">
+                    <i class="fs-4">⏳</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #0ca678 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Total Revenue</h6>
+                    <h3 class="fw-bold text-dark m-0">$@(orders.Sum(o => o.TotalAmount).ToString("N0"))</h3>
+                </div>
+                <div class="bg-success-subtle text-success rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #e6fcf5;">
+                    <i class="fs-4">💰</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #f59f00 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Completed Orders</h6>
+                    <h3 class="fw-bold text-dark m-0">@orders.Count(o => o.Status == "Completed")</h3>
+                </div>
+                <div class="bg-warning-subtle text-warning rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #fff4e3;">
+                    <i class="fs-4">✅</i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #2b8a3e !important;">
+            <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #e03131 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- List Orders -->
+        <div class="col-lg-12">
+            <div class="admin-card p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <h5 class="fw-bold text-secondary m-0">Order List (@filteredOrders.Count)</h5>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <!-- Status Filter -->
+                        <select class="form-select admin-form-control py-1.5" style="width: 150px;" @bind="filterStatus">
+                            <option value="">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                        <!-- Customer ID Filter -->
+                        <input type="number" class="form-control admin-form-control py-1.5" style="width: 150px;" placeholder="Customer ID..." @bind="filterCustomerId" />
+                        
+                        <!-- Add New Order Button -->
+                        <button class="btn btn-cps d-flex align-items-center gap-2 py-1.5 px-3 fw-semibold shadow-sm text-white border-0" @onclick="OpenAddOrderModal" style="background-color: #d70018;">
+                            <span>+</span> Create Order
+                        </button>
+                    </div>
+                </div>
+
+                @if (isLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading order list...</p>
+                    </div>
+                }
+                else if (!filteredOrders.Any())
+                {
+                    <div class="text-center py-5 border rounded bg-light">
+                        <p class="text-muted m-0">No orders found.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Created Date</th>
+                                    <th style="width: 160px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in filteredOrders)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-secondary" style="font-family: monospace; font-size: 0.85rem;">@order.OrderId.ToString().Substring(0, 8)</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark px-2 py-1" style="font-size: 0.8rem;">ID: @order.CustomerId</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info px-2 py-1" style="font-size: 0.8rem;">@order.OrderItems.Count items</span>
+                                        </td>
+                                        <td class="fw-bold text-dark">@order.TotalAmount.ToString("N0") $</td>
+                                        <td>
+                                            <span class="badge @GetStatusBadgeClass(order.Status) px-2 py-1" style="font-size: 0.8rem;">@order.Status</span>
+                                        </td>
+                                        <td style="font-size: 0.85rem;">
+                                            @order.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <button class="btn btn-sm btn-outline-info me-2" @onclick="() => ViewOrder(order)" title="View Details">
+                                                View
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditOrder(order)" title="Edit">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(order.OrderId, order.OrderId.ToString().Substring(0, 8))" title="Delete">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal View Order Details -->
+@if (showViewModal && selectedOrder != null)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050; overflow-y: auto;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-dark text-white border-0 p-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold m-0">Order Details</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseViewModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Order ID:</p>
+                            <p class="fw-bold text-dark" style="font-family: monospace;">@selectedOrder.OrderId</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Status:</p>
+                            <span class="badge @GetStatusBadgeClass(selectedOrder.Status)">@selectedOrder.Status</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Customer ID:</p>
+                            <p class="fw-bold text-dark">@selectedOrder.CustomerId</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Promotion ID:</p>
+                            <p class="fw-bold text-dark">@(selectedOrder.PromotionId ?? 0)</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Created Date:</p>
+                            <p class="fw-bold text-dark">@selectedOrder.CreatedAt.ToString("dd MMM yyyy HH:mm:ss")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Updated Date:</p>
+                            <p class="fw-bold text-dark">@(selectedOrder.UpdatedAt?.ToString("dd MMM yyyy HH:mm:ss") ?? "N/A")</p>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h6 class="fw-bold text-dark mb-3">Order Items</h6>
+                    @if (selectedOrder.OrderItems.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Variant</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in selectedOrder.OrderItems)
+                                    {
+                                        <tr>
+                                            <td>@item.ProductName</td>
+                                            <td>@item.ProductVariantDetails</td>
+                                            <td class="text-center">@item.Quantity</td>
+                                            <td>$@item.PriceAtPurchase.ToString("N2")</td>
+                                            <td>$@item.Subtotal.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No items in this order.</p>
+                    }
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p class="text-muted mb-1" style="font-size: 0.85rem;">Total Amount:</p>
+                            <p class="fw-bold text-dark" style="font-size: 1.3rem;">$@selectedOrder.TotalAmount.ToString("N2")</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-end bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                    <button type="button" class="btn btn-secondary px-4 py-2 border" @onclick="CloseViewModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Create / Update Order Form -->
+@if (showOrderModal)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050; overflow-y: auto;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-dark text-white border-0 p-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold m-0">
+                        @(isEditingOrder ? "Update Order" : "Create New Order")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseOrderModal" aria-label="Close"></button>
+                </div>
+                <EditForm Model="@orderFormModel" OnValidSubmit="SaveOrder" FormName="CreateOrderForm">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="customerId">Customer ID <span class="text-danger">*</span></label>
+                                <InputNumber id="customerId" class="form-control admin-form-control" @bind-Value="orderFormModel.CustomerId" />
+                                <ValidationMessage For="@(() => orderFormModel.CustomerId)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="promotionId">Promotion ID</label>
+                                <InputNumber id="promotionId" class="form-control admin-form-control" @bind-Value="orderFormModel.PromotionId" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="status">Status <span class="text-danger">*</span></label>
+                                <InputSelect id="status" class="form-select admin-form-control" @bind-Value="orderFormModel.Status">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => orderFormModel.Status)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="totalAmount">Total Amount <span class="text-danger">*</span></label>
+                                <InputNumber id="totalAmount" class="form-control admin-form-control" @bind-Value="orderFormModel.TotalAmount" />
+                                <ValidationMessage For="@(() => orderFormModel.TotalAmount)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-3 justify-content-end bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                        <button type="button" class="btn btn-secondary px-4 py-2 border" @onclick="CloseOrderModal">Cancel</button>
+                        <button type="submit" class="btn btn-danger px-4 py-2 text-white border-0" style="background-color: #d70018;">
+                            @(isEditingOrder ? "Update Order" : "Create Order")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Delete Confirmation -->
+@if (showDeleteConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-danger text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Delete Order</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDeleteConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to delete order <strong>@orderToDeleteId</strong>?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">This action will soft-delete the order and all associated items.</p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseDeleteConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-danger px-4 py-2" @onclick="ExecuteDelete">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<OrderDto> orders = new();
+    private string filterStatus = "";
+    private int filterCustomerId = 0;
+    private bool isLoading = true;
+    private string successMessage = "";
+    private string errorMessage = "";
+
+    // Modal & Form states
+    private bool showOrderModal = false;
+    [SupplyParameterFromForm]
+    private OrderFormModel orderFormModel { get; set; } = new();
+    private bool isEditingOrder = false;
+    private Guid editingOrderId = Guid.Empty;
+
+    // View modal
+    private bool showViewModal = false;
+    private OrderDto? selectedOrder = null;
+
+    // Delete confirmation states
+    private bool showDeleteConfirmation = false;
+    private Guid orderToDeleteGuid = Guid.Empty;
+    private string orderToDeleteId = "";
+
+    public class OrderFormModel
+    {
+        public int CustomerId { get; set; }
+        public int? PromotionId { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; } = "Pending";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            orders = await OrderService.GetAllOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private List<OrderDto> filteredOrders
+    {
+        get
+        {
+            IEnumerable<OrderDto> result = orders;
+
+            if (filterCustomerId > 0)
+            {
+                result = result.Where(o => o.CustomerId == filterCustomerId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterStatus))
+            {
+                result = result.Where(o => o.Status == filterStatus);
+            }
+
+            return result.OrderByDescending(o => o.CreatedAt).ToList();
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning-subtle text-warning",
+            "Processing" => "bg-info-subtle text-info",
+            "Completed" => "bg-success-subtle text-success",
+            "Cancelled" => "bg-danger-subtle text-danger",
+            _ => "bg-secondary-subtle text-secondary"
+        };
+    }
+
+    private void OpenAddOrderModal()
+    {
+        ClearMessages();
+        isEditingOrder = false;
+        editingOrderId = Guid.Empty;
+        orderFormModel = new OrderFormModel();
+        showOrderModal = true;
+    }
+
+    private void CloseOrderModal()
+    {
+        showOrderModal = false;
+        isEditingOrder = false;
+        editingOrderId = Guid.Empty;
+        orderFormModel = new OrderFormModel();
+    }
+
+    private void ViewOrder(OrderDto order)
+    {
+        selectedOrder = order;
+        showViewModal = true;
+    }
+
+    private void CloseViewModal()
+    {
+        showViewModal = false;
+        selectedOrder = null;
+    }
+
+    private void EditOrder(OrderDto order)
+    {
+        ClearMessages();
+        isEditingOrder = true;
+        editingOrderId = order.OrderId;
+        orderFormModel = new OrderFormModel
+        {
+            CustomerId = order.CustomerId,
+            PromotionId = order.PromotionId,
+            TotalAmount = order.TotalAmount,
+            Status = order.Status
+        };
+        showOrderModal = true;
+    }
+
+    private async Task SaveOrder()
+    {
+        ClearMessages();
+
+        try
+        {
+            if (isEditingOrder)
+            {
+                var updateDto = new OrderUpdateDto
+                {
+                    OrderId = editingOrderId,
+                    PromotionId = orderFormModel.PromotionId,
+                    TotalAmount = orderFormModel.TotalAmount,
+                    Status = orderFormModel.Status
+                };
+                var result = await OrderService.UpdateOrderAsync(updateDto);
+                if (result)
+                {
+                    successMessage = "Order updated successfully!";
+                    CloseOrderModal();
+                    await LoadData();
+                }
+                else
+                {
+                    errorMessage = "Failed to update order.";
+                }
+            }
+            else
+            {
+                var createDto = new OrderCreateDto
+                {
+                    CustomerId = orderFormModel.CustomerId,
+                    PromotionId = orderFormModel.PromotionId,
+                    TotalAmount = orderFormModel.TotalAmount,
+                    Status = orderFormModel.Status,
+                    OrderItems = new()
+                };
+                var result = await OrderService.CreateOrderAsync(createDto);
+                if (result != null)
+                {
+                    successMessage = "Order created successfully!";
+                    CloseOrderModal();
+                    await LoadData();
+                }
+                else
+                {
+                    errorMessage = "Failed to create order.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void ConfirmDelete(Guid orderId, string orderIdDisplay)
+    {
+        orderToDeleteGuid = orderId;
+        orderToDeleteId = orderIdDisplay;
+        showDeleteConfirmation = true;
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        showDeleteConfirmation = false;
+        orderToDeleteGuid = Guid.Empty;
+        orderToDeleteId = "";
+    }
+
+    private async Task ExecuteDelete()
+    {
+        ClearMessages();
+        try
+        {
+            var result = await OrderService.DeleteOrderAsync(orderToDeleteGuid);
+            if (result)
+            {
+                successMessage = "Order deleted successfully!";
+                CloseDeleteConfirmation();
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Failed to delete order.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = "";
+        errorMessage = "";
+    }
+}

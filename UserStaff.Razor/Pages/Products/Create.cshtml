@@ -1,0 +1,30 @@
+﻿@page
+@model Staff.Razor.Pages.Products.CreateModel
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+}
+
+<h2>Thêm sản phẩm mới</h2>
+<form method="post">
+    <!-- Hiển thị lỗi tổng -->
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label>Product name</label>
+        <input asp-for="ProductToCreate.ProductName" class="form-control" />
+        <span asp-validation-for="ProductToCreate.ProductName" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label>Brand</label>
+        <input asp-for="ProductToCreate.Brand" class="form-control" />
+        <span asp-validation-for="ProductToCreate.Brand" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label>Category Id(temp)</label>
+        <input asp-for="ProductToCreate.CategoryId" class="form-control" />
+        <span asp-validation-for="ProductToCreate.CategoryId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+</form>

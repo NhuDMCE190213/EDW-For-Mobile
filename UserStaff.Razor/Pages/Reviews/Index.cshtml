@@ -1,0 +1,269 @@
+@page
+@model Staff.Razor.Pages.Reviews.IndexModel
+@{
+    ViewData["Title"] = "Review Management";
+}
+@Html.AntiForgeryToken()
+
+<style>
+    .ds-heading-accent {
+        border-left: 4px solid #E24B4A;
+        padding-left: 12px;
+    }
+
+    .btn-ds-primary {
+        background-color: #E24B4A;
+        border: none;
+        color: #FFFFFF;
+        border-radius: 8px;
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+
+        .btn-ds-primary:hover,
+        .btn-ds-primary:focus {
+            background-color: #A32D2D;
+            color: #FFFFFF;
+        }
+
+    .btn-ds-secondary {
+        background-color: #FFFFFF;
+        border: 1px solid #E24B4A;
+        color: #A32D2D;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+        .btn-ds-secondary:hover {
+            background-color: #FCEBEB;
+            color: #A32D2D;
+        }
+
+    .btn-ds-neutral {
+        background-color: var(--color-background-secondary, #F0F0F0);
+        border: none;
+        color: var(--color-text-secondary, #555555);
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    .ds-card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .ds-action-btn {
+        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .badge-pill-ds {
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-weight: 500;
+        font-size: 12px;
+    }
+
+    .badge-flagged {
+        background-color: #FCEBEB;
+        color: #791F1F;
+    }
+
+    .badge-normal {
+        background-color: #EAF3DE;
+        color: #27500A;
+    }
+
+    .badge-rating {
+        background-color: #FFF3CD;
+        color: #856404;
+    }
+
+    .table-ds thead th {
+        font-weight: 500;
+        font-size: 12px;
+        color: var(--color-text-secondary, #888888);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .table-ds tbody td {
+        font-size: 13px;
+    }
+
+    .modal-content-ds {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .star-rating {
+        color: #FFD700;
+        font-size: 14px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0 fw-medium ds-heading-accent">Review List</h2>
+    @if (Model.ProductId > 0)
+    {
+        <a asp-page="/Products/Index" class="btn btn-sm btn-ds-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Products
+        </a>
+    }
+</div>
+
+<div class="card ds-card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-borderless table-ds align-middle mb-0">
+                <thead class="border-bottom">
+                    <tr>
+                        <th class="py-3 px-4">User</th>
+                        <th>Product</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Reviews.Count == 0)
+                    {
+                        <tr><td colspan="6" class="text-center py-4 text-muted">No review data yet.</td></tr>
+                    }
+                    @foreach (var review in Model.Reviews)
+                    {
+                        <tr class="border-bottom">
+                            <td class="px-4">
+                                <div class="fw-medium text-dark">@review.CustomerName</div>
+                                <div class="text-muted small">ID: @review.CustomerId</div>
+                            </td>
+                            <td>
+                                <div class="fw-medium text-dark">@review.ProductName</div>
+                                <div class="text-muted small">ID: @review.ProductId</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge badge-pill-ds badge-rating">
+                                    @for (int i = 1; i <= review.Rating; i++)
+                                    {
+                                        <i class="bi bi-star-fill star-rating"></i>
+                                    }
+                                    @for (int i = review.Rating + 1; i <= 5; i++)
+                                    {
+                                        <i class="bi bi-star text-muted"></i>
+                                    }
+                                    @review.Rating/5
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 300px;" title="@review.Comment">
+                                    @review.Comment
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @if (review.IsFlagged)
+                                {
+                                    <span class="badge badge-pill-ds badge-flagged">Flagged</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-pill-ds badge-normal">Normal</span>
+                                }
+                            </td>
+                            <td class="text-end px-4">
+                                @if (!review.IsFlagged)
+                                {
+                                    <button type="button" class="btn btn-outline-warning btn-sm ds-action-btn btn-flag"
+                                            data-id="@review.Id"
+                                            data-customer="@review.CustomerName"
+                                            title="Flag as spam">
+                                        <i class="bi bi-flag"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- FLAG CONFIRMATION MODAL -->
+<div class="modal fade" id="flagModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-ds shadow">
+            <div class="modal-header bg-light border-bottom-0 py-3">
+                <h5 class="modal-title fw-medium text-dark"><i class="bi bi-flag-fill text-warning me-2"></i>Flag Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-exclamation-triangle text-warning display-4 mb-3 d-block"></i>
+                <p class="fs-5 mb-1 fw-medium">Are you sure you want to flag this review as spam?</p>
+                <p class="text-muted small">Customer: <b id="lblFlagCustomer" class="text-warning"></b></p>
+                <p class="text-muted small mb-0 text-decoration-underline">Note:</p>
+                <span class="text-secondary small d-block">Flagged reviews will be hidden from product display.</span>
+            </div>
+            <div class="modal-footer bg-light border-top-0 d-flex justify-content-center gap-2 py-3">
+                <button type="button" class="btn-ds-neutral px-4 py-2 animate-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnConfirmFlag" class="btn-ds-primary px-4 py-2" style="background-color: #FFC107; border-color: #FFC107;">
+                    <i class="bi bi-flag-fill me-1"></i>Flag Review
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Flag review handler
+        let flagId = 0;
+        $(document).on('click', '.btn-flag', function () {
+            flagId = $(this).data('id');
+            $('#lblFlagCustomer').text($(this).data('customer'));
+            $('#flagModal').modal('show');
+        });
+
+        $('#btnConfirmFlag').on('click', function () {
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '?handler=Flag',
+                type: 'POST',
+                data: { id: flagId, __RequestVerificationToken: token },
+                success: function (response) {
+                    $('#flagModal').modal('hide');
+                    if (response.success) {
+                        showToast('success', response.message);
+                        setTimeout(function () { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                },
+                error: function () {
+                    $('#flagModal').modal('hide');
+                    showToast('error', 'An error occurred while flagging the review.');
+                }
+            });
+        });
+
+        function showToast(type, message) {
+            const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+            const toastHtml = `
+                <div class="toast align-items-center text-white ${toastClass} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>`;
+            $('.toast-container').remove();
+            $('body').append('<div class="toast-container position-fixed top-0 end-0 p-3"></div>');
+            $('.toast-container').append(toastHtml);
+            $('.toast').toast({ delay: 3000 }).toast('show');
+        }
+    </script>
+}

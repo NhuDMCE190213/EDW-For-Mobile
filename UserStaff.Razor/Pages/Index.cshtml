@@ -1,0 +1,101 @@
+﻿@page
+@using System.Globalization
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="mb-4">
+    <h4 class="fw-bold text-dark m-0">Welcome back, @User.Identity?.Name</h4>
+    <p class="text-muted m-0">Here is what's happening in the store today.</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #E24B4A !important;">
+            <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .72rem; letter-spacing: .5px;">Products</h6>
+            <h3 class="fw-bold text-dark m-0">@Model.TotalProducts</h3>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #f59f00 !important;">
+            <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .72rem; letter-spacing: .5px;">Pending Orders</h6>
+            <h3 class="fw-bold text-dark m-0">@Model.PendingOrders</h3>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #0ca678 !important;">
+            <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .72rem; letter-spacing: .5px;">Completed Revenue</h6>
+            <h3 class="fw-bold text-dark m-0">@Model.TotalRevenue.ToString("C0", new CultureInfo("vi-VN"))</h3>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #1b6ec2 !important;">
+            <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .72rem; letter-spacing: .5px;">Flagged Reviews</h6>
+            <h3 class="fw-bold text-dark m-0">@Model.FlaggedReviews <span class="fs-6 text-muted fw-normal">/ @Model.TotalReviews</span></h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Recent orders -->
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark m-0">Recent Orders</h5>
+            <a asp-page="/Orders/Index" class="btn btn-sm btn-outline-secondary">View all</a>
+        </div>
+        @if (!Model.RecentOrders.Any())
+        {
+            <p class="text-muted">No orders yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <tr>
+                                <td class="small">@order.OrderId.ToString().Substring(0, 8)</td>
+                                <td>#@order.CustomerId</td>
+                                <td class="fw-semibold">@order.TotalAmount.ToString("C0", new CultureInfo("vi-VN"))</td>
+                                <td><span class="badge @Model.GetStatusBadgeClass(order.Status)">@order.Status</span></td>
+                                <td class="small text-muted">@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <!-- Quick links -->
+    <div class="col-lg-4">
+        <h5 class="fw-bold text-dark mb-3">Quick Actions</h5>
+        <div class="list-group">
+            <a asp-page="/Products/Index" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                <i class="bi bi-phone-fill text-danger"></i> Manage Products
+            </a>
+            <a asp-page="/Orders/Index" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                <i class="bi bi-cart-check-fill text-danger"></i> Process Orders
+            </a>
+            <a asp-page="/Reviews/Index" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                <i class="bi bi-chat-square-text-fill text-danger"></i> Review Moderation
+                @if (Model.FlaggedReviews > 0)
+                {
+                    <span class="badge bg-danger ms-auto">@Model.FlaggedReviews</span>
+                }
+            </a>
+        </div>
+    </div>
+</div>

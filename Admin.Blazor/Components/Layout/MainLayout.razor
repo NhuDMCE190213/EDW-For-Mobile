@@ -1,0 +1,224 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-flex justify-content-between align-items-center w-100 border-bottom border-light bg-white shadow-sm" style="height: 3.5rem;">
+            <div class="d-flex align-items-center gap-3">
+                <h5 class="m-0 fw-semibold text-dark d-none d-sm-block fs-6" style="letter-spacing: -0.2px;">Electronic Commerce Control Center</h5>
+                <span class="badge bg-success-subtle border d-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill" style="font-size: 0.75rem; background-color: #e6fcf5 !important; border-color: #c3fae8 !important; color: #0ca678 !important; font-weight: 600;">
+                    <span class="d-inline-block bg-success rounded-circle pulse-dot" style="width: 6px; height: 6px; background-color: #0ca678 !important;"></span>
+                    Admin Active
+                </span>
+            </div>
+
+            <div class="custom-account-dropdown">
+                <CascadingAuthenticationState>
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="account-icon-circle"></div>
+
+                            <ul class="account-menu-list shadow">
+                                <li class="menu-user-greeting">
+                                    Hi, @context.User.Identity?.Name
+                                </li>
+                                <li>
+                                    <a class="menu-link-item" href="profile">
+                                        <span class="menu-icon icon-profile"></span> Edit Profile
+                                    </a>
+                                </li>
+                                <li class="menu-divider"></li>
+                                <li>
+                                    <a class="menu-link-item text-danger" href="/auth/logout">
+                                        <span class="menu-icon icon-logout"></span> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </Authorized>
+                        <NotAuthorized>
+                            <a href="/auth/login" class="manual-login-btn">Login</a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </CascadingAuthenticationState>
+            </div>
+        </div>
+
+        <article class="content px-4 py-3">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<style>
+    /* Khung bọc cụm tài khoản góc phải */
+    .custom-account-dropdown {
+        position: relative;
+        display: inline-block;
+        padding: 0.5rem 0;
+        cursor: pointer;
+        z-index: 9999;
+    }
+
+    /* Tạo nút hình tròn chứa icon người bằng mã SVG thủ công giống navmenu */
+    .account-icon-circle {
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 50%;
+        background: #f1f3f5 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23495057' class='bi bi-person-circle' viewBox='0 0 16 16'%3E%3Cpath d='M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/%3E%3Cpath fill-rule='evenodd' d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z'/%3E%3C/svg%3E") no-repeat center/1.35rem;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    /* Hiệu ứng tương tác nhẹ khi di chuột vào vòng tròn */
+    .custom-account-dropdown:hover .account-icon-circle {
+        background-color: #e9ecef;
+        transform: scale(1.05);
+    }
+
+    /* Bảng danh sách menu đổ xuống (Mặc định ẩn) */
+    .account-menu-list {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        min-width: 180px;
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin: 0;
+        list-style: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        display: none;
+        opacity: 0;
+        transform: translateY(-5px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    /* BÍ QUYẾT: Tự động hiển thị danh sách khi rê chuột vào khu vực cụm tài khoản */
+    .custom-account-dropdown:hover .account-menu-list {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Dòng thiệp chúc mừng / hiển thị tên User */
+    .menu-user-greeting {
+        padding: 0.5rem 0.75rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #212529;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Định dạng chung cho các hàng liên kết chức năng */
+    .menu-link-item {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important; /* Căn đều text và icon về bên trái */
+        width: 100%;
+        padding: 0.45rem 0.75rem !important;
+        margin-left: 0 !important; /* KHẮC PHỤC TRIỆT ĐỂ: Ép bỏ lề 1.5rem từ file .css */
+        font-size: 0.88rem;
+        color: #495057 !important;
+        text-decoration: none !important;
+        border-radius: 6px;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+        .menu-link-item:hover {
+            background-color: #f8f9fa !important;
+            color: #d70018 !important; /* Đổi màu chữ sang đỏ thương hiệu khi hover */
+            text-decoration: none !important; /* Chặn gạch chân của hệ thống */
+        }
+
+        .menu-link-item.text-danger:hover {
+            background-color: #fff5f5 !important;
+            color: #e03131 !important;
+        }
+
+    /* Đường kẻ phân chia */
+    .menu-divider {
+        height: 1px;
+        background-color: #e9ecef;
+        margin: 0.4rem 0;
+    }
+
+    /* Khai báo khung icon dùng mã SVG độc lập bên trong menu */
+    .menu-icon {
+        display: inline-block;
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-right: 0.5rem;
+        background-size: cover;
+    }
+
+    /* Icon vẽ thủ công cho mục Edit Profile */
+    .icon-profile {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' class='bi bi-person-vcard' viewBox='0 0 16 16'%3E%3Cpath d='M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm4-2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5ZM9.5 8a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4ZM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2ZM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Z'/%3E%3C/svg%3E");
+    }
+
+    .menu-link-item:hover .icon-profile {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23d70018' class='bi bi-person-vcard' viewBox='0 0 16 16'%3E%3Cpath d='M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm4-2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5ZM9.5 8a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4ZM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2ZM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Z'/%3E%3C/svg%3E");
+    }
+
+    /* Icon vẽ thủ công cho mục Logout */
+    .icon-logout {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23fa5252' class='bi bi-box-arrow-right' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M10.146 4.646a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L12.793 8l-2.647-2.646a.5.5 0 0 1 0-.708z'/%3E%3Cpath fill-rule='evenodd' d='M2 13.5A1.5 1.5 0 0 0 3.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 10.5 1h-7A1.5 1.5 0 0 0 2 2.5v11zM3.5 2a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5h-7z'/%3E%3C/svg%3E");
+    }
+
+    /* Nút đăng nhập thủ công khớp với nút trên ảnh */
+    .manual-login-btn {
+        display: inline-block;
+        background-color: #d70018;
+        color: white;
+        padding: 0.35rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+
+        .manual-login-btn:hover {
+            background-color: #b50012;
+            color: white;
+        }
+
+    /* Hiệu ứng nhấp nháy cho dấu chấm Active */
+    .pulse-dot {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.15);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(0.95);
+            opacity: 1;
+        }
+    }
+</style>

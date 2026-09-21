@@ -1,0 +1,80 @@
+@using System.Globalization
+@model BLL.DTOs.Order.OrderCheckoutResultDto
+@{
+    ViewData["Title"] = "Order Created";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-2">Order created successfully</h2>
+                        <p class="text-muted mb-0">Your cart items have been transferred into a pending order.</p>
+                    </div>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border px-3 py-2">Payment: @Model.PaymentStatus</span>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <div class="text-muted small">Order ID</div>
+                            <div class="fw-semibold text-break">@Model.Order.OrderId</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <div class="text-muted small">Subtotal</div>
+                            <div class="fw-semibold">@Model.Subtotal.ToString("C", new CultureInfo("vi-VN"))</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <div class="text-muted small">Shipping</div>
+                            <div class="fw-semibold">@Model.Shipping.ToString("C", new CultureInfo("vi-VN"))</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <div class="text-muted small">Total</div>
+                            <div class="fw-bold text-danger fs-5">@Model.Total.ToString("C", new CultureInfo("vi-VN"))</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Order.OrderItems)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.ProductName</div>
+                                        <div class="text-muted small">@item.ProductVariantDetails</div>
+                                    </td>
+                                    <td class="text-end">@item.Quantity</td>
+                                    <td class="text-end">@item.PriceAtPurchase.ToString("C", new CultureInfo("vi-VN"))</td>
+                                    <td class="text-end">@((item.PriceAtPurchase * item.Quantity).ToString("C", new CultureInfo("vi-VN")))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Cart")">Back to cart</a>
+                    <a class="btn btn-danger text-white" href="@Url.Action("Index", "Orders")">View orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,705 @@
+@page "/products"
+@rendermode InteractiveServer
+@using BLL.DTOs.Category
+@using BLL.DTOs.Product
+@using BLL.DTOs.Product.Staff
+@using BLL.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.SignalR.IHubContext<Admin.Blazor.Hubs.AdminHub> HubContext
+@implements IAsyncDisposable
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Manage Products - ElectroNexus Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Manage Products</h2>
+            <p class="text-muted m-0">Create, view, edit details, and delete phones, laptops, and other electronic devices.</p>
+        </div>
+    </div>
+
+    <!-- Stats Quick Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #d70018 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Total Products</h6>
+                    <h3 class="fw-bold text-dark m-0">@products.Count</h3>
+                </div>
+                <div class="bg-danger-subtle text-danger rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #ffe3e3;">
+                    <i class="fs-4">📱</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #1b6ec2 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Unique Brands</h6>
+                    <h3 class="fw-bold text-dark m-0">@uniqueBrandsCount</h3>
+                </div>
+                <div class="bg-primary-subtle text-primary rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #e7f5ff;">
+                    <i class="fs-4">🏷️</i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #0ca678 !important;">
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Active Categories</h6>
+                    <h3 class="fw-bold text-dark m-0">@categories.Count</h3>
+                </div>
+                <div class="bg-success-subtle text-success rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: #e6fcf5;">
+                    <i class="fs-4">📂</i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #2b8a3e !important;">
+            <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #e03131 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- List Products (Full width) -->
+        <div class="col-lg-12">
+            <div class="admin-card p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <h5 class="fw-bold text-secondary m-0">Product List (@filteredProducts.Count)</h5>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <!-- Category Filter -->
+                        <select class="form-select admin-form-control py-1.5" style="width: 170px;" @bind="filterCategoryId">
+                            <option value="0">All Categories</option>
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.Id">@cat.Name</option>
+                            }
+                        </select>
+                        <!-- Search Box -->
+                        <input type="text" class="form-control admin-form-control py-1.5" style="width: 220px;" placeholder="Search products..." @bind="searchKeyword" @bind:event="oninput" />
+                        
+                        <!-- Add New Product Button -->
+                        <button class="btn btn-cps d-flex align-items-center gap-2 py-1.5 px-3 fw-semibold shadow-sm text-white border-0" @onclick="OpenAddProductModal" style="background-color: #d70018;">
+                            <span>+</span> Add Product
+                        </button>
+                    </div>
+                </div>
+
+                @if (isLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading product list...</p>
+                    </div>
+                }
+                else if (!filteredProducts.Any())
+                {
+                    <div class="text-center py-5 border rounded bg-light">
+                        <p class="text-muted m-0">No products found.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">ID</th>
+                                    <th>Product info</th>
+                                    <th>Brand</th>
+                                    <th>Category</th>
+                                    <th style="width: 140px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in filteredProducts)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-secondary">#@product.ProductId</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="d-flex gap-1 flex-wrap" style="max-width: 90px;">
+                                                    @if (productImages(product.ImageUrl).Any())
+                                                    {
+                                                        @foreach (var img in productImages(product.ImageUrl))
+                                                        {
+                                                            <img src="/@img" alt="product thumbnail" class="rounded border shadow-sm" style="width: 38px; height: 38px; object-fit: cover;" />
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="rounded border bg-light d-flex align-items-center justify-content-center text-muted shadow-sm" style="width: 38px; height: 38px; font-size: 0.65rem;">
+                                                            No Image
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">@product.ProductName</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 0.75rem; font-weight: 500;">@product.Brand</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1" style="font-size: 0.75rem; font-weight: 550; background-color: #fff5f5; border: 1px solid #ffe3e3;">
+                                                @(!string.IsNullOrEmpty(product.CategoryName) ? product.CategoryName : "Uncategorized")
+                                            </span>
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditProduct(product)" title="Edit">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(product.ProductId, product.ProductName)" title="Delete">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Create / Update Product Form -->
+@if (showProductModal)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050; overflow-y: auto;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-dark text-white border-0 p-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold m-0">
+                        @(isEditing ? "Update Product" : "Create New Product")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseProductModal" aria-label="Close"></button>
+                </div>
+                <EditForm Model="@formModel" OnValidSubmit="SaveProduct" FormName="CreateProductForm">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body p-4">
+                        @if (!categories.Any())
+                        {
+                            <div class="alert alert-warning border-0 shadow-sm mb-3">
+                                <i class="bi bi-info-circle me-1"></i> You need to <a href="categories" class="fw-bold text-danger">create a category first</a> before adding products.
+                            </div>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="productName">Product Name <span class="text-danger">*</span></label>
+                                <InputText id="productName" class="form-control admin-form-control" placeholder="e.g., iPhone 15 Pro Max" @bind-Value="formModel.ProductName" />
+                                <ValidationMessage For="@(() => formModel.ProductName)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="productBrand">Brand <span class="text-danger">*</span></label>
+                                <InputText id="productBrand" class="form-control admin-form-control" placeholder="e.g., Apple, Samsung" @bind-Value="formModel.Brand" />
+                                <ValidationMessage For="@(() => formModel.Brand)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="admin-form-label fw-semibold mb-1" for="productCategory">Category <span class="text-danger">*</span></label>
+                                <InputSelect id="productCategory" class="form-select admin-form-control" @bind-Value="formModel.CategoryId">
+                                    <option value="0">-- Select Category --</option>
+                                    @foreach (var cat in categories)
+                                    {
+                                        <option value="@cat.Id">@cat.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => formModel.CategoryId)" class="text-danger" style="font-size: 0.8rem;" />
+                            </div>
+
+
+
+                            <div class="col-12">
+                                <label class="admin-form-label fw-semibold mb-1">Upload Images (Up to 4 images)</label>
+                                <InputFile OnChange="LoadFiles" class="form-control admin-form-control" accept="image/*" multiple disabled="@(uploadedFiles.Count >= 4)" />
+                                <div class="text-muted small mt-1">You can select multiple files at once. (Total files limit: 4)</div>
+
+                                @if (uploadedFiles.Any())
+                                {
+                                    <div class="d-flex flex-wrap gap-3 mt-3">
+                                        @foreach (var item in uploadedFiles)
+                                        {
+                                            var localItem = item;
+                                            <div class="position-relative border rounded p-2 bg-light text-center shadow-sm" style="width: 110px;">
+                                                <img src="@(localItem.PreviewUrl ?? ("/" + localItem.SavedPath))" class="img-thumbnail" style="width: 90px; height: 90px; object-fit: contain;" alt="preview" />
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; padding: 0; line-height: 1;" @onclick="() => RemoveFile(localItem)">&times;</button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-3 justify-content-end bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                        <button type="button" class="btn btn-secondary px-4 py-2 border" @onclick="CloseProductModal">Cancel</button>
+                        <button type="submit" class="btn btn-danger px-4 py-2 text-white border-0" style="background-color: #d70018;" disabled="@(!categories.Any())">
+                            @(isEditing ? "Update Product" : "Add Product")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Delete Confirmation -->
+@if (showDeleteConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-danger text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Delete Product</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDeleteConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to delete product <strong>@productToDeleteName</strong>?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">This action will soft-delete the product. Associated variants will also be hidden.</p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseDeleteConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-danger px-4 py-2" @onclick="ExecuteDelete">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ProductStaffDto> products = new();
+    private List<CategoryDto> categories = new();
+    private string searchKeyword = "";
+    private int filterCategoryId = 0;
+    private bool isLoading = true;
+    private string successMessage = "";
+    private string errorMessage = "";
+    private HubConnection? hubConnection;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    // Modal & Form states
+    private bool showProductModal = false;
+    [SupplyParameterFromForm]
+    private ProductFormModel formModel { get; set; } = new();
+    private bool isEditing = false;
+    private int editingProductId = 0;
+
+    // Delete confirmation states
+    private bool showDeleteConfirmation = false;
+    private int productToDeleteId = 0;
+    private string productToDeleteName = "";
+
+    // Uploaded files list supporting up to 4 images
+    private List<UploadFileDto> uploadedFiles = new();
+
+    public class UploadFileDto
+    {
+        public IBrowserFile? File { get; set; }
+        public string? PreviewUrl { get; set; }
+        public string? SavedPath { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On("ProductChanged", async () =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadData();
+                StateHasChanged();
+            });
+        });
+
+        hubConnection.On("CategoryChanged", async () =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadData();
+                StateHasChanged();
+            });
+        });
+
+        // await hubConnection.StartAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                if (hubConnection is not null && hubConnection.State == HubConnectionState.Disconnected)
+                {
+                    // Chỉ chạy khi giao diện đã render hoàn toàn trên Trình duyệt (Client)
+                    await hubConnection.StartAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Can't connect to Realtime Hub: {ex.Message}";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            await LoadDataInternal();
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private async Task LoadDataInternal()
+    {
+        isLoading = true;
+        try
+        {
+            categories = await CategoryService.GetAllCategoriesAsync();
+            products = await ProductService.GetAllProductsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private int uniqueBrandsCount => products.Select(p => p.Brand).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+
+    private List<ProductStaffDto> filteredProducts
+    {
+        get
+        {
+            IEnumerable<ProductStaffDto> result = products;
+            if (filterCategoryId > 0)
+            {
+                result = result.Where(p => p.CategoryId == filterCategoryId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchKeyword))
+            {
+                result = result.Where(p => 
+                    p.ProductName.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) || 
+                    p.Brand.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            return result.ToList();
+        }
+    }
+
+    private List<string> productImages(string? imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl))
+            return new List<string>();
+        return imageUrl.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(4);
+        foreach (var file in files)
+        {
+            if (uploadedFiles.Count >= 4)
+            {
+                errorMessage = "You can only upload up to 4 images per product.";
+                break;
+            }
+
+            try
+            {
+                var format = "image/png";
+                var resizedImageFile = await file.RequestImageFileAsync(format, 300, 300);
+                var buffer = new byte[resizedImageFile.Size];
+                using (var stream = resizedImageFile.OpenReadStream())
+                {
+                    await stream.ReadAsync(buffer);
+                }
+                var previewUrl = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+                
+                uploadedFiles.Add(new UploadFileDto 
+                { 
+                    File = file, 
+                    PreviewUrl = previewUrl 
+                });
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error previewing image: {ex.Message}";
+            }
+        }
+    }
+
+    private void RemoveFile(UploadFileDto item)
+    {
+        uploadedFiles.Remove(item);
+    }
+
+    private void OpenAddProductModal()
+    {
+        ClearMessages();
+        isEditing = false;
+        editingProductId = 0;
+        formModel = new ProductFormModel();
+        uploadedFiles.Clear();
+        showProductModal = true;
+    }
+
+    private void CloseProductModal()
+    {
+        showProductModal = false;
+        isEditing = false;
+        editingProductId = 0;
+        formModel = new ProductFormModel();
+        uploadedFiles.Clear();
+    }
+
+    private void EditProduct(ProductStaffDto product)
+    {
+        ClearMessages();
+        uploadedFiles.Clear();
+        
+        if (!string.IsNullOrEmpty(product.ImageUrl))
+        {
+            var paths = product.ImageUrl.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var path in paths)
+            {
+                uploadedFiles.Add(new UploadFileDto { SavedPath = path });
+            }
+        }
+
+        isEditing = true;
+        editingProductId = product.ProductId;
+        formModel = new ProductFormModel
+        {
+            ProductName = product.ProductName,
+            Brand = product.Brand,
+            CategoryId = product.CategoryId,
+            ImageUrl = product.ImageUrl
+        };
+        showProductModal = true;
+    }
+
+    private async Task SaveProduct()
+    {
+        ClearMessages();
+        if (formModel.CategoryId <= 0)
+        {
+            errorMessage = "Please select a valid category.";
+            return;
+        }
+
+        await _semaphore.WaitAsync();
+        try
+        {
+            List<string> imagePaths = new();
+
+            foreach (var item in uploadedFiles)
+            {
+                if (!string.IsNullOrEmpty(item.SavedPath))
+                {
+                    imagePaths.Add(item.SavedPath);
+                }
+                else if (item.File != null)
+                {
+                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(item.File.Name);
+                    
+                    var sharedUploads = Path.GetFullPath(Path.Combine(Environment.ContentRootPath, "..", "shared-uploads"));
+                    if (!Directory.Exists(sharedUploads))
+                    {
+                        Directory.CreateDirectory(sharedUploads);
+                    }
+                    var filePath = Path.Combine(sharedUploads, uniqueFileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await item.File.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024).CopyToAsync(fileStream);
+                    }
+
+                    imagePaths.Add("uploads/" + uniqueFileName);
+                }
+            }
+
+            string? finalImageUrl = imagePaths.Any() ? string.Join(";", imagePaths) : null;
+
+            if (isEditing)
+            {
+                var updateDto = new ProductStaffUpdateDto
+                {
+                    ProductId = editingProductId,
+                    ProductName = formModel.ProductName,
+                    Brand = formModel.Brand,
+                    CategoryId = formModel.CategoryId,
+                    ImageUrl = finalImageUrl
+                };
+                var result = await ProductService.UpdateProductAsync(updateDto);
+                if (result)
+                {
+                    successMessage = $"Product '{formModel.ProductName}' updated successfully!";
+                    CloseProductModal();
+                    if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+                    {
+                        await hubConnection.SendAsync("BroadcastProductChanged");
+                    }
+                }
+                else
+                {
+                    errorMessage = "Failed to update product.";
+                }
+            }
+            else
+            {
+                var createDto = new ProductStaffCreateDto
+                {
+                    ProductName = formModel.ProductName,
+                    Brand = formModel.Brand,
+                    CategoryId = formModel.CategoryId,
+                    ImageUrl = finalImageUrl
+                };
+                var created = await ProductService.CreateProductAsync(createDto);
+                if (created != null)
+                {
+                    successMessage = $"Product '{created.ProductName}' added successfully!";
+                    CloseProductModal();
+                    if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+                    {
+                        await hubConnection.SendAsync("BroadcastProductChanged");
+                    }
+                }
+                else
+                {
+                    errorMessage = "Failed to add product.";
+                }
+            }
+            await LoadDataInternal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"System error: {ex.Message}";
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private void ConfirmDelete(int id, string name)
+    {
+        ClearMessages();
+        productToDeleteId = id;
+        productToDeleteName = name;
+        showDeleteConfirmation = true;
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        showDeleteConfirmation = false;
+        productToDeleteId = 0;
+        productToDeleteName = "";
+    }
+
+    private async Task ExecuteDelete()
+    {
+        var id = productToDeleteId;
+        var name = productToDeleteName;
+        CloseDeleteConfirmation();
+
+        await _semaphore.WaitAsync();
+        try
+        {
+            var deleteDto = new ProductStaffDeleteDto { ProductId = id };
+            var result = await ProductService.DeleteProductAsync(deleteDto);
+            if (result)
+            {
+                successMessage = $"Product '{name}' deleted successfully!";
+                if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+                {
+                    await hubConnection.SendAsync("BroadcastProductChanged");
+                }
+                await LoadDataInternal();
+            }
+            else
+            {
+                errorMessage = "Failed to delete product.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting product: {ex.Message}";
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = "";
+        errorMessage = "";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    public class ProductFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Please enter the product name.")]
+        [System.ComponentModel.DataAnnotations.StringLength(150, ErrorMessage = "Product name cannot exceed 150 characters.")]
+        public string ProductName { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Please enter the brand name.")]
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Brand name cannot exceed 100 characters.")]
+        public string Brand { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(1, int.MaxValue, ErrorMessage = "Please select a valid category.")]
+        public int CategoryId { get; set; }
+
+        public string? ImageUrl { get; set; }
+    }
+}

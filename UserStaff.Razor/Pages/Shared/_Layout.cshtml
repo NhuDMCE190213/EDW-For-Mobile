@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ECommerse Staff</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/UserStaff.Razor.styles.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --staff-sidebar-bg: #2C2C2A;
+            --staff-sidebar-text: rgba(255, 255, 255, 0.75);
+            --staff-sidebar-text-active: #FFFFFF;
+            --staff-sidebar-hover: rgba(255, 255, 255, 0.08);
+            --staff-sidebar-active-bg: rgba(255, 255, 255, 0.12);
+            --color-primary: #E24B4A;
+            --color-primary-hover: #A32D2D;
+            --sidebar-width: 240px;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background-color: var(--color-background-secondary, #F5F5F5);
+        }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ---------- Staff sidebar (vertical, dark gray, no radius) ---------- */
+        /* Fixed positioning: always exactly 100% of the viewport height,
+                   completely independent of page/content length. No flex or sticky
+                   height math involved, so it can never fall short on long pages. */
+        .staff-sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            background-color: var(--staff-sidebar-bg);
+            border-radius: 0; /* full-page frame: no rounding per design system */
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 1030;
+        }
+
+        .staff-sidebar-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .staff-sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 20px;
+            color: #FFFFFF;
+            font-weight: 500;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+            .staff-sidebar-brand i {
+                font-size: 20px;
+                color: var(--color-primary);
+            }
+
+        .staff-role-badge {
+            margin: 16px 20px 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px; /* badge: full pill per design system */
+            background-color: rgba(226, 75, 74, 0.18);
+            color: #F2A6A5;
+            font-size: 11px;
+            font-weight: 500;
+            width: fit-content;
+        }
+
+        .staff-nav {
+            flex: 1;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow-y: auto;
+        }
+
+        .staff-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px; /* nav items act like buttons: 8px */
+            color: var(--staff-sidebar-text);
+            font-size: 13px;
+            font-weight: 400;
+            text-decoration: none;
+            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+        }
+
+            .staff-nav-link i {
+                font-size: 16px;
+                width: 18px;
+                text-align: center;
+            }
+
+            .staff-nav-link:hover {
+                background-color: var(--staff-sidebar-hover);
+                color: var(--staff-sidebar-text-active);
+            }
+
+            .staff-nav-link.active {
+                background-color: var(--staff-sidebar-active-bg);
+                color: var(--staff-sidebar-text-active);
+                font-weight: 500;
+                border-left: 2px solid var(--color-primary);
+                padding-left: 10px;
+            }
+
+        .staff-sidebar-footer {
+            padding: 12px 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .staff-user-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--staff-sidebar-text);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+            .staff-user-link:hover {
+                background-color: var(--staff-sidebar-hover);
+                color: var(--staff-sidebar-text-active);
+            }
+
+            .staff-user-link i {
+                font-size: 22px;
+            }
+
+        .staff-logout-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--staff-sidebar-text);
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+            .staff-logout-link:hover {
+                background-color: var(--staff-sidebar-hover);
+                color: var(--staff-sidebar-text-active);
+            }
+
+        /* ---------- Main column ---------- */
+        .staff-main-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            margin-left: var(--sidebar-width);
+        }
+
+        .staff-topbar {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .staff-topbar-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #222222;
+        }
+
+        .staff-content {
+            flex: 1;
+            padding: 24px;
+        }
+
+        .staff-content-card {
+            background-color: #FFFFFF;
+            border-radius: 12px; /* content card: 12px per design system */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            padding: 24px;
+        }
+
+        .staff-footer {
+            background-color: #FFFFFF;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 12px 24px;
+            font-size: 12px;
+            color: var(--color-text-secondary, #888888);
+        }
+
+        .staff-mobile-toggle {
+            display: none;
+        }
+
+        @@media (max-width: 991.98px) {
+            .staff-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.2s ease-in-out;
+            }
+
+                .staff-sidebar.show {
+                    transform: translateX(0);
+                }
+
+            .staff-main-column {
+                margin-left: 0;
+            }
+
+            .staff-mobile-toggle {
+                display: inline-flex;
+            }
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <div class="app-shell">
+        <!-- ============ Staff sidebar ============ -->
+        <aside class="staff-sidebar" id="staffSidebar">
+            <div class="staff-sidebar-inner">
+                <div class="staff-sidebar-brand">
+                    <i class="bi bi-phone-vibrate"></i>
+                    <span>ECommerse Staff</span>
+                </div>
+
+                <span class="staff-role-badge">
+                    <i class="bi bi-person-badge-fill"></i> Staff Mode
+                </span>
+
+                <nav class="staff-nav">
+                    <a class="staff-nav-link" asp-area="" asp-page="/Index">
+                        <i class="bi bi-house-door-fill"></i> Home
+                    </a>
+                    <a class="staff-nav-link" asp-area="" asp-page="/Products/Index">
+                        <i class="bi bi-phone-fill"></i> Product Variants
+                    </a>
+                    <a class="staff-nav-link" asp-area="" asp-page="/Reviews/Index">
+                        <i class="bi bi-chat-square-text-fill"></i> Reviews
+                    </a>
+                    <a class="staff-nav-link" asp-area="" asp-page="/Orders/Index">
+                        <i class="bi bi-cart-check-fill"></i> Order Processing
+                    </a>
+                </nav>
+
+                <div class="staff-sidebar-footer">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="dropdown">
+                            <a class="staff-user-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="text-truncate">@User.Identity.Name</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark mt-2" style="border-radius: 8px;">
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Profile/Index">
+                                        <i class="bi bi-person-fill me-2"></i> Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Auth/Logout">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Log out
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="staff-logout-link" asp-page="/Auth/Login">
+                            <i class="bi bi-box-arrow-in-right"></i> Log in
+                        </a>
+                    }
+                </div>
+            </div>
+        </aside>
+
+        <!-- ============ Main column ============ -->
+        <div class="staff-main-column">
+            <header class="staff-topbar">
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm staff-mobile-toggle" type="button" onclick="document.getElementById('staffSidebar').classList.toggle('show')">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <span class="staff-topbar-title">@ViewData["Title"]</span>
+                </div>
+            </header>
+
+            <div class="staff-content">
+                <main role="main" class="staff-content-card">
+                    @RenderBody()
+                </main>
+            </div>
+
+            <footer class="staff-footer d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                <span>&copy; 2026 - <strong style="color: var(--color-primary);">Electronic Commerce Store</strong> - Operations Management System</span>
+                <span>Access level: <strong style="color: var(--color-primary-hover);">Warehouse / Sales Staff</strong></span>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

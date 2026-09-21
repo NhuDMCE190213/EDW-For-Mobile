@@ -1,0 +1,195 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using BLL.DTOs.Order
+@using BLL.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@inject IOrderService OrderService
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject IProductReviewService ReviewService
+@inject IPromotionService PromotionService
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Dashboard - ElectroNexus Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark m-0">Dashboard</h2>
+        <p class="text-muted m-0">Store performance overview.</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Stat cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #d70018 !important;">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .75rem; letter-spacing: .5px;">Total Orders</h6>
+                        <h3 class="fw-bold text-dark m-0">@orders.Count</h3>
+                    </div>
+                    <div class="bg-danger-subtle text-danger rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background-color:#ffe3e3;">
+                        <i class="fs-4">📦</i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #0ca678 !important;">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .75rem; letter-spacing: .5px;">Revenue (Completed)</h6>
+                        <h3 class="fw-bold text-dark m-0">$@(orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount).ToString("N0"))</h3>
+                    </div>
+                    <div class="bg-success-subtle text-success rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background-color:#e6fcf5;"><i class="fs-4">💰</i></div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #1b6ec2 !important;">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .75rem; letter-spacing: .5px;">Products</h6>
+                        <h3 class="fw-bold text-dark m-0">@products.Count(p => !p.IsDeleted)</h3>
+                    </div>
+                    <div class="bg-primary-subtle text-primary rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background-color:#e7f5ff;"><i class="fs-4">📱</i></div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-row align-items-center justify-content-between" style="border-radius: 12px; border-left: 4px solid #f59f00 !important;">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: .75rem; letter-spacing: .5px;">Pending Orders</h6>
+                        <h3 class="fw-bold text-dark m-0">@orders.Count(o => o.Status == "Pending")</h3>
+                    </div>
+                    <div class="bg-warning-subtle text-warning rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background-color:#fff4e3;"><i class="fs-4">⏳</i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="admin-card p-3">
+                    <h6 class="text-muted text-uppercase fw-bold mb-1" style="font-size:.75rem;">Categories</h6>
+                    <h3 class="fw-bold text-dark m-0">@categories.Count</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="admin-card p-3">
+                    <h6 class="text-muted text-uppercase fw-bold mb-1" style="font-size:.75rem;">Flagged Reviews</h6>
+                    <h3 class="fw-bold text-dark m-0">@reviews.Count(r => r.IsFlagged && !r.IsDeleted) <span class="fs-6 text-muted fw-normal">/ @reviews.Count(r => !r.IsDeleted)</span></h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="admin-card p-3">
+                    <h6 class="text-muted text-uppercase fw-bold mb-1" style="font-size:.75rem;">Active Promotions</h6>
+                    <h3 class="fw-bold text-dark m-0">@activePromotions.Count</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Recent orders -->
+            <div class="col-lg-8">
+                <div class="admin-card">
+                    @* <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-secondary m-0">Recent Orders</h5>
+                        <a href="orders" class="btn btn-sm btn-outline-secondary">View all</a>
+                    </div> *@
+                    @if (!orders.Any())
+                    {
+                        <p class="text-muted">No orders yet.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in orders.OrderByDescending(o => o.CreatedAt).Take(5))
+                                    {
+                                        <tr>
+                                            <td class="small">@order.OrderId.ToString().Substring(0, 8)</td>
+                                            <td>@order.CustomerName</td>
+                                            <td class="fw-semibold">@order.TotalAmount.ToString("N0") đ</td>
+                                            <td><span class="badge @GetStatusBadgeClass(order.Status)">@order.Status</span></td>
+                                            <td class="small text-muted">@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick links -->
+            <div class="col-lg-4">
+                <div class="admin-card">
+                    <h5 class="fw-bold text-secondary mb-3">Quick Actions</h5>
+                    <div class="list-group">
+                        <a href="categories" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-tag text-danger"></i> Manage Categories
+                        </a>
+                        <a href="products" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-phone text-danger"></i> Manage Products
+                        </a>
+                        <a href="reviews" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-chat-square-text text-danger"></i> Manage Reviews
+                            @{
+                                var flagged = reviews.Count(r => r.IsFlagged && !r.IsDeleted);
+                            }
+                            @if (flagged > 0)
+                            {
+                                <span class="badge bg-danger ms-auto">@flagged</span>
+                            }
+                        </a>
+                        <a href="promotions" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-percent text-danger"></i> Manage Promotions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<OrderDto> orders = new();
+    private List<BLL.DTOs.Product.Staff.ProductStaffDto> products = new();
+    private List<BLL.DTOs.Category.CategoryDto> categories = new();
+    private List<BLL.DTOs.ProductReview.ProductReviewDto> reviews = new();
+    private List<BLL.DTOs.Promotion.PromotionDto> activePromotions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await OrderService.GetAllOrdersAsync();
+        products = await ProductService.GetAllProductsAsync();
+        categories = await CategoryService.GetAllCategoriesAsync();
+        reviews = await ReviewService.GetAllProductReviewsAsync();
+        activePromotions = await PromotionService.GetActiveAndUpcomingPromotionsAsync();
+        isLoading = false;
+    }
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-warning-subtle text-warning",
+        "Processing" => "bg-info-subtle text-info",
+        "Completed" => "bg-success-subtle text-success",
+        "Cancelled" => "bg-danger-subtle text-danger",
+        _ => "bg-secondary-subtle text-secondary"
+    };
+}

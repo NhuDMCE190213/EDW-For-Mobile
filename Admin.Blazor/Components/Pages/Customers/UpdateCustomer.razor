@@ -1,0 +1,202 @@
+﻿@page "/customers/update"
+@using Admin.Blazor.Hubs
+@using BLL.DTOs.Customer
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using FluentValidation
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IValidator<CustomerUpdateDto> Validator
+@rendermode InteractiveServer
+@inject ICustomerService CustomerService
+@inject NavigationManager NavigationManager
+@inject IHubContext<AdminHub> HubContext
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="modal-header">
+    <h5 class="modal-title fw-bold">Update Customer</h5>
+
+    <button type="button"
+            class="btn-close"
+            @onclick="OnCancel">
+    </button>
+</div>
+
+<div class="modal-body">
+
+    <div class="row g-3">
+
+        <!-- Name -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Full Name <span class="text-danger">*</span>
+            </label>
+
+            <input class="form-control @(HasValidationError(nameof(customerUpdateDto.FullName)) ? "is-invalid" : "")"
+                   placeholder="Enter full name..." @bind="customerUpdateDto.FullName" />
+            @if (HasValidationError(nameof(customerUpdateDto.FullName)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(customerUpdateDto.FullName))</div>
+            }
+        </div>
+
+        <!-- mail -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Email <span class="text-danger">*</span>
+            </label>
+
+            <input class="form-control @(HasValidationError(nameof(customerUpdateDto.Email)) ? "is-invalid" : "")"
+                   placeholder="Enter email..." @bind="customerUpdateDto.Email" />
+            @if (HasValidationError(nameof(customerUpdateDto.Email)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(customerUpdateDto.Email))</div>
+            }
+        </div>
+
+        <!-- phone -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Phone <span class="text-danger">*</span>
+            </label>
+
+            <input class="form-control @(HasValidationError(nameof(customerUpdateDto.PhoneNumber)) ? "is-invalid" : "")"
+                   placeholder="Enter phone..." @bind="customerUpdateDto.PhoneNumber" />
+            @if (HasValidationError(nameof(customerUpdateDto.PhoneNumber)))
+            {
+                <div class="invalid-feedback">@GetValidationError(nameof(customerUpdateDto.PhoneNumber))</div>
+            }
+        </div>
+
+        <!--isactive-->
+        <div class="col-md-6">
+            <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" @bind="customerUpdateDto.IsActive" id="isActiveCheck" />
+                <label class="form-check-label fw-semibold" for="isActiveCheck">
+                    Customer Is Active
+                </label>
+            </div>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-md-12" style="color: red;">@errorMessage</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+
+    <button class="btn btn-secondary"
+            @onclick="OnCancel">
+        Cancel
+    </button>
+
+    <button class="btn btn-danger" @onclick="Update">
+        Update
+    </button>
+
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnEdited { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    private string errorMessage = string.Empty;
+    private Dictionary<string, List<string>> validationErrors = new();
+
+    [Parameter] public CustomerDto customerDto { get; set; } = new CustomerDto();
+    private CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
+
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SignalER
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<int>("CustomerDeleted", async (deletedId) =>
+        {
+            if (deletedId == customerDto.CustomerId)
+            {
+                await InvokeAsync(() => NavigationManager.NavigateTo("/customers"));
+            }
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error connecting to hub: {ex.Message}";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (customerDto != null)
+        {
+            customerUpdateDto = new CustomerUpdateDto
+            {
+                FullName = customerDto.FullName,
+                Email = customerDto.Email,
+                PhoneNumber = customerDto.PhoneNumber,
+                Role = RoleEnum.Customer,
+                Points = customerDto.Points,
+                IsActive = customerDto.IsActive
+            };
+        }
+    }
+
+    private async Task Update()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            validationErrors.Clear();
+
+            var result = await Validator.ValidateAsync(customerUpdateDto);
+            if (!result.IsValid)
+            {
+                foreach (var err in result.Errors)
+                {
+                    if (!validationErrors.ContainsKey(err.PropertyName))
+                        validationErrors[err.PropertyName] = new List<string>();
+                    validationErrors[err.PropertyName].Add(err.ErrorMessage);
+                }
+
+                var first = result.Errors.FirstOrDefault();
+                if (first != null) errorMessage = $"Validation failed: {first.ErrorMessage}";
+                return;
+            }
+
+            await CustomerService.UpdateCustomerAsync(customerDto.CustomerId, customerUpdateDto);
+            await HubContext.Clients.All.SendAsync("CustomerChanged");
+            await OnEdited.InvokeAsync();
+        }
+        catch (FluentValidation.ValidationException vex)
+        {
+            foreach (var err in vex.Errors)
+            {
+                if (!validationErrors.ContainsKey(err.PropertyName))
+                    validationErrors[err.PropertyName] = new List<string>();
+                validationErrors[err.PropertyName].Add(err.ErrorMessage);
+            }
+            errorMessage = "Validation failed";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private bool HasValidationError(string field) => validationErrors.ContainsKey(field);
+    private string GetValidationError(string field) => validationErrors.TryGetValue(field, out var errs) ? string.Join(", ", errs) : string.Empty;
+
+}

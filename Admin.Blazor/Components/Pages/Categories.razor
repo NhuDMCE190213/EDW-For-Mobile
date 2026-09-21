@@ -1,0 +1,413 @@
+﻿@page "/categories"
+@rendermode InteractiveServer
+@using BLL.DTOs.Category
+@using BLL.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR.Client
+@inject ICategoryService CategoryService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Manage Categories - ElectroNexus Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Manage Categories</h2>
+            <p class="text-muted m-0">View, create, edit, and delete electronic device categories.</p>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #2b8a3e !important;">
+            <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" style="border-left: 4px solid #e03131 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="ClearMessages" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- List Categories (Left) -->
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-secondary m-0">Category List (@filteredCategories.Count)</h5>
+                    <div class="input-group search-bar-box" style="width: 280px;">
+                        <input type="text" class="form-control admin-form-control py-1.5" placeholder="Search categories..." @bind="searchKeyword" @bind:event="oninput" />
+                    </div>
+                </div>
+
+                @if (isLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading category list...</p>
+                    </div>
+                }
+                else if (!filteredCategories.Any())
+                {
+                    <div class="text-center py-5 border rounded bg-light">
+                        <p class="text-muted m-0">No categories found matching your search.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">ID</th>
+                                    <th>Category Name</th>
+                                    <th>Created Date</th>
+                                    <th style="width: 150px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var category in filteredCategories)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-secondary">#@category.Id</td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">@category.Name</span>
+                                        </td>
+                                        <td class="text-muted" style="font-size: 0.85rem;">
+                                            @category.CreatedAt.ToLocalTime().ToString("MM/dd/yyyy HH:mm")
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditCategory(category)" title="Edit">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(category.Id, category.Name)" title="Delete">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Form Card (Right) -->
+        <div class="col-lg-4">
+            <div class="admin-card">
+                <h5 class="fw-bold text-secondary mb-3">
+                    @(isEditing ? "Update Category" : "Create New Category")
+                </h5>
+
+                <EditForm Model="@formModel" OnValidSubmit="SaveCategory" FormName="CreateCategoryForm">
+                    <DataAnnotationsValidator />
+                    
+                    <div class="mb-3">
+                        <label class="admin-form-label" for="categoryName">Category Name <span class="text-danger">*</span></label>
+                        <InputText id="categoryName" class="form-control admin-form-control" placeholder="Enter category name (e.g. Phone)" @bind-Value="formModel.Name" />
+                        <ValidationMessage For="@(() => formModel.Name)" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 0.25rem;" />
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        @if (isEditing)
+                        {
+                            <button type="button" class="btn btn-cps-outline py-2 px-3" @onclick="CancelEdit">Cancel</button>
+                            <button type="submit" class="btn btn-cps py-2 px-3">Update</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-cps py-2 w-100">Add Category</button>
+                        }
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Delete Confirmation (Pure HTML/CSS trigger by state) -->
+@if (showDeleteConfirmation)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-danger text-white border-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title fw-bold">Confirm Delete Category</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDeleteConfirmation" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="fs-5 m-0 text-dark">Are you sure you want to delete category <strong>@categoryToDeleteName</strong>?</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">This action will soft-delete the category. Associated products will be affected.</p>
+                </div>
+                <div class="modal-footer border-0 p-3 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 py-2 border" @onclick="CloseDeleteConfirmation">Cancel</button>
+                    <button type="button" class="btn btn-danger px-4 py-2" @onclick="ExecuteDelete">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<CategoryDto> categories = new();
+    private string searchKeyword = "";
+    private bool isLoading = true;
+    private string successMessage = "";
+    private string errorMessage = "";
+    private HubConnection? hubConnection;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    // Form states
+    [SupplyParameterFromForm]
+    private CategoryFormModel formModel { get; set; } = new();
+    private bool isEditing = false;
+    private int editingCategoryId = 0;
+
+    // Delete confirmation states
+    private bool showDeleteConfirmation = false;
+    private int categoryToDeleteId = 0;
+    private string categoryToDeleteName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On("CategoryChanged", async () =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadCategories();
+                StateHasChanged();
+            });
+        });
+
+        // await hubConnection.StartAsync(); // chuyển lên OnAfterRenderAsync để đảm bảo giao diện đã render hoàn toàn trước khi kết nối
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                if (hubConnection is not null && hubConnection.State == HubConnectionState.Disconnected)
+                {
+                    // Chỉ chạy khi giao diện đã render hoàn toàn trên Trình duyệt (Client)
+                    await hubConnection.StartAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Can't connect to Realtime Hub: {ex.Message}";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            await LoadCategoriesInternal();
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private async Task LoadCategoriesInternal()
+    {
+        isLoading = true;
+        try
+        {
+            categories = await CategoryService.GetAllCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading categories: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private List<CategoryDto> filteredCategories
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(searchKeyword))
+                return categories;
+
+            return categories.Where(c => c.Name.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+    }
+
+    private void EditCategory(CategoryDto category)
+    {
+        ClearMessages();
+        isEditing = true;
+        editingCategoryId = category.Id;
+        formModel = new CategoryFormModel { Name = category.Name };
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        editingCategoryId = 0;
+        formModel = new CategoryFormModel();
+    }
+
+    private async Task SaveCategory()
+    {
+        ClearMessages();
+        if (string.IsNullOrWhiteSpace(formModel.Name))
+        {
+            errorMessage = "Category name cannot be empty.";
+            return;
+        }
+
+        await _semaphore.WaitAsync();
+        try
+        {
+            if (isEditing)
+            {
+                var updateDto = new CategoryUpdateDto { Id = editingCategoryId, Name = formModel.Name };
+                var result = await CategoryService.UpdateCategoryAsync(updateDto);
+                if (result)
+                {
+                    successMessage = $"Category '{formModel.Name}' updated successfully!";
+                    CancelEdit();
+                    if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+                    {
+                        await hubConnection.SendAsync("BroadcastCategoryChanged");
+                    }
+                }
+                else
+                {
+                    errorMessage = "Failed to update category. Please try again.";
+                }
+            }
+            else
+            {
+                var createDto = new CategoryCreateDto { Name = formModel.Name };
+                var created = await CategoryService.CreateCategoryAsync(createDto);
+                if (created != null)
+                {
+                    successMessage = $"New category '{created.Name}' created successfully!";
+                    formModel = new CategoryFormModel();
+                    if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+                    {
+                        await hubConnection.SendAsync("BroadcastCategoryChanged");
+                    }
+                }
+                else
+                {
+                    errorMessage = "Failed to create category.";
+                }
+            }
+            await LoadCategoriesInternal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private void ConfirmDelete(int id, string name)
+    {
+        ClearMessages();
+        categoryToDeleteId = id;
+        categoryToDeleteName = name;
+        showDeleteConfirmation = true;
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        showDeleteConfirmation = false;
+        categoryToDeleteId = 0;
+        categoryToDeleteName = "";
+    }
+
+    private async Task ExecuteDelete()
+    {
+        var id = categoryToDeleteId;
+        var name = categoryToDeleteName;
+        CloseDeleteConfirmation();
+
+        await _semaphore.WaitAsync();
+        try
+        {
+            var deleteDto = new CategoryDeleteDto { Id = id };
+            var result = await CategoryService.DeleteCategoryAsync(deleteDto);
+            if (result)
+            {
+                successMessage = $"Category '{name}' deleted successfully!";
+                if (isEditing && editingCategoryId == id)
+                {
+                    CancelEdit();
+                }
+                if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+                {
+                    await hubConnection.SendAsync("BroadcastCategoryChanged");
+                }
+                await LoadCategoriesInternal();
+            }
+            else
+            {
+                errorMessage = "Failed to delete category.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while deleting the category: {ex.Message}";
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = "";
+        errorMessage = "";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    // Form Model supporting Data Annotations
+    public class CategoryFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Please enter a category name.")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Category name must be at most 200 characters.")]
+        public string Name { get; set; } = string.Empty;
+    }
+}

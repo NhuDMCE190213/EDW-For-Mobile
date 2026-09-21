@@ -1,0 +1,110 @@
+﻿@page "/staff_management/delete"
+@using Admin.Blazor.Hubs
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@rendermode InteractiveServer
+@inject IStaffService StaffService
+@inject NavigationManager NavigationManager
+@inject IHubContext<AdminHub> HubContext
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="modal-header">
+    <h5 class="modal-title fw-bold">Delete Staff</h5>
+
+    <button type="button"
+            class="btn-close"
+            @onclick="OnCancel">
+    </button>
+</div>
+<div class="p-6">
+    <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+            <span class="material-symbols-outlined text-red-600">
+                Delete Staff
+            </span>
+        </div>
+
+        <div>
+            <p class="font-medium">
+                Are you sure you want to delete this staff member?
+            </p>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+
+    <button class="btn btn-secondary"
+            @onclick="OnCancel">
+        Cancel
+    </button>
+
+    <button class="btn btn-danger" @onclick="Delete">
+        Delete Staff
+    </button>
+
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnDeleted { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    private string errorMessage = string.Empty;
+    [Parameter] public int staffId { get; set; }
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SignalER
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<int>("StaffDeleted", async (deletedId) =>
+        {
+            if (deletedId == staffId)
+            {
+                await InvokeAsync(() => NavigationManager.NavigateTo("/staff_management"));
+            }
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error connecting to hub: {ex.Message}";
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.StopAsync();
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+    private async Task Delete()
+    {
+        try
+        {
+            await StaffService.DeleteStaffAsync(staffId);
+            await HubContext.Clients.All.SendAsync("StaffDeleted", staffId);
+            await HubContext.Clients.All.SendAsync("StaffChanged");
+            await OnDeleted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+}

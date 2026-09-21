@@ -1,0 +1,534 @@
+﻿@page "/staff_management"
+@using AutoMapper
+@using BLL.DTOs.Pagination
+@using BLL.DTOs.Staff
+@using BLL.Services.Interfaces
+@using DAL.Enums
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.SignalR.Client
+@rendermode InteractiveServer
+@* @inject IStaffService StaffService *@
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>AdminStaffs - StaffManager</PageTitle>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container py-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Staff</h1>
+        </div>
+
+        <button class="btn btn-danger px-4 py-2" @onclick="showCreate">
+            <i class="bi bi-plus-lg"></i>
+            Create Staff
+        </button>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-secondary fw-semibold small mb-2">
+                        Total Staffs
+                    </p>
+                    <h1 class="fw-bold mb-0">@staffs?.Pagination.TotalCount</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-success fw-semibold small mb-2">
+                        Active
+                    </p>
+                    <h1 class="fw-bold text-success mb-0">@staffs?.ActiveCount</h1>
+                </div>
+            </div>
+        </div>
+
+        @*   <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-warning fw-semibold small mb-2">
+                        Upcoming
+                    </p>
+                    <h1 class="fw-bold text-warning mb-0">@promotions?.Upcoming</h1>
+                </div>
+            </div>
+        </div> *@
+
+        @* <div class="col-lg-3 col-md-6">
+            <div class="card rounded-4 h-100">
+                <div class="card-body py-4">
+                    <p class="text-uppercase text-danger fw-semibold small mb-2">
+                        Expired
+                    </p>
+                    <h1 class="text-uppercase text-danger fw-semibold small mb-2">@promotions?.ExpiredOrDisabledCount</h1>
+                </div>
+            </div>
+        </div> *@
+    </div>
+
+    <!-- Filter -->
+    <div class="mt-4">
+        <div class="card rounded-4 shadow-sm">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <!-- Search -->
+                    <div class="col-lg-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control border-start-0 bg-light"
+                                   placeholder="Search staff name..." @bind="searchName" @bind:event="oninput" @onkeyup="LoadStaffs">
+                        </div>
+                    </div>
+
+                    <!-- Filter Button -->
+                    <div class="col-lg-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary w-100" @onclick="ToggleFilterPopup">
+                                <i class="bi bi-funnel me-2"></i>
+                                Filter
+                                @if (showFilterPopup)
+                                {
+                                    <i class="bi bi-chevron-up ms-1"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-chevron-down ms-1"></i>
+                                }
+                            </button>
+                            <button class="btn btn-outline-secondary" @onclick="ClearFilters" title="Clear filters">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Popup -->
+                    @if (showFilterPopup)
+                    {
+                        <div class="row mt-3 pt-3 border-top">
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap gap-4">
+                                    <!-- Include Deleted -->
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="includeDeleted"
+                                               @bind="includeDeleted"
+                                               @bind:event="oninput"
+                                               @onchange="LoadStaffs">
+                                        <label class="form-check-label fw-semibold" for="includeDeleted">
+                                            <i class="bi bi-trash text-danger me-1"></i>
+                                            Include Deleted
+                                        </label>
+                                    </div>
+
+                                    <!-- Include Disabled -->
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="includeDisabled"
+                                               @bind="includeDisabled"
+                                               @bind:event="oninput"
+                                               @onchange="LoadStaffs">
+                                        <label class="form-check-label fw-semibold" for="includeDisabled">
+                                            <i class="bi bi-eye-slash text-secondary me-1"></i>
+                                            Include Disabled
+                                        </label>
+                                    </div>
+
+                                    <!-- Active Filters Display -->
+                                    @if (HasActiveFilters())
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-info text-dark">
+                                                <i class="bi bi-funnel-fill me-1"></i>
+                                                Active Filters
+                                            </span>
+                                            @if (includeDeleted)
+                                            {
+                                                <span class="badge bg-danger">Deleted</span>
+                                            }
+                                            @if (includeDisabled)
+                                            {
+                                                <span class="badge bg-secondary">Disabled</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staffs List -->
+    <div class="card rounded-4 shadow-sm mt-4">
+        @if (staffs == null)
+        {
+            <div class="card-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else if (staffs.Pagination.Items.Count == 0)
+        {
+            <div class="card-body text-center">
+                <p class="text-secondary mb-0">No staffs found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Index</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @{
+                            int index = staffs.Pagination.StartIndex;
+                        }
+                        @foreach (var staff in staffs.Pagination.Items)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@staff.FullName</td>
+                                <td>@staff.Email</td>
+                                <td>@staff.Role</td>
+                                <td>
+                                    @switch (GetStatus(staff))
+                                    {
+                                        case "Active":
+                                            <span class="badge bg-success">Active</span>
+                                            break;
+                                        case "Unknown":
+                                            <span class="badge bg-warning text-dark">Upcoming</span>
+                                            break;
+                                        case "Inactive":
+                                            <span class="badge bg-secondary">Inactive</span>
+                                            break;
+                                        case "Deleted":
+                                            <span class="badge bg-dark">Deleted</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (!GetStatus(staff).Equals("Deleted"))
+                                    {
+                                        <button class="btn btn-sm btn-primary me-2" @onclick="() => showEdit(staff)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => showDelete(staff)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-secondary">
+                            Showing @staffs.Pagination.StartIndex to @staffs.Pagination.EndIndex of @staffs.Pagination.TotalCount entries
+                        </span>
+
+                        <select class="form-select form-select-sm w-auto" @onchange="OnPageSizeChanged">
+                            <option value="10" selected="@(pageSize == 10)">10</option>
+                            <option value="25" selected="@(pageSize == 25)">25</option>
+                            <option value="50" selected="@(pageSize == 50)">50</option>
+                        </select>
+                    </div>
+
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <!-- Previous -->
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="#" @onclick="() => OnPageChanged(currentPage - 1)" @onclick:preventDefault="true">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <!-- First page -->
+                            @if (staffs.Pagination.TotalPages > 0)
+                            {
+                                <li class="page-item @(currentPage == 1 ? "active" : "")">
+                                    <a class="page-link" href="#" @onclick="() => OnPageChanged(1)" @onclick:preventDefault="true">1</a>
+                                </li>
+                            }
+
+                            <!-- Ellipsis after first page -->
+                            @if (currentPage > 3 && staffs.Pagination.TotalPages > 4)
+                            {
+                                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                            }
+
+                            <!-- Pages around current -->
+                            @for (int i = Math.Max(2, currentPage - 1); i <= Math.Min(staffs.Pagination.TotalPages - 1, currentPage + 1); i++)
+                            {
+                                if (i != 1 && i != staffs.Pagination.TotalPages)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" href="#" @onclick="() => OnPageChanged(i)" @onclick:preventDefault="true">@i</a>
+                                    </li>
+                                }
+                            }
+
+                            <!-- Ellipsis before last page -->
+                            @if (currentPage < staffs.Pagination.TotalPages - 2 && staffs.Pagination.TotalPages > 4)
+                            {
+                                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                            }
+
+                            <!-- Last page -->
+                            @if (staffs.Pagination.TotalPages > 1)
+                            {
+                                <li class="page-item @(currentPage == staffs.Pagination.TotalPages ? "active" : "")">
+                                    <a class="page-link" href="#" @onclick="() => OnPageChanged(staffs.Pagination.TotalPages)" @onclick:preventDefault="true">@staffs.Pagination.TotalPages</a>
+                                </li>
+                            }
+
+                            <!-- Next -->
+                            <li class="page-item @(currentPage == staffs.Pagination.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="#" @onclick="() => OnPageChanged(currentPage + 1)" @onclick:preventDefault="true">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+</div>
+@if (showCreateModal)
+{
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <CreateStaff OnCreated="OnSaved" OnCancel="ClosePanels" />
+            </div>
+        </div>
+    </div>
+}
+@if (showEditModal && selectedStaff != null)
+{
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <UpdateStaff staffDto="selectedStaff" OnEdited="OnSaved" OnCancel="ClosePanels" />
+            </div>
+        </div>
+    </div>
+}
+@if (showDeleteModal && selectedStaff != null)
+{
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <DeleteStaff staffId="selectedStaff.StaffId" OnDeleted="OnSaved" OnCancel="ClosePanels" />
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private StaffDashBoardDto? staffs;
+    private string searchName = string.Empty;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private bool showCreateModal = false;
+    private bool showEditModal = false;
+    private bool showDeleteModal = false;
+    private bool showDetailsModal = false;
+    private StaffDto? selectedStaff;
+    private bool showFilterPopup = false;
+    private bool includeDeleted = false;
+    private bool includeDisabled = false;
+    private HubConnection? _hubConnection;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStaffs();
+
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/adminHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On("StaffChanged", async () =>
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadStaffs();
+            StateHasChanged();
+        });
+    });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.StopAsync();
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+    private async Task LoadStaffs()
+    {
+        var requestDto = new StaffDashBoardRequestDto
+        {
+            SearchTerm = searchName,
+            IncludeDelete = includeDeleted,
+            IncludeDisable = includeDisabled,
+            Pagination = new PaginationRequest
+            {
+                Page = currentPage,
+                PageSize = pageSize
+            }
+        };
+        // staffs = await StaffService.GetStaffsListAsync(requestDto);
+        await using var scope = ScopeFactory.CreateAsyncScope();
+
+        var staffService = scope.ServiceProvider.GetRequiredService<IStaffService>();
+
+        staffs = await staffService.GetStaffsListAsync(requestDto);
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        pageSize = int.Parse(e.Value!.ToString()!);
+        currentPage = 1;
+        await LoadStaffs();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        currentPage = page;
+        await LoadStaffs();
+    }
+
+    private async Task OnSaved()
+    {
+        await LoadStaffs();
+        ClosePanels();
+    }
+
+    private void ClosePanels()
+    {
+        showCreateModal = showEditModal = showDetailsModal = showDeleteModal = false;
+        selectedStaff = null;
+    }
+
+    private void showCreate()
+    {
+        showCreateModal = true;
+        showEditModal = showDetailsModal = showDeleteModal = false;
+        selectedStaff = null;
+    }
+
+    private void showEdit(StaffDto staff)
+    {
+        selectedStaff = staff;
+        showEditModal = true;
+        showCreateModal = showDetailsModal = showDeleteModal = false;
+    }
+
+    private void showDelete(StaffDto staff)
+    {
+        selectedStaff = staff;
+        showEditModal = showCreateModal = showDetailsModal = false;
+        showDeleteModal = true;
+    }
+
+    private string GetStatus(StaffDto staff)
+    {
+        if (staff.IsActive && !staff.IsDeleted)
+        {
+            return "Active";
+        }
+        else if (!staff.IsActive && !staff.IsDeleted)
+        {
+            return "Inactive";
+        }
+        else if (staff.IsDeleted)
+        {
+            return "Deleted";
+        }
+        else
+        {
+            return "Unknown";
+        }
+    }
+
+    private void ToggleFilterPopup()
+    {
+        showFilterPopup = !showFilterPopup;
+    }
+
+    private async Task ClearFilters()
+    {
+        searchName = string.Empty;
+        includeDeleted = false;
+        includeDisabled = false;
+        currentPage = 1;
+        showFilterPopup = false;
+        await LoadStaffs();
+    }
+
+    private bool HasActiveFilters()
+    {
+        return includeDeleted || includeDisabled || !string.IsNullOrEmpty(searchName);
+    }
+}

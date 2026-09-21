@@ -1,0 +1,23 @@
+## Tool hiển thị cấu hình hệ thống và file tạm của OS
+.DS_Store
+Thumbs.db
+
+## Visual Studio cache và các file build tạm
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+## JetBrains Rider / Resharper (nếu nhóm có ai dùng Rider)
+.idea/
+*.sln.iml
+
+## Các file cấu hình chứa thông tin nhạy cảm (BẢO MẬT KEY)
+**/appsettings.Development.json
+appsettings.json
+appsettings.*.json
+
+## Entity Framework Core Migrations cache
+*.pfx

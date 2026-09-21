@@ -1,0 +1,249 @@
+﻿@page
+@model Staff.Razor.Pages.ProductVariants.CreateVariantsModel
+
+@{
+    ViewData["Title"] = "Auto-Generate Product Variants";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <a asp-page="./Index" asp-route-productId="@Model.ProductId" class="ds-back-btn shadow-sm" title="Back">
+                <i class="bi bi-arrow-left fs-5 lh-1"></i>
+            </a>
+            <h5 class="mb-0"><i class="bi bi-cpu-fill me-2"></i> Auto-Generate Variants Matrix</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" id="variantsForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ProductId" />
+                <div class="row">
+                    <div class="col-md-4 border-end">
+                        <h6 class="text-secondary fw-bold text-uppercase mb-3">1. Enter Attributes</h6>
+                        <p class="small text-muted">Separate multiple values with commas (e.g., Red, Blue, Gold)</p>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Colors</label>
+                            <input type="text" id="inputColors" class="form-control attr-input" placeholder="e.g., Black, White, Silver" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Processor (CPU)</label>
+                            <input type="text" id="inputCpus" class="form-control attr-input" placeholder="e.g., Ultra 5, Ultra 7" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Memory (RAM)</label>
+                            <input type="text" id="inputRams" class="form-control attr-input" placeholder="e.g., 16GB, 32GB" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Storage Capacity</label>
+                            <input type="text" id="inputStorages" class="form-control attr-input" placeholder="e.g., 512GB, 1TB" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Display Size</label>
+                            <input type="text" id="inputScreens" class="form-control attr-input" placeholder="e.g., 14 inch, 16 inch" />
+                        </div>
+
+                        <div class="p-3 bg-light rounded border border-secondary border-opacity-25 mb-4">
+                            <h6 class="text-dark fw-bold small text-uppercase mb-3"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Fill Default Values</h6>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold text-muted mb-1">Default Price (₫)</label>
+                                <input type="number" id="quickPrice" class="form-control form-control-sm" placeholder="0" min="0" />
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label small fw-bold text-muted mb-1">Default Stock</label>
+                                <input type="number" id="quickStock" class="form-control form-control-sm" placeholder="0" min="0" />
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-secondary" id="btnClearAll">
+                                <i class="bi bi-trash3 me-1"></i> Clear Inputs
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8 ps-md-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-secondary fw-bold text-uppercase mb-0">2. Generated Variants Matrix</h6>
+                            <span class="badge bg-primary fs-6" id="lblTotalVariants">Total: 0 variants</span>
+                        </div>
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        <div class="table-responsive style-scroll" style="max-height: 550px;">
+                            <table class="table table-bordered align-middle text-center" id="matrixTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Color</th>
+                                        <th>CPU</th>
+                                        <th>RAM</th>
+                                        <th>Storage</th>
+                                        <th>Screen</th>
+                                        <th style="width: 150px;">Price (₫) <span class="text-danger">*</span></th>
+                                        <th style="width: 100px;">Stock <span class="text-danger">*</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matrixBody">
+                                    <tr>
+                                        <td colspan="8" class="text-muted py-4">Enter attribute values on the left to generate the matrix.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-success btn-lg px-5" id="btnSaveMatrix" disabled>
+                                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Save All Variants
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .style-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .style-scroll::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .style-scroll::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    .sticky-top {
+        top: -1px;
+        z-index: 10;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const inputs = document.querySelectorAll('.attr-input');
+            inputs.forEach(input => input.addEventListener('input', generateMatrix));
+
+            // Lắng nghe sự kiện gõ trên các ô điền nhanh (Quick Fill) để đồng bộ xuống dưới bảng
+            document.getElementById('quickPrice').addEventListener('input', syncQuickFill);
+            document.getElementById('quickStock').addEventListener('input', syncQuickFill);
+
+            document.getElementById('btnClearAll').addEventListener('click', function() {
+                inputs.forEach(i => i.value = '');
+                document.getElementById('quickPrice').value = '';
+                document.getElementById('quickStock').value = '';
+                generateMatrix();
+            });
+        });
+
+        function generateMatrix() {
+            // CẢI TIẾN THUẬT TOÁN: Khử trùng lặp chuỗi gõ nhầm bằng Set và chuyển chữ HOA đồng bộ
+            const parseInput = (id) => {
+                const val = document.getElementById(id).value.trim();
+                if (!val) return [null];
+
+                const rawArray = val.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+                const uniqueArray = [...new Set(rawArray)]; // Loại bỏ hoàn toàn phần tử trùng lặp
+
+                return uniqueArray.length > 0 ? uniqueArray : [null];
+            };
+
+            const colors = parseInput('inputColors');
+            const cpus = parseInput('inputCpus');
+            const rams = parseInput('inputRams');
+            const storages = parseInput('inputStorages');
+            const screens = parseInput('inputScreens');
+
+            const hasData = [colors, cpus, rams, storages, screens].some(arr => arr.length > 1 || (arr[0] !== null));
+
+            if (!hasData) {
+                resetTable();
+                return;
+            }
+
+            const cartesian = (...arrays) => arrays.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())));
+            const combinations = cartesian(colors, cpus, rams, storages, screens);
+
+            const matrixBody = document.getElementById('matrixBody');
+            const btnSave = document.getElementById('btnSaveMatrix');
+            const lblTotal = document.getElementById('lblTotalVariants');
+
+            // Lấy giá trị hiện tại ở các ô Quick Fill để đưa vào lúc sinh dòng mới
+            const defaultPrice = document.getElementById('quickPrice').value;
+            const defaultStock = document.getElementById('quickStock').value;
+
+            matrixBody.innerHTML = '';
+            let validIndex = 0;
+
+            combinations.forEach((combo) => {
+                const rowData = {
+                    color: combo[0] || "",
+                    cpu: combo[1] || "",
+                    ram: combo[2] || "",
+                    storage: combo[3] || "",
+                    screen: combo[4] || ""
+                };
+
+                if (!rowData.color && !rowData.cpu && !rowData.ram && !rowData.storage && !rowData.screen) return;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="hidden" name="Variants[${validIndex}].Color" value="${rowData.color}" />${rowData.color || '<span class="text-muted">N/A</span>'}</td>
+                    <td><input type="hidden" name="Variants[${validIndex}].Cpu" value="${rowData.cpu}" />${rowData.cpu || '<span class="text-muted">N/A</span>'}</td>
+                    <td><input type="hidden" name="Variants[${validIndex}].Ram" value="${rowData.ram}" />${rowData.ram || '<span class="text-muted">N/A</span>'}</td>
+                    <td><input type="hidden" name="Variants[${validIndex}].Storage" value="${rowData.storage}" />${rowData.storage || '<span class="text-muted">N/A</span>'}</td>
+                    <td><input type="hidden" name="Variants[${validIndex}].ScreenSize" value="${rowData.screen}" />${rowData.screen || '<span class="text-muted">N/A</span>'}</td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="Variants[${validIndex}].Price" class="form-control text-end matrix-price" value="${defaultPrice}" placeholder="0" min="0" required />
+                            <span class="input-group-text">₫</span>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" name="Variants[${validIndex}].StockQuantity" class="form-control form-control-sm text-center matrix-stock" value="${defaultStock}" placeholder="0" min="0" required />
+                    </td>
+                `;
+                matrixBody.appendChild(row);
+                validIndex++;
+            });
+
+            lblTotal.innerText = `Total: ${validIndex} variants`;
+
+            if (validIndex > 0) {
+                btnSave.disabled = false;
+                lblTotal.className = "badge bg-success fs-6";
+            } else {
+                resetTable();
+            }
+        }
+
+        // CẢI TIẾN: Hàm tự động đồng bộ hóa dữ liệu từ Quick Fill xuống ma trận khi đang gõ
+        function syncQuickFill() {
+            const defaultPrice = document.getElementById('quickPrice').value;
+            const defaultStock = document.getElementById('quickStock').value;
+
+            // Đẩy giá trị vào toàn bộ các class tương ứng dưới bảng
+            document.querySelectorAll('.matrix-price').forEach(input => { input.value = defaultPrice; });
+            document.querySelectorAll('.matrix-stock').forEach(input => { input.value = defaultStock; });
+        }
+
+        function resetTable() {
+            document.getElementById('matrixBody').innerHTML = `<tr><td colspan="8" class="text-muted py-4">Enter attribute values on the left to generate the matrix.</td></tr>`;
+            document.getElementById('btnSaveMatrix').disabled = true;
+            const lblTotal = document.getElementById('lblTotalVariants');
+            lblTotal.innerText = 'Total: 0 variants';
+            lblTotal.className = "badge bg-primary fs-6";
+        }
+    </script>
+}
