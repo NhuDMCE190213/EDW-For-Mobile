@@ -16,7 +16,7 @@ namespace DAL.Repositories
 
         public async Task<List<Category>> GetAllCategoriesAsync()
         {
-            return await _context.Categories.AsNoTracking().ToListAsync();
+            return await _context.Categories.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
         }
 
         public async Task<Category?> GetCategoryByIdAsync(int id)

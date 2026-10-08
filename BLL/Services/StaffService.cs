@@ -31,6 +31,22 @@ namespace BLL.Services
             _mapper = mapper;
         }
 
+        public async Task<StaffProfileDto?> GetProfileAsync(int staffId)
+        {
+            var staff = await _staffRepository.GetByIdAsync(staffId);
+            if (staff == null || !staff.IsActive) return null;
+
+            return new StaffProfileDto
+            {
+                StaffId = staff.StaffId,
+                Email = staff.Email,
+                FullName = staff.FullName,
+                IsActive = staff.IsActive,
+                CreatedAt = staff.CreatedAt,
+                UpdatedAt = staff.UpdatedAt
+            };
+        }
+
         public async Task<StaffDto?> GetByEmailAsync(string email)
         {
             var staff = await _staffRepository.GetByEmailAsync(email);

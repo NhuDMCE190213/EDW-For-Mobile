@@ -28,6 +28,8 @@ namespace BLL
 
             services.AddScoped<ICartItemService, CartItemService>();
 
+            services.AddScoped<IJwtService, JwtService>();
+
             services.AddAutoMapper(cfg =>
             {
                 cfg.AddMaps(Assembly.GetExecutingAssembly());

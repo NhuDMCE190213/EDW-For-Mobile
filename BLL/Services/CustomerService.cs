@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BLL.DTOs.Customer;
 using BLL.DTOs.Pagination;
 using BLL.DTOs.Staff;
@@ -28,6 +28,21 @@ namespace BLL.Services
             _customerRepository = customerRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+        }
+
+        public async Task<CustomerProfileDto?> GetProfileAsync(int customerId)
+        {
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+            if (customer == null || customer.IsDeleted) return null;
+
+            return new CustomerProfileDto
+            {
+                CustomerId = customer.CustomerId,
+                FullName = customer.FullName,
+                Email = customer.Email,
+                PhoneNumber = customer.PhoneNumber,
+                Points = customer.Points
+            };
         }
 
         public async Task<CustomerDto?> GetByEmailAsync(string email)
@@ -88,6 +103,44 @@ namespace BLL.Services
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow
             };
+            var created = await _customerRepository.CreateAsync(customer);
+
+            return new CustomerDto
+            {
+                CustomerId = created.CustomerId,
+                FullName = created.FullName,
+                Email = created.Email,
+                PhoneNumber = created.PhoneNumber,
+                Role = created.Role,
+                Points = created.Points,
+                CreatedAt = created.CreatedAt,
+                UpdatedAt = created.UpdatedAt
+            };
+        }
+
+        public async Task<CustomerDto> RegisterAsync(CustomerRegisterDto registerDto)
+        {
+            // UC-03: 03.3 & FR-01 Unique Email check
+            var existing = await _customerRepository.GetByEmailAsync(registerDto.Email);
+            if (existing != null)
+            {
+                throw new InvalidOperationException("Email address is already registered.");
+            }
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+            var customer = new Customer
+            {
+                FullName = registerDto.FullName,
+                Email = registerDto.Email,
+                PhoneNumber = registerDto.PhoneNumber,
+                PasswordHash = passwordHash,
+                Role = RoleEnum.Customer,
+                Points = 0,
+                IsActive = true,
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
             var created = await _customerRepository.CreateAsync(customer);
 
             return new CustomerDto

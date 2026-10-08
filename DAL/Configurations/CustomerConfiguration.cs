@@ -8,6 +8,7 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<Customer> builder)
         {
+            builder.ToTable("customers");
             builder.HasKey(c => c.CustomerId);
             builder.Property(c => c.FullName).IsRequired().HasMaxLength(100);
             builder.Property(c => c.Email).IsRequired().HasMaxLength(255);

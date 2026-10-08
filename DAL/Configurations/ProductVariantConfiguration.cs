@@ -8,6 +8,8 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<ProductVariant> builder)
         {
+            // Keep the runtime mapping aligned with the existing InitData migration.
+            builder.ToTable("product_variants");
             builder.HasKey(pv => pv.ProductVariantId);
             builder.Property(pv => pv.Sku).IsRequired().HasMaxLength(50);
             //builder.Property(pv => pv.ProductCode).IsRequired().HasMaxLength(50);

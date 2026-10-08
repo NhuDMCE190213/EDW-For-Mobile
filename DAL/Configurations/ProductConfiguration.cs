@@ -9,7 +9,7 @@ namespace DAL.Configurations
         public void Configure(EntityTypeBuilder<Product> builder)
         {
             // 1. Cấu hình tên bảng nếu muốn khác tên DbSet có dùng naming convention nên phải comment lại tên bảng
-            //builder.ToTable("Products");
+            builder.ToTable("products");
 
             // 2. Cấu hình Khóa chính và các ràng buộc cột
             builder.HasKey(p => p.ProductId);

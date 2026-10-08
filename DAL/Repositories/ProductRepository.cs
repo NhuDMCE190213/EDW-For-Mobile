@@ -15,7 +15,11 @@ namespace DAL.Repositories
 
         public async Task<List<Product>> GetAllProductsAsync()
         {
-            var products = await _context.Products.AsNoTracking().Include(p => p.Category).ToListAsync();
+            var products = await _context.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .OrderBy(p => p.ProductId)
+                .ToListAsync();
             return products;
         }
 
