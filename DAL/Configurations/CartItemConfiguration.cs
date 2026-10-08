@@ -1,4 +1,4 @@
-﻿using DAL.Models;
+using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,7 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<CartItem> builder)
         {
+            builder.ToTable("cart_items");
             // 2. Cấu hình Khóa chính và các ràng buộc cột
             builder.HasKey(p => p.CartItemId);
             builder.Property(p => p.CustomerId).IsRequired();
@@ -17,6 +18,7 @@ namespace DAL.Configurations
             builder.HasOne(p => p.ProductVariant)
                 .WithMany()
                 .HasForeignKey(p => p.ProductVariantId)
+                .HasConstraintName("fk_cart_items_product_variants_product_variant_id")
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

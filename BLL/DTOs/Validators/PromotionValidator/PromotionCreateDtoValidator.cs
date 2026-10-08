@@ -1,4 +1,4 @@
-﻿using BLL.DTOs.Promotion;
+using BLL.DTOs.Promotion;
 using DAL.Enums;
 using FluentValidation;
 using System;
@@ -27,7 +27,7 @@ namespace BLL.DTOs.Validators.PromotionValidator
             {
                 RuleFor(x => x.Percentage)
                     .NotNull().WithMessage("Percentage is required for Percentage type")
-                    .InclusiveBetween((byte)0, (byte)100).WithMessage("Percentage must be between 0 and 100");
+                    .InclusiveBetween((decimal)0, (decimal)100).WithMessage("Percentage must be between 0 and 100");
             });
 
             //price

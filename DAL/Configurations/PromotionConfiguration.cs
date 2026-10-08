@@ -1,4 +1,4 @@
-﻿using DAL.Models;
+using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,8 +11,7 @@ namespace DAL.Configurations
             builder.ToTable("promotions");
 
             // Primary key
-            builder.HasKey(p => p.PromotionId)
-                   .HasName("pk_promotions");
+            builder.HasKey(p => p.PromotionId);
 
             builder.Property(p => p.Name)
                    .HasColumnName("name")
@@ -65,7 +64,7 @@ namespace DAL.Configurations
 
             builder.Property(p => p.Percentage)
                    .HasColumnName("percentage")
-                   .HasColumnType("tinyint")
+                   .HasColumnType("decimal(18,2)")
                    .IsRequired(false);
 
             // Stock-related
@@ -96,11 +95,11 @@ namespace DAL.Configurations
                    .IsRequired(false);
 
             // Indexes
-            builder.HasIndex(p => p.IsDeleted, "ix_promotions_is_deleted");
-            builder.HasIndex(p => p.IsDisabled, "ix_promotions_is_disabled");
-            builder.HasIndex(p => p.StartAt, "ix_promotions_start_at");
-            builder.HasIndex(p => p.EndAt, "ix_promotions_end_at");
-            builder.HasIndex(p => p.PromotionType, "ix_promotions_promotion_type");
+            builder.HasIndex(p => p.IsDeleted);
+            builder.HasIndex(p => p.IsDisabled);
+            builder.HasIndex(p => p.StartAt);
+            builder.HasIndex(p => p.EndAt);
+            builder.HasIndex(p => p.PromotionType);
         }
     }
 }

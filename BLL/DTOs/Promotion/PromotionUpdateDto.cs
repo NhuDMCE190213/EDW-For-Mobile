@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using DAL.Enums;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace BLL.DTOs.Promotion
         [Range(0, double.MaxValue)]
         public decimal? ThresholdPrice { get; set; }
         [Range(0, 100)]
-        public byte? Percentage { get; set; }
+        public decimal? Percentage { get; set; }
         // Stock
         public bool IsReservedStock { get; set; } = true;
         [Range(0, int.MaxValue)]

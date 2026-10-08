@@ -1,4 +1,4 @@
-﻿using BLL.DTOs.Pagination;
+using BLL.DTOs.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +12,7 @@ namespace BLL.DTOs.Promotion.PromotionList
         public int ActiveCount { get; set; } = 0;
         public int Upcoming { get; set; } = 0;
         public int ExpiredOrDisabledCount { get; set; } = 0;
+        public decimal MaxCost { get; set; } = 0;
         public PaginatedResponse<PromotionDto> Pagination { get; set; } = new PaginatedResponse<PromotionDto>();
     }
 }

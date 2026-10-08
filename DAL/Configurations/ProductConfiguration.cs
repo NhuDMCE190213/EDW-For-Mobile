@@ -22,18 +22,20 @@ namespace DAL.Configurations
             builder.HasOne(p => p.Category)
                    .WithMany()
                    .HasForeignKey(p => p.CategoryId)
+                   .HasConstraintName("fk_products_categories_category_id")
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(p => p.ProductVariants)
                    .WithOne(pv => pv.Product)
                    .HasForeignKey(pv => pv.ProductId)
+                   .HasConstraintName("fk_product_variants_products_product_id")
                    .OnDelete(DeleteBehavior.Cascade);
 
             // 4. Cấu hình xóa mềm (Soft Delete)
             builder.HasQueryFilter(p => !p.IsDeleted);
 
             // 5. Cấu hình chỉ mục (Index)s
-            builder.HasIndex(p => p.ProductName).HasDatabaseName("IX_Product_ProductName");
+            builder.HasIndex(p => p.ProductName);
         }
     }
 }

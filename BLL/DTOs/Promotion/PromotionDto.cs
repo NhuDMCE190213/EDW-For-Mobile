@@ -7,7 +7,7 @@ namespace BLL.DTOs.Promotion
         public DAL.Enums.PromotionTypeEnum PromotionType { get; set; } // true: percentage, false: fixed amount
         public decimal? SalePrice { get; set; }
         public decimal? ThresholdPrice { get; set; }
-        public byte? Percentage { get; set; }
+        public decimal? Percentage { get; set; }
         public bool IsReservedStock { get; set; }
         public int? MaxReservedStock { get; set; }
         public bool IsLimitedTime { get; set; }

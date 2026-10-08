@@ -10,5 +10,6 @@ namespace BLL.Services.Interfaces
         public Task UpdatePromotionAsync(Guid id, PromotionUpdateDto promotionUpdateDto);
         public Task DeletePromotionAsync(Guid id);
         public Task<List<PromotionDto>> GetActiveAndUpcomingPromotionsAsync();
+        public Task<PromotionDto?> GetPromotionByIdAsync(Guid id);
     }
 }

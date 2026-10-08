@@ -19,7 +19,7 @@ namespace DAL.Models
         [Range(0, double.MaxValue)]
         public decimal? ThresholdPrice { get; set; }
         [Range(0, 100)]
-        public byte? Percentage { get; set; }
+        public decimal? Percentage { get; set; }
         // Stock
         public bool IsReservedStock { get; set; } = true;
         [Range(0, int.MaxValue)]
@@ -34,7 +34,7 @@ namespace DAL.Models
         public DateTime? UpdatedAt { get; set; }
         public bool IsDisabled { get; set; } = false;
 
-        public Promotion Create(string name,PromotionTypeEnum promotionTypeEnum, decimal? salePrice = null, decimal? thresholdPrice = null, byte? percentage = null, bool isReservedStock = true, int? maxReservedStock = null, bool isLimitedTime = false, DateTime? startAt = null, DateTime? endAt = null, bool isDisable = false)
+        public Promotion Create(string name,PromotionTypeEnum promotionTypeEnum, decimal? salePrice = null, decimal? thresholdPrice = null, decimal? percentage = null, bool isReservedStock = true, int? maxReservedStock = null, bool isLimitedTime = false, DateTime? startAt = null, DateTime? endAt = null, bool isDisable = false)
         {
             return new Promotion
             {
@@ -53,7 +53,7 @@ namespace DAL.Models
             };
         }
 
-        public void Update(string name, PromotionTypeEnum promotionTypeEnum, decimal? salePrice = null, decimal? thresholdPrice = null, byte? percentage = null, bool isReservedStock = true, int? maxReservedStock = null, bool isLimitedTime = false, DateTime? startAt = null, DateTime? endAt = null, bool isDisable = false)
+        public void Update(string name, PromotionTypeEnum promotionTypeEnum, decimal? salePrice = null, decimal? thresholdPrice = null, decimal? percentage = null, bool isReservedStock = true, int? maxReservedStock = null, bool isLimitedTime = false, DateTime? startAt = null, DateTime? endAt = null, bool isDisable = false)
         {
             Name = name;
             PromotionType = promotionTypeEnum;

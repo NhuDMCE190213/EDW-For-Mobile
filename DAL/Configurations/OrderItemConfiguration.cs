@@ -24,7 +24,7 @@ namespace DAL.Configurations
             builder.Property(oi => oi.Quantity)
                    .IsRequired();
 
-            builder.ToTable(t =>
+            builder.ToTable("order_items", t =>
             {
                 t.HasCheckConstraint(
                     "CK_OrderItem_Quantity_Positive",
@@ -56,11 +56,13 @@ namespace DAL.Configurations
             builder.HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
+                .HasConstraintName("fk_order_items_orders_order_id")
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(oi => oi.ProductVariant)
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductVariantId)
+                .HasConstraintName("fk_order_items_product_variants_product_variant_id")
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure soft delete
