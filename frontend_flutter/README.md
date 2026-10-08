@@ -1,17 +1,24 @@
-# frontend_flutter
+# EDW Flutter frontend
 
-A new Flutter project.
+The current Flutter screen is the staff product-variant management module. It
+loads products and variants from the ASP.NET API and supports:
 
-## Getting Started
+- filtering variants by product;
+- creating and editing color, CPU, RAM, storage, screen size, price, stock,
+  and image URL;
+- deleting a variant;
+- restocking an existing variant;
+- stock status badges matching the old Razor staff screen.
 
-This project is a starting point for a Flutter application.
+## Running against the API
 
-A few resources to get you started if this is your first Flutter project:
+Start the API with the HTTP profile (`http://localhost:5238`) and run:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+flutter run --dart-define=API_BASE_URL=http://localhost:5238
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+`10.0.2.2` is the host alias for an Android emulator. For Flutter Web or
+Windows, use `http://localhost:5238` instead. The app defaults to the Android
+emulator URL on mobile and localhost on web.

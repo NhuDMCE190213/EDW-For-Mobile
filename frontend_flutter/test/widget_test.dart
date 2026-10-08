@@ -1,30 +1,24 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:frontend_flutter/main.dart';
+import 'package:frontend_flutter/models/product_variant.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('variant JSON mapping preserves staff fields', () {
+    final variant = ProductVariant.fromJson({
+      'productVariantId': '00000000-0000-0000-0000-000000000001',
+      'sku': 'PHONE-BLK-128',
+      'color': 'Black',
+      'storage': '128GB',
+      'ram': '8GB',
+      'price': 29000000,
+      'stockQuantity': 12,
+      'productId': 7,
+      'promotion': {'name': 'Launch promotion'},
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(variant.sku, 'PHONE-BLK-128');
+    expect(variant.productId, 7);
+    expect(variant.price, 29000000);
+    expect(variant.promotionName, 'Launch promotion');
   });
 }

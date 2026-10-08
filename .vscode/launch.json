@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Staff - Local Web",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/frontend_flutter",
+      "deviceId": "chrome",
+      "args": [
+        "--dart-define=API_BASE_URL=http://localhost:5238"
+      ]
+    },
+    {
+      "name": "Flutter Staff - Local Windows",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/frontend_flutter",
+      "deviceId": "windows",
+      "args": [
+        "--dart-define=API_BASE_URL=http://localhost:5238"
+      ]
+    },
+    {
+      "name": "Flutter Staff - Android Emulator",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/frontend_flutter",
+      "deviceId": "android",
+      "args": [
+        "--dart-define=API_BASE_URL=http://10.0.2.2:5238"
+      ]
+    },
+    {
+      "name": "API - Local HTTP",
+      "request": "launch",
+      "type": "coreclr",
+      "cwd": "${workspaceFolder}/API",
+      "program": "${workspaceFolder}/API/bin/Debug/net8.0/API.exe",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "args": [
+        "--urls",
+        "http://localhost:5238"
+      ],
+      "preLaunchTask": "build API"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "API + Flutter Staff - Local Web",
+      "configurations": [
+        "API - Local HTTP",
+        "Flutter Staff - Local Web"
+      ]
+    }
+  ]
+}
