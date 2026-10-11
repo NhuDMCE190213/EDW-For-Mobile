@@ -4,30 +4,35 @@ import 'package:flutter/material.dart';
 import 'screens/admin_catalog_page.dart';
 import 'screens/customer_cart_page.dart';
 import 'screens/customer_orders_page.dart';
+import 'screens/login_screen.dart';
 import 'screens/staff_orders_page.dart';
 import 'screens/staff_variant_page.dart';
 import 'services/admin_catalog_api.dart';
+import 'services/auth_api.dart';
 import 'services/cart_api.dart';
 import 'services/order_api.dart';
 import 'services/staff_variant_api.dart';
 
 void main() {
-  final baseUrl = const String.fromEnvironment(
+  const configuredBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: '',
   );
-  final apiBaseUrl = baseUrl.isNotEmpty
-      ? baseUrl
+
+  final resolvedBaseUrl = configuredBaseUrl.isNotEmpty
+      ? configuredBaseUrl
       : !kIsWeb && defaultTargetPlatform == TargetPlatform.android
-      ? 'http://10.0.2.2:5238'
-      : 'http://localhost:5238';
+          ? 'http://10.0.2.2:5238'
+          : 'http://localhost:5238';
 
   runApp(
     MyApp(
-      adminApi: AdminCatalogApi(baseUrl: apiBaseUrl),
-      variantApi: StaffVariantApi(baseUrl: apiBaseUrl),
-      orderApi: OrderApi(baseUrl: apiBaseUrl),
-      cartApi: CartApi(baseUrl: apiBaseUrl),
+      baseUrl: resolvedBaseUrl,
+      adminApi: AdminCatalogApi(baseUrl: resolvedBaseUrl),
+      authApi: AuthApi(baseUrl: resolvedBaseUrl),
+      variantApi: StaffVariantApi(baseUrl: resolvedBaseUrl),
+      orderApi: OrderApi(baseUrl: resolvedBaseUrl),
+      cartApi: CartApi(baseUrl: resolvedBaseUrl),
     ),
   );
 }
@@ -35,13 +40,17 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
+    required this.baseUrl,
     required this.adminApi,
+    required this.authApi,
     required this.variantApi,
     required this.orderApi,
     required this.cartApi,
   });
 
+  final String baseUrl;
   final AdminCatalogApi adminApi;
+  final AuthApi authApi;
   final StaffVariantApi variantApi;
   final OrderApi orderApi;
   final CartApi cartApi;
@@ -50,6 +59,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EDW Mobile',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE24B4A)),
         useMaterial3: true,
@@ -58,12 +68,20 @@ class MyApp extends StatelessWidget {
           fillColor: Color(0xFFF7F7F7),
         ),
       ),
-      home: AppNavigation(
-        adminApi: adminApi,
-        variantApi: variantApi,
-        orderApi: orderApi,
-        cartApi: cartApi,
+      
+home: LoginScreen(
+  authApi: authApi,
+  baseUrl: baseUrl,
+),
       ),
+      routes: {
+        '/home': (_) => AppNavigation(
+              adminApi: adminApi,
+              variantApi: variantApi,
+              orderApi: orderApi,
+              cartApi: cartApi,
+            ),
+      },
     );
   }
 }
