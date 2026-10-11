@@ -93,6 +93,20 @@ class _PromotionPageState extends State<PromotionPage> {
     }
   }
 
+  Future<void> _toggleDisabled(Promotion promotion) async {
+    final disable = !promotion.isDisabled;
+    try {
+      await widget.api.update(
+        promotion.id,
+        PromotionInput.fromPromotion(promotion, isDisable: disable),
+      );
+      _message(disable ? 'Promotion disabled.' : 'Promotion enabled.');
+      _load(spinner: false);
+    } catch (error) {
+      _message(error.toString(), error: true);
+    }
+  }
+
   void _message(String text, {bool error = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -242,6 +256,7 @@ class _PromotionPageState extends State<PromotionPage> {
                 promotion: result.items[index],
                 onEdit: () => _edit(result.items[index]),
                 onDelete: () => _delete(result.items[index]),
+                onToggleDisabled: () => _toggleDisabled(result.items[index]),
               ),
             )
           : SingleChildScrollView(
@@ -274,6 +289,19 @@ class _PromotionPageState extends State<PromotionPage> {
                             DataCell(
                               Row(
                                 children: [
+                                  IconButton(
+                                    onPressed: promotion.isDeleted
+                                        ? null
+                                        : () => _toggleDisabled(promotion),
+                                    icon: Icon(
+                                      promotion.isDisabled
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    tooltip: promotion.isDisabled
+                                        ? 'Enable'
+                                        : 'Disable',
+                                  ),
                                   IconButton(
                                     onPressed: () => _edit(promotion),
                                     icon: const Icon(Icons.edit_outlined),
@@ -361,11 +389,13 @@ class _PromotionCard extends StatelessWidget {
     required this.promotion,
     required this.onEdit,
     required this.onDelete,
+    required this.onToggleDisabled,
   });
 
   final Promotion promotion;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onToggleDisabled;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -403,6 +433,15 @@ class _PromotionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              IconButton(
+                onPressed: promotion.isDeleted ? null : onToggleDisabled,
+                icon: Icon(
+                  promotion.isDisabled
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+                tooltip: promotion.isDisabled ? 'Enable' : 'Disable',
+              ),
               IconButton(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined),
