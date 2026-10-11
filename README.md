@@ -95,6 +95,9 @@ flutter pub get
 
 # Chạy ứng dụng trên máy ảo hoặc thiết bị thật
 flutter run
+
+# Chạy ứng dụng theo localhost
+flutter run -d windows --dart-define=API_BASE_URL=http://localhost:5238
 ```
 *(Lưu ý: Nhớ thay đổi biến `BASE_URL` trong code Flutter thành địa chỉ IP local của máy tính (ví dụ: `http://10.0.2.2:5000` cho Android Emulator) thay vì `localhost` để máy ảo có thể gọi được API backend).*
 
@@ -102,6 +105,7 @@ flutter run
 
 ## 👥 Thành viên Thực hiện (Project Team)
 - Đái Minh Như (Leader) - Email: nhudm.ce190213@gmail.com
+- Tiêu Gia Huy (member) - Email: huytg.ce191594@gmail.com
 - [Thêm tên các thành viên khác vào đây...]
 
 > **Lưu ý:** Khi bạn thêm file cấu hình chứa secret (API keys, connection strings) vào repository cục bộ, tuyệt đối **không** commit các file này lên GitHub — hãy kiểm tra kỹ `.gitignore` trước khi push code.

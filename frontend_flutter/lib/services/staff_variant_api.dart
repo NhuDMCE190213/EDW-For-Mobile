@@ -3,21 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/product_variant.dart';
-
-class ApiException implements Exception {
-  const ApiException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
+import 'api_exception.dart';
 
 class StaffVariantApi {
-  StaffVariantApi({
-    http.Client? client,
-    required this.baseUrl,
-  }) : _client = client ?? http.Client();
+  StaffVariantApi({http.Client? client, required this.baseUrl})
+    : _client = client ?? http.Client();
 
   final http.Client _client;
   final String baseUrl;
@@ -62,7 +52,9 @@ class StaffVariantApi {
   }
 
   Future<void> delete(String id) async {
-    final response = await _client.delete(_uri('/api/staff/product-variants/$id'));
+    final response = await _client.delete(
+      _uri('/api/staff/product-variants/$id'),
+    );
     _ensureSuccess(response);
   }
 
