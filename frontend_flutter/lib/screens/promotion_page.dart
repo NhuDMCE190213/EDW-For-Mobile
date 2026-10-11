@@ -16,6 +16,7 @@ class _PromotionPageState extends State<PromotionPage> {
   final _searchController = TextEditingController();
   PromotionListResult? _result;
   bool _loading = true;
+  bool _actionInProgress = false;
   String? _error;
   int _page = 1;
 
@@ -43,12 +44,14 @@ class _PromotionPageState extends State<PromotionPage> {
         _result = result;
         _error = null;
         _loading = false;
+        _actionInProgress = false;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString();
         _loading = false;
+        _actionInProgress = false;
       });
     }
   }
@@ -63,12 +66,13 @@ class _PromotionPageState extends State<PromotionPage> {
   }
 
   Future<void> _delete(Promotion promotion) async {
+    if (_actionInProgress) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete promotion?'),
         content: Text(
-          'Delete "${promotion.name}"? This disables the promotion.',
+          'Delete "${promotion.name}"? This will soft-delete it and remove it from normal promotion lists.',
         ),
         actions: [
           TextButton(
@@ -84,17 +88,21 @@ class _PromotionPageState extends State<PromotionPage> {
       ),
     );
     if (confirmed != true) return;
+    setState(() => _actionInProgress = true);
     try {
       await widget.api.delete(promotion.id);
-      _message('Promotion deleted.');
+      _message('Promotion soft-deleted.');
       _load(spinner: false);
     } catch (error) {
+      if (mounted) setState(() => _actionInProgress = false);
       _message(error.toString(), error: true);
     }
   }
 
   Future<void> _toggleDisabled(Promotion promotion) async {
+    if (_actionInProgress) return;
     final disable = !promotion.isDisabled;
+    setState(() => _actionInProgress = true);
     try {
       await widget.api.update(
         promotion.id,
@@ -103,6 +111,7 @@ class _PromotionPageState extends State<PromotionPage> {
       _message(disable ? 'Promotion disabled.' : 'Promotion enabled.');
       _load(spinner: false);
     } catch (error) {
+      if (mounted) setState(() => _actionInProgress = false);
       _message(error.toString(), error: true);
     }
   }
@@ -125,7 +134,7 @@ class _PromotionPageState extends State<PromotionPage> {
         title: const Text('Promotion Management'),
         actions: [
           IconButton(
-            onPressed: _loading ? null : _load,
+            onPressed: _loading || _actionInProgress ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
           ),
@@ -144,7 +153,7 @@ class _PromotionPageState extends State<PromotionPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _loading ? null : _edit,
+        onPressed: _loading || _actionInProgress ? null : _edit,
         icon: const Icon(Icons.add),
         label: const Text('Add promotion'),
       ),
@@ -178,7 +187,10 @@ class _PromotionPageState extends State<PromotionPage> {
         ),
         const SizedBox(width: 8),
         IconButton.filled(
-          onPressed: _load,
+          onPressed: () {
+            _page = 1;
+            _load();
+          },
           icon: const Icon(Icons.search),
           tooltip: 'Search',
         ),
@@ -230,7 +242,7 @@ class _PromotionPageState extends State<PromotionPage> {
 
   Widget _buildContent(PromotionListResult? result) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) {
+    if (_error != null && result == null) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -247,86 +259,147 @@ class _PromotionPageState extends State<PromotionPage> {
     if (result == null || result.items.isEmpty) {
       return const Center(child: Text('No promotion data yet.'));
     }
-    return LayoutBuilder(
-      builder: (context, constraints) => constraints.maxWidth < 800
-          ? ListView.separated(
-              itemCount: result.items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (_, index) => _PromotionCard(
-                promotion: result.items[index],
-                onEdit: () => _edit(result.items[index]),
-                onDelete: () => _delete(result.items[index]),
-                onToggleDisabled: () => _toggleDisabled(result.items[index]),
-              ),
-            )
-          : SingleChildScrollView(
-              child: Card(
-                clipBehavior: Clip.antiAlias,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('NAME')),
-                    DataColumn(label: Text('TYPE / VALUE')),
-                    DataColumn(label: Text('STOCK')),
-                    DataColumn(label: Text('DURATION')),
-                    DataColumn(label: Text('STATUS')),
-                    DataColumn(label: Text('ACTIONS')),
-                  ],
-                  rows: result.items
-                      .map(
-                        (promotion) => DataRow(
-                          cells: [
-                            DataCell(Text(promotion.name)),
-                            DataCell(Text(_value(promotion))),
-                            DataCell(
-                              Text(
-                                promotion.isReservedStock
-                                    ? '${promotion.maxReservedStock ?? 0}'
-                                    : 'Unlimited',
-                              ),
-                            ),
-                            DataCell(Text(_duration(promotion))),
-                            DataCell(_StatusBadge(status: promotion.status)),
-                            DataCell(
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: promotion.isDeleted
-                                        ? null
-                                        : () => _toggleDisabled(promotion),
-                                    icon: Icon(
-                                      promotion.isDisabled
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
-                                    ),
-                                    tooltip: promotion.isDisabled
-                                        ? 'Enable'
-                                        : 'Disable',
-                                  ),
-                                  IconButton(
-                                    onPressed: () => _edit(promotion),
-                                    icon: const Icon(Icons.edit_outlined),
-                                    tooltip: 'Edit',
-                                  ),
-                                  IconButton(
-                                    onPressed: promotion.isDeleted
-                                        ? null
-                                        : () => _delete(promotion),
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                    ),
-                                    tooltip: 'Delete',
-                                  ),
-                                ],
-                              ),
-                            ),
+    return Column(
+      children: [
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(_error!, style: TextStyle(color: Colors.red.shade700)),
+          ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => constraints.maxWidth < 800
+                ? ListView.separated(
+                    itemCount: result.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (_, index) => _PromotionCard(
+                      promotion: result.items[index],
+                      onEdit: result.items[index].isDeleted
+                          ? null
+                          : () => _edit(result.items[index]),
+                      onDelete: () => _delete(result.items[index]),
+                      onToggleDisabled: () =>
+                          _toggleDisabled(result.items[index]),
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Card(
+                        clipBehavior: Clip.antiAlias,
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text('NAME')),
+                            DataColumn(label: Text('TYPE / VALUE')),
+                            DataColumn(label: Text('STOCK')),
+                            DataColumn(label: Text('DURATION')),
+                            DataColumn(label: Text('STATUS')),
+                            DataColumn(label: Text('ACTIONS')),
                           ],
+                          rows: result.items
+                              .map(
+                                (promotion) => DataRow(
+                                  cells: [
+                                    DataCell(Text(promotion.name)),
+                                    DataCell(Text(_value(promotion))),
+                                    DataCell(
+                                      Text(
+                                        promotion.isReservedStock
+                                            ? '${promotion.maxReservedStock ?? 0}'
+                                            : 'Unlimited',
+                                      ),
+                                    ),
+                                    DataCell(Text(_duration(promotion))),
+                                    DataCell(
+                                      _StatusBadge(status: promotion.status),
+                                    ),
+                                    DataCell(
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            onPressed: promotion.isDeleted
+                                                ? null
+                                                : () => _toggleDisabled(
+                                                    promotion,
+                                                  ),
+                                            icon: Icon(
+                                              promotion.isDisabled
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                        .visibility_off_outlined,
+                                            ),
+                                            tooltip: promotion.isDisabled
+                                                ? 'Enable'
+                                                : 'Disable',
+                                          ),
+                                          IconButton(
+                                            onPressed: promotion.isDeleted
+                                                ? null
+                                                : () => _edit(promotion),
+                                            icon: const Icon(
+                                              Icons.edit_outlined,
+                                            ),
+                                            tooltip: 'Edit',
+                                          ),
+                                          IconButton(
+                                            onPressed: promotion.isDeleted
+                                                ? null
+                                                : () => _delete(promotion),
+                                            icon: const Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.red,
+                                            ),
+                                            tooltip: 'Delete',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              .toList(),
                         ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ),
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+        _buildPagination(result),
+      ],
+    );
+  }
+
+  Widget _buildPagination(PromotionListResult result) {
+    final totalPages = result.totalPages;
+    if (totalPages <= 1) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: _page > 1 && !_loading && !_actionInProgress
+                ? () {
+                    setState(() => _page--);
+                    _load();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Previous page',
+          ),
+          Text('Page $_page of $totalPages'),
+          IconButton(
+            onPressed: _page < totalPages && !_loading && !_actionInProgress
+                ? () {
+                    setState(() => _page++);
+                    _load();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Next page',
+          ),
+        ],
+      ),
     );
   }
 
@@ -393,9 +466,27 @@ class _PromotionCard extends StatelessWidget {
   });
 
   final Promotion promotion;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback onDelete;
   final VoidCallback onToggleDisabled;
+
+  String _money(double value) => value
+      .toStringAsFixed(0)
+      .replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(1)},',
+      );
+
+  String _duration(Promotion promotion) {
+    if (!promotion.isLimitedTime ||
+        promotion.startAt == null ||
+        promotion.endAt == null) {
+      return 'Unlimited';
+    }
+    String date(DateTime value) =>
+        '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+    return '${date(promotion.startAt!)} - ${date(promotion.endAt!)}';
+  }
 
   @override
   Widget build(BuildContext context) => Card(
@@ -419,17 +510,15 @@ class _PromotionCard extends StatelessWidget {
           Text(
             promotion.type == PromotionType.percentage
                 ? 'Discount: ${promotion.percentage ?? 0}%'
-                : 'Sale price: ${promotion.salePrice ?? 0} VND',
+                : 'Sale price: ${_money(promotion.salePrice ?? 0)} VND',
           ),
           if (promotion.type == PromotionType.fixedAmount &&
               promotion.thresholdPrice != null)
-            Text('Threshold: ${promotion.thresholdPrice} VND'),
+            Text('Threshold: ${_money(promotion.thresholdPrice!)} VND'),
           Text(
             'Stock: ${promotion.isReservedStock ? promotion.maxReservedStock ?? 0 : 'Unlimited'}',
           ),
-          Text(
-            'Duration: ${promotion.isLimitedTime ? 'Limited' : 'Unlimited'}',
-          ),
+          Text('Duration: ${_duration(promotion)}'),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -443,7 +532,7 @@ class _PromotionCard extends StatelessWidget {
                 tooltip: promotion.isDisabled ? 'Enable' : 'Disable',
               ),
               IconButton(
-                onPressed: onEdit,
+                onPressed: promotion.isDeleted ? null : onEdit,
                 icon: const Icon(Icons.edit_outlined),
                 tooltip: 'Edit',
               ),
@@ -539,23 +628,32 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
   }
 
   Future<void> _save() async {
-    final value = double.tryParse(_value.text.trim());
-    final threshold = double.tryParse(_threshold.text.trim());
-    final stock = int.tryParse(_stock.text.trim());
+    double? parseNumber(String text) =>
+        double.tryParse(text.trim().replaceAll(',', '.'));
+
+    final value = parseNumber(_value.text);
+    final threshold = parseNumber(_threshold.text);
+    final stock = int.tryParse(_stock.text.trim().replaceAll(',', ''));
+    final name = _name.text.trim();
+    final invalidFixedAmount =
+        _type == PromotionType.fixedAmount &&
+        (threshold == null ||
+            threshold <= 0 ||
+            value == null ||
+            value >= threshold);
     if (_name.text.trim().isEmpty ||
         value == null ||
-        value < 0 ||
+        value <= 0 ||
         (_type == PromotionType.percentage && value > 100) ||
-        (_type == PromotionType.fixedAmount &&
-            (threshold == null || threshold < 0)) ||
-        (_reserved && (stock == null || stock < 0)) ||
+        invalidFixedAmount ||
+        (_reserved && (stock == null || stock <= 0)) ||
         (_limited &&
             (_startAt == null ||
                 _endAt == null ||
                 !_endAt!.isAfter(_startAt!)))) {
       setState(
-        () =>
-            _error = 'Please enter valid promotion values and required dates.',
+        () => _error =
+            'Check name, value (> 0), stock (> 0), threshold, and dates.',
       );
       return;
     }
@@ -564,7 +662,7 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
       _error = null;
     });
     final input = PromotionInput(
-      name: _name.text.trim(),
+      name: name,
       type: _type,
       salePrice: _type == PromotionType.fixedAmount ? value : null,
       thresholdPrice: _type == PromotionType.fixedAmount ? threshold : null,
@@ -604,12 +702,16 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
       lastDate: DateTime(2100),
     );
     if (picked == null || !mounted) return;
+    final previous = start ? _startAt : _endAt;
     final date = DateTime(
       picked.year,
       picked.month,
       picked.day,
-      start ? 0 : 23,
-      start ? 0 : 59,
+      previous?.hour ?? (start ? 0 : 23),
+      previous?.minute ?? (start ? 0 : 59),
+      previous?.second ?? 0,
+      previous?.millisecond ?? 0,
+      previous?.microsecond ?? 0,
     );
     setState(() {
       if (start) {
@@ -659,7 +761,13 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
               ],
               onChanged: _saving
                   ? null
-                  : (value) => setState(() => _type = value!),
+                  : (value) {
+                      if (value == null || value == _type) return;
+                      setState(() {
+                        _type = value;
+                        _value.clear();
+                      });
+                    },
             ),
             const SizedBox(height: 12),
             TextField(

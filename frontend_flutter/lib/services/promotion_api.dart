@@ -6,11 +6,16 @@ import '../models/promotion.dart';
 import 'staff_variant_api.dart';
 
 class PromotionApi {
-  PromotionApi({http.Client? client, required this.baseUrl})
-      : _client = client ?? http.Client();
+  PromotionApi({http.Client? client, required this.baseUrl, this.authToken})
+    : _client = client ?? http.Client();
 
   final http.Client _client;
   final String baseUrl;
+  String? authToken;
+
+  void setAuthToken(String? token) => authToken = token;
+
+  void dispose() => _client.close();
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
 
@@ -19,13 +24,17 @@ class PromotionApi {
     int page = 1,
     int pageSize = 10,
     bool includeDisable = true,
+    bool includeDeleted = true,
   }) async {
     final response = await _client.post(
       _uri('/api/Promotions/list'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
-        'searchTerm': searchTerm?.trim().isEmpty == true ? null : searchTerm?.trim(),
+        'searchTerm': searchTerm?.trim().isEmpty == true
+            ? null
+            : searchTerm?.trim(),
         'includeDisable': includeDisable,
+        'includeDeleted': includeDeleted,
         'pagination': {'page': page, 'pageSize': pageSize},
       }),
     );
@@ -38,7 +47,7 @@ class PromotionApi {
   Future<void> create(PromotionInput input) async {
     final response = await _client.post(
       _uri('/api/Promotions'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode(input.toJson()),
     );
     _ensureSuccess(response);
@@ -47,14 +56,17 @@ class PromotionApi {
   Future<void> update(String id, PromotionInput input) async {
     final response = await _client.put(
       _uri('/api/Promotions/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode(input.toJson()),
     );
     _ensureSuccess(response);
   }
 
   Future<void> delete(String id) async {
-    final response = await _client.delete(_uri('/api/Promotions/$id'));
+    final response = await _client.delete(
+      _uri('/api/Promotions/$id'),
+      headers: _headers(),
+    );
     _ensureSuccess(response);
   }
 
@@ -66,5 +78,13 @@ class PromotionApi {
         'API request failed (${response.statusCode})${detail.isEmpty ? '' : ': $detail'}',
       );
     }
+  }
+
+  Map<String, String> _headers() {
+    return {
+      'Content-Type': 'application/json',
+      if (authToken != null && authToken!.isNotEmpty)
+        'Authorization': 'Bearer ${authToken!}',
+    };
   }
 }

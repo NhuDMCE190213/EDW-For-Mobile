@@ -1,5 +1,8 @@
 enum PromotionType { percentage, fixedAmount }
 
+int? _parseInt(Object? value) =>
+    value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
+
 class Promotion {
   const Promotion({
     required this.id,
@@ -32,26 +35,68 @@ class Promotion {
   final bool isDisabled;
 
   factory Promotion.fromJson(Map<String, dynamic> json) {
-    final type = (json['promotionType'] ?? json['PromotionType']) as num? ?? 0;
+    final type = _enumValue(json['promotionType'] ?? json['PromotionType']);
     return Promotion(
-      id: (json['promotionId'] ?? json['PromotionId']) as String,
-      name: (json['name'] ?? '') as String,
-      type: type.toInt() == 1 ? PromotionType.fixedAmount : PromotionType.percentage,
-      salePrice: (json['salePrice'] as num?)?.toDouble(),
-      thresholdPrice: (json['thresholdPrice'] as num?)?.toDouble(),
-      percentage: (json['percentage'] as num?)?.toDouble(),
-      isReservedStock: (json['isReservedStock'] as bool?) ?? true,
-      maxReservedStock: (json['maxReservedStock'] as num?)?.toInt(),
-      isLimitedTime: (json['isLimitedTime'] as bool?) ?? false,
-      startAt: _date(json['startAt']),
-      endAt: _date(json['endAt']),
-      isDeleted: (json['isDeleted'] as bool?) ?? false,
-      isDisabled: (json['isDisabled'] as bool?) ?? false,
+      id: (json['promotionId'] ?? json['PromotionId'] ?? '').toString(),
+      name: (json['name'] ?? json['Name'] ?? '').toString(),
+      type: type.toInt() == 1
+          ? PromotionType.fixedAmount
+          : PromotionType.percentage,
+      salePrice: _double(json['salePrice'] ?? json['SalePrice']),
+      thresholdPrice: _double(json['thresholdPrice'] ?? json['ThresholdPrice']),
+      percentage: _double(json['percentage'] ?? json['Percentage']),
+      isReservedStock: _bool(
+        json['isReservedStock'] ?? json['IsReservedStock'],
+      ),
+      maxReservedStock: _int(
+        json['maxReservedStock'] ?? json['MaxReservedStock'],
+      ),
+      isLimitedTime: _bool(json['isLimitedTime'] ?? json['IsLimitedTime']),
+      startAt: _date(json['startAt'] ?? json['StartAt']),
+      endAt: _date(json['endAt'] ?? json['EndAt']),
+      isDeleted: _bool(json['isDeleted'] ?? json['IsDeleted']),
+      isDisabled: _bool(json['isDisabled'] ?? json['IsDisabled']),
     );
   }
 
-  static DateTime? _date(Object? value) =>
-      value is String ? DateTime.tryParse(value)?.toLocal() : null;
+  static int _enumValue(Object? value) {
+    if (value is num) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+      return value.toLowerCase() == 'fixedamount' ? 1 : 0;
+    }
+    return 0;
+  }
+
+  static double? _double(Object? value) => value is num
+      ? value.toDouble()
+      : double.tryParse(value?.toString() ?? '');
+
+  static int? _int(Object? value) =>
+      value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
+
+  static bool _bool(Object? value) =>
+      value is bool ? value : value?.toString().toLowerCase() == 'true';
+
+  static DateTime? _date(Object? value) {
+    if (value is! String) return null;
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return null;
+    if (value.endsWith('Z') || RegExp(r'[+-]\d\d:\d\d$').hasMatch(value)) {
+      return parsed.toLocal();
+    }
+    return DateTime.utc(
+      parsed.year,
+      parsed.month,
+      parsed.day,
+      parsed.hour,
+      parsed.minute,
+      parsed.second,
+      parsed.millisecond,
+      parsed.microsecond,
+    ).toLocal();
+  }
 
   String get status {
     if (isDeleted) return 'Deleted';
@@ -115,18 +160,18 @@ class PromotionInput {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'promotionType': type == PromotionType.fixedAmount ? 1 : 0,
-        'salePrice': salePrice,
-        'thresholdPrice': thresholdPrice,
-        'percentage': percentage,
-        'isReservedStock': isReservedStock,
-        'maxReservedStock': maxReservedStock,
-        'isLimitedTime': isLimitedTime,
-        'startAt': startAt?.toUtc().toIso8601String(),
-        'endAt': endAt?.toUtc().toIso8601String(),
-        'isDisable': isDisable,
-      };
+    'name': name,
+    'promotionType': type == PromotionType.fixedAmount ? 1 : 0,
+    'salePrice': salePrice,
+    'thresholdPrice': thresholdPrice,
+    'percentage': percentage,
+    'isReservedStock': isReservedStock,
+    'maxReservedStock': maxReservedStock,
+    'isLimitedTime': isLimitedTime,
+    'startAt': startAt?.toUtc().toIso8601String(),
+    'endAt': endAt?.toUtc().toIso8601String(),
+    'isDisable': isDisable,
+  };
 }
 
 class PromotionListResult {
@@ -153,14 +198,23 @@ class PromotionListResult {
     final items = (pagination['items'] ?? pagination['Items'] ?? []) as List;
     return PromotionListResult(
       items: items
-          .map((item) => Promotion.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) =>
+                Promotion.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList(),
-      totalCount: (pagination['totalCount'] as num?)?.toInt() ?? 0,
-      activeCount: (json['activeCount'] as num?)?.toInt() ?? 0,
-      upcomingCount: (json['upcoming'] as num?)?.toInt() ?? 0,
-      expiredCount: (json['expiredOrDisabledCount'] as num?)?.toInt() ?? 0,
-      page: (pagination['page'] as num?)?.toInt() ?? 1,
-      totalPages: (pagination['totalPages'] as num?)?.toInt() ?? 0,
+      totalCount:
+          _parseInt(pagination['totalCount'] ?? pagination['TotalCount']) ?? 0,
+      activeCount: _parseInt(json['activeCount'] ?? json['ActiveCount']) ?? 0,
+      upcomingCount: _parseInt(json['upcoming'] ?? json['Upcoming']) ?? 0,
+      expiredCount:
+          _parseInt(
+            json['expiredOrDisabledCount'] ?? json['ExpiredOrDisabledCount'],
+          ) ??
+          0,
+      page: _parseInt(pagination['page'] ?? pagination['Page']) ?? 1,
+      totalPages:
+          _parseInt(pagination['totalPages'] ?? pagination['TotalPages']) ?? 0,
     );
   }
 }
