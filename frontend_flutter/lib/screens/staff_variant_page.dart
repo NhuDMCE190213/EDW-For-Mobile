@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../models/product_variant.dart';
+import '../services/auth_api.dart';
 import '../services/staff_variant_api.dart';
+import 'login_screen.dart';
+import 'profile_screen.dart';
 
 class StaffVariantPage extends StatefulWidget {
-  const StaffVariantPage({super.key, required this.api});
+  const StaffVariantPage({
+    super.key,
+    required this.api,
+    this.authToken,
+    this.authApi,
+    this.baseUrl,
+  });
 
   final StaffVariantApi api;
+  final String? authToken;
+  final AuthApi? authApi;
+  final String? baseUrl;
 
   @override
   State<StaffVariantPage> createState() => _StaffVariantPageState();
@@ -148,6 +160,50 @@ class _StaffVariantPageState extends State<StaffVariantPage> {
     );
   }
 
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất tài khoản nhân viên?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE24B4A)),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    if (widget.authApi != null && widget.authToken != null) {
+      try {
+        await widget.authApi!.logout(widget.authToken!);
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+    if (widget.authApi != null && widget.baseUrl != null) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LoginScreen(
+            authApi: widget.authApi!,
+            baseUrl: widget.baseUrl!,
+          ),
+        ),
+        (route) => false,
+      );
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,6 +215,30 @@ class _StaffVariantPageState extends State<StaffVariantPage> {
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
           ),
+          if (widget.authToken != null && widget.baseUrl != null)
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(
+                      token: widget.authToken!,
+                      role: 'Staff',
+                      baseUrl: widget.baseUrl!,
+                      authApi: widget.authApi,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.account_circle_outlined),
+              tooltip: 'Hồ sơ cá nhân',
+            ),
+          if (widget.authApi != null)
+            IconButton(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout),
+              tooltip: 'Đăng xuất',
+            ),
         ],
       ),
       body: Padding(
