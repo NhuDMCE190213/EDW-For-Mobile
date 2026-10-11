@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/promotion.dart';
 import '../services/promotion_api.dart';
@@ -32,7 +35,7 @@ class _PromotionPageState extends State<PromotionPage> {
     super.dispose();
   }
 
-  Future<void> _load({bool spinner = true}) async {
+  Future<void> _load({bool spinner = true, int? previousPage}) async {
     if (spinner) setState(() => _loading = true);
     try {
       final result = await widget.api.list(
@@ -40,6 +43,11 @@ class _PromotionPageState extends State<PromotionPage> {
         page: _page,
       );
       if (!mounted) return;
+      if (result.items.isEmpty && _page > 1) {
+        _page = math.max(1, math.min(result.totalPages, _page - 1));
+        await _load(spinner: false);
+        return;
+      }
       setState(() {
         _result = result;
         _error = null;
@@ -48,6 +56,7 @@ class _PromotionPageState extends State<PromotionPage> {
       });
     } catch (error) {
       if (!mounted) return;
+      if (previousPage != null) _page = previousPage;
       setState(() {
         _error = error.toString();
         _loading = false;
@@ -72,7 +81,7 @@ class _PromotionPageState extends State<PromotionPage> {
       builder: (context) => AlertDialog(
         title: const Text('Delete promotion?'),
         content: Text(
-          'Delete "${promotion.name}"? This will soft-delete it and remove it from normal promotion lists.',
+          'Delete "${promotion.name}"? This will mark the promotion as deleted.',
         ),
         actions: [
           TextButton(
@@ -220,7 +229,12 @@ class _PromotionPageState extends State<PromotionPage> {
             Colors.orange,
             Icons.schedule_outlined,
           ),
-          _StatCard('Expired', result.expiredCount, Colors.red, Icons.history),
+          _StatCard(
+            'Expired/Disabled',
+            result.expiredCount,
+            Colors.red,
+            Icons.history,
+          ),
         ];
         return Wrap(
           spacing: 8,
@@ -242,7 +256,7 @@ class _PromotionPageState extends State<PromotionPage> {
 
   Widget _buildContent(PromotionListResult? result) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null && result == null) {
+    if (_error != null && (result == null || result.items.isEmpty)) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -380,8 +394,9 @@ class _PromotionPageState extends State<PromotionPage> {
           IconButton(
             onPressed: _page > 1 && !_loading && !_actionInProgress
                 ? () {
+                    final previousPage = _page;
                     setState(() => _page--);
-                    _load();
+                    _load(previousPage: previousPage);
                   }
                 : null,
             icon: const Icon(Icons.chevron_left),
@@ -391,8 +406,9 @@ class _PromotionPageState extends State<PromotionPage> {
           IconButton(
             onPressed: _page < totalPages && !_loading && !_actionInProgress
                 ? () {
+                    final previousPage = _page;
                     setState(() => _page++);
-                    _load();
+                    _load(previousPage: previousPage);
                   }
                 : null,
             icon: const Icon(Icons.chevron_right),
@@ -628,11 +644,16 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
   }
 
   Future<void> _save() async {
-    double? parseNumber(String text) =>
+    double? parseVnd(String text) =>
+        double.tryParse(text.replaceAll(RegExp(r'[.,\s]'), ''));
+
+    double? parsePercent(String text) =>
         double.tryParse(text.trim().replaceAll(',', '.'));
 
-    final value = parseNumber(_value.text);
-    final threshold = parseNumber(_threshold.text);
+    final value = _type == PromotionType.fixedAmount
+        ? parseVnd(_value.text)
+        : parsePercent(_value.text);
+    final threshold = parseVnd(_threshold.text);
     final stock = int.tryParse(_stock.text.trim().replaceAll(',', ''));
     final name = _name.text.trim();
     final invalidFixedAmount =
@@ -780,6 +801,9 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
                     ? 'Percentage (0-100) *'
                     : 'Sale price (VND) *',
               ),
+              inputFormatters: _type == PromotionType.fixedAmount
+                  ? [FilteringTextInputFormatter.digitsOnly]
+                  : null,
             ),
             if (_type == PromotionType.fixedAmount) ...[
               const SizedBox(height: 12),
@@ -788,6 +812,7 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: 'Threshold price (VND) *',
                 ),
