@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../models/auth_model.dart';
 import '../services/auth_api.dart';
+import '../services/cart_api.dart';
 import '../services/staff_variant_api.dart';
 import 'customer_home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
-import 'staff_variant_page.dart';
 
 enum LoginRoleTab { customer, staff }
 
@@ -84,21 +84,16 @@ class _LoginScreenState extends State<LoginScreen> {
               user: response,
               authApi: widget.authApi,
               baseUrl: widget.baseUrl,
+              cartApi: CartApi(baseUrl: widget.baseUrl),
             ),
           ),
         );
       } else {
-        // Chuyển sang màn hình quản lý biến thể của Staff (Code nhóm trưởng)
-        Navigator.pushReplacement(
+        // Staff sử dụng navigation chứa cả Variants và Orders.
+        Navigator.pushReplacementNamed(
           context,
-          MaterialPageRoute(
-            builder: (_) => StaffVariantPage(
-              api: StaffVariantApi(baseUrl: widget.baseUrl),
-              authToken: response.token,
-              authApi: widget.authApi,
-              baseUrl: widget.baseUrl,
-            ),
-          ),
+          '/home',
+          arguments: response.token,
         );
       }
     } on ApiException catch (e) {

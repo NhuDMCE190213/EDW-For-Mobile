@@ -7,10 +7,10 @@ class StaffOrdersPage extends StatefulWidget {
   final OrderApi api;
 
   @override
-  State<StaffOrdersPage> createState() => _StaffOrdersPageState();
+  State<StaffOrdersPage> createState() => StaffOrdersPageState();
 }
 
-class _StaffOrdersPageState extends State<StaffOrdersPage> {
+class StaffOrdersPageState extends State<StaffOrdersPage> {
   List<Order> _orders = [];
   bool _isLoading = true;
 
@@ -38,6 +38,8 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
     }
   }
 
+  Future<void> refresh() => _fetchOrders();
+
   Future<void> _updateStatus(String orderId, String status) async {
     try {
       await widget.api.updateOrderStatus(orderId, status);
@@ -58,11 +60,7 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Staff - View Orders'),
-      ),
-      body: _isLoading
+    return _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _fetchOrders,
@@ -91,7 +89,6 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
                   );
                 },
               ),
-            ),
-    );
+            );
   }
 }
