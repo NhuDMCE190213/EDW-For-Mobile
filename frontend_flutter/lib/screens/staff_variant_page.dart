@@ -10,11 +10,11 @@ class StaffVariantPage extends StatefulWidget {
   const StaffVariantPage({
     super.key,
     required this.api,
-    this.showAppBar = true,
+    this.authToken,
   });
 
   final StaffVariantApi api;
-  final bool showAppBar;
+  final String? authToken;
 
   @override
   State<StaffVariantPage> createState() => StaffVariantPageState();
@@ -160,87 +160,69 @@ class StaffVariantPageState extends State<StaffVariantPage> {
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final productPicker = DropdownButtonFormField<int?>(
-                initialValue: _selectedProductId,
-                decoration: const InputDecoration(
-                  labelText: 'Product',
-                  prefixIcon: Icon(Icons.inventory_2_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem<int?>(
-                    value: null,
-                    child: Text('All products'),
+    return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final productPicker = DropdownButtonFormField<int?>(
+                  initialValue: _selectedProductId,
+                  decoration: const InputDecoration(
+                    labelText: 'Product',
+                    prefixIcon: Icon(Icons.inventory_2_outlined),
+                    border: OutlineInputBorder(),
                   ),
-                  ..._products.map(
-                    (product) => DropdownMenuItem<int?>(
-                      value: product.id,
-                      child: Text(
-                        '${product.id} - ${product.name}',
-                        overflow: TextOverflow.ellipsis,
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('All products'),
+                    ),
+                    ..._products.map(
+                      (product) => DropdownMenuItem<int?>(
+                        value: product.id,
+                        child: Text(
+                          '${product.id} - ${product.name}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedProductId = value);
-                  _load();
-                },
-              );
-              final addButton = FilledButton.icon(
-                onPressed: () => _showEditor(),
-                icon: const Icon(Icons.add),
-                label: const Text('Add variant'),
-              );
-              if (constraints.maxWidth < 520) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedProductId = value);
+                    _load();
+                  },
+                );
+                final addButton = FilledButton.icon(
+                  onPressed: () => _showEditor(),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add variant'),
+                );
+                if (constraints.maxWidth < 520) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      productPicker,
+                      const SizedBox(height: 8),
+                      addButton,
+                    ],
+                  );
+                }
+                return Row(
                   children: [
-                    productPicker,
-                    const SizedBox(height: 8),
+                    Expanded(child: productPicker),
+                    const SizedBox(width: 12),
                     addButton,
                   ],
                 );
-              }
-              return Row(
-                children: [
-                  Expanded(child: productPicker),
-                  const SizedBox(width: 12),
-                  addButton,
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          Expanded(child: _buildContent()),
-        ],
-      ),
-    );
-
-    if (!widget.showAppBar) {
-      return content;
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Product Variant Management'),
-        actions: [
-          IconButton(
-            onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
-      body: content,
-    );
+              },
+            ),
+            const SizedBox(height: 16),
+            Expanded(child: _buildContent()),
+          ],
+        ),
+      );
   }
 
   Widget _buildContent() {

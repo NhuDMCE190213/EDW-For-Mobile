@@ -20,14 +20,13 @@ void main() {
 
   final resolvedBaseUrl = configuredBaseUrl.isNotEmpty
       ? configuredBaseUrl
-      : !kIsWeb && defaultTargetPlatform == TargetPlatform.android
-      ? 'http://10.0.2.2:5238'
-      : 'http://localhost:5238';
+      : kIsWeb
+      ? 'http://localhost:5238'
+      : 'http://10.0.2.2:5238';
 
   runApp(
     MyApp(
       baseUrl: resolvedBaseUrl,
-      adminApi: AdminCatalogApi(baseUrl: resolvedBaseUrl),
       authApi: AuthApi(baseUrl: resolvedBaseUrl),
       variantApi: StaffVariantApi(baseUrl: resolvedBaseUrl),
       orderApi: OrderApi(baseUrl: resolvedBaseUrl),
@@ -70,7 +69,6 @@ class MyApp extends StatelessWidget {
       home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
       routes: {
         '/home': (context) => AppNavigation(
-          adminApi: adminApi,
           variantApi: variantApi,
           orderApi: orderApi,
           authApi: authApi,
@@ -114,24 +112,19 @@ class _AppNavigationState extends State<AppNavigation> {
   void initState() {
     super.initState();
     _pages = [
-      AdminCatalogPage(api: widget.adminApi),
       StaffVariantPage(
         key: _variantPageKey,
         api: widget.variantApi,
-        showAppBar: false,
+        authToken: widget.authToken,
       ),
       StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
     ];
   }
 
   Future<void> _refreshCurrentPage() {
-    if (_currentIndex == 1) {
-      return _variantPageKey.currentState!.refresh();
-    }
-    if (_currentIndex == 2) {
-      return _ordersPageKey.currentState!.refresh();
-    }
-    return Future.value();
+    return _currentIndex == 0
+        ? _variantPageKey.currentState!.refresh()
+        : _ordersPageKey.currentState!.refresh();
   }
 
   Future<void> _openProfile() async {
@@ -173,28 +166,30 @@ class _AppNavigationState extends State<AppNavigation> {
         : 'Staff - View Orders';
 
     return Scaffold(
-      appBar: _currentIndex == 0
-          ? null
-          : AppBar(
-              title: Text(title),
-              actions: [
-                IconButton(
-                  onPressed: _refreshCurrentPage,
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh',
-                ),
-                IconButton(
-                  onPressed: _openProfile,
-                  icon: const Icon(Icons.account_circle_outlined),
-                  tooltip: 'Profile',
-                ),
-                IconButton(
-                  onPressed: _logout,
-                  icon: const Icon(Icons.logout),
-                  tooltip: 'Logout',
-                ),
-              ],
-            ),
+      appBar: AppBar(
+        title: Text(
+          _currentIndex == 0
+              ? 'Product Variant Management'
+              : 'Staff - View Orders',
+        ),
+        actions: [
+          IconButton(
+            onPressed: _refreshCurrentPage,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
+            onPressed: _openProfile,
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Profile',
+          ),
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -203,10 +198,6 @@ class _AppNavigationState extends State<AppNavigation> {
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_customize_outlined),
-            label: 'Catalog',
-          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.inventory),
             label: 'Variants',

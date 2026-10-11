@@ -57,7 +57,7 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
@@ -79,20 +79,14 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                     ),
                     trailing: DropdownButton<String>(
                       value: order.status,
-                      items:
-                          [
-                                'Pending',
-                                'Processing',
-                                'Confirmed',
-                                'Shipped',
-                                'Completed',
-                                'Cancelled',
-                              ]
-                              .map(
-                                (s) =>
-                                    DropdownMenuItem(value: s, child: Text(s)),
-                              )
-                              .toList(),
+                      items: [
+                        'Pending',
+                        'Processing',
+                        'Confirmed',
+                        'Shipped',
+                        'Completed',
+                        'Cancelled',
+                      ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                       onChanged: (newStatus) {
                         if (newStatus != null && newStatus != order.status) {
                           _updateStatus(order.orderId, newStatus);
