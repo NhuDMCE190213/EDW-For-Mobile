@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DAL.Migrations
 {
     /// <inheritdoc />
-    public partial class InitData : Migration
+    public partial class Initdatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -58,7 +58,7 @@ namespace DAL.Migrations
                     promotion_type = table.Column<int>(type: "int", nullable: false),
                     sale_price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     threshold_price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    percentage = table.Column<byte>(type: "tinyint", nullable: true),
+                    percentage = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     is_reserved_stock = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     max_reserved_stock = table.Column<int>(type: "int", nullable: true),
                     is_limited_time = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
@@ -312,6 +312,11 @@ namespace DAL.Migrations
                 column: "product_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_product_variants_price",
+                table: "product_variants",
+                column: "price");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_product_variants_product_id",
                 table: "product_variants",
                 column: "product_id");
@@ -322,25 +327,20 @@ namespace DAL.Migrations
                 column: "promotion_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProductVariant_Price",
-                table: "product_variants",
-                column: "price");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductVariant_Sku",
+                name: "ix_product_variants_sku",
                 table: "product_variants",
                 column: "sku",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Product_ProductName",
-                table: "products",
-                column: "product_name");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_products_category_id",
                 table: "products",
                 column: "category_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_products_product_name",
+                table: "products",
+                column: "product_name");
 
             migrationBuilder.CreateIndex(
                 name: "ix_promotions_end_at",

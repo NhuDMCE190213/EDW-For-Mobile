@@ -7,9 +7,8 @@ import 'screens/promotion_page.dart';
 import 'screens/staff_variant_page.dart';
 import 'screens/profile_screen.dart';
 import 'screens/staff_orders_page.dart';
-import 'screens/staff_variant_page.dart';
-import 'services/admin_catalog_api.dart';
 import 'services/auth_api.dart';
+import 'services/admin_catalog_api.dart';
 import 'services/promotion_api.dart';
 import 'services/cart_api.dart';
 import 'services/order_api.dart';
@@ -31,6 +30,7 @@ void main() {
     MyApp(
       baseUrl: resolvedBaseUrl,
       authApi: AuthApi(baseUrl: resolvedBaseUrl),
+      catalogApi: AdminCatalogApi(baseUrl: resolvedBaseUrl),
       variantApi: StaffVariantApi(baseUrl: resolvedBaseUrl),
       promotionApi: PromotionApi(baseUrl: resolvedBaseUrl),
       orderApi: OrderApi(baseUrl: resolvedBaseUrl),
@@ -43,17 +43,16 @@ class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
     required this.baseUrl,
-    required this.adminApi,
     required this.authApi,
+    required this.catalogApi,
     required this.variantApi,
     required this.promotionApi,
     required this.orderApi,
     required this.cartApi,
   });
-
   final String baseUrl;
-  final AdminCatalogApi adminApi;
   final AuthApi authApi;
+  final AdminCatalogApi catalogApi;
   final StaffVariantApi variantApi;
   final PromotionApi promotionApi;
   final OrderApi orderApi;
@@ -79,6 +78,7 @@ class MyApp extends StatelessWidget {
           promotionApi: promotionApi,
           orderApi: orderApi,
           authApi: authApi,
+          catalogApi: catalogApi,
           baseUrl: baseUrl,
           authToken: ModalRoute.of(context)?.settings.arguments as String?,
         ),
@@ -90,20 +90,20 @@ class MyApp extends StatelessWidget {
 class AppNavigation extends StatefulWidget {
   const AppNavigation({
     super.key,
-    required this.adminApi,
     required this.variantApi,
     required this.promotionApi,
     required this.orderApi,
     required this.authApi,
+    required this.catalogApi,
     required this.baseUrl,
     this.authToken,
   });
 
-  final AdminCatalogApi adminApi;
   final StaffVariantApi variantApi;
   final PromotionApi promotionApi;
   final OrderApi orderApi;
   final AuthApi authApi;
+  final AdminCatalogApi catalogApi;
   final String baseUrl;
   final String? authToken;
 
@@ -126,15 +126,20 @@ class _AppNavigationState extends State<AppNavigation> {
         api: widget.variantApi,
         authToken: widget.authToken,
       ),
-      PromotionPage(key: _promotionPageKey, api: widget.promotionApi),
+      PromotionPage(api: widget.promotionApi),
       StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
+      AdminCatalogPage(api: widget.catalogApi),
     ];
   }
 
   Future<void> _refreshCurrentPage() {
-    return _currentIndex == 0
-        ? _variantPageKey.currentState!.refresh()
-        : _ordersPageKey.currentState!.refresh();
+    if (_currentIndex == 0) {
+      return _variantPageKey.currentState?.refresh() ?? Future.value();
+    }
+    if (_currentIndex == 2) {
+      return _ordersPageKey.currentState?.refresh() ?? Future.value();
+    }
+    return Future.value();
   }
 
   Future<void> _openProfile() async {
@@ -171,17 +176,16 @@ class _AppNavigationState extends State<AppNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    final title = _currentIndex == 1
-        ? 'Product Variant Management'
-        : 'Staff - View Orders';
-
     return Scaffold(
-
       appBar: AppBar(
         title: Text(
           _currentIndex == 0
               ? 'Product Variant Management'
-              : 'Staff - View Orders',
+              : _currentIndex == 1
+              ? 'Promotion Management'
+              : _currentIndex == 2
+              ? 'Staff - View Orders'
+              : 'Product and Category Management',
         ),
         actions: [
           IconButton(
@@ -214,13 +218,16 @@ class _AppNavigationState extends State<AppNavigation> {
             label: 'Variants',
           ),
           BottomNavigationBarItem(
-
             icon: Icon(Icons.local_offer),
             label: 'Promotions',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'All Orders',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category_outlined),
+            label: 'Catalog',
           ),
         ],
       ),

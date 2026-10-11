@@ -4,10 +4,10 @@ import '../models/auth_model.dart';
 import '../services/api_exception.dart';
 import '../services/auth_api.dart';
 import '../services/cart_api.dart';
+import '../services/order_api.dart';
 import 'customer_home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
-import '../services/staff_variant_api.dart';
 
 enum LoginRoleTab { customer, staff }
 
@@ -82,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
               authApi: widget.authApi,
               baseUrl: widget.baseUrl,
               cartApi: CartApi(baseUrl: widget.baseUrl),
+              orderApi: OrderApi(baseUrl: widget.baseUrl),
             ),
           ),
         );

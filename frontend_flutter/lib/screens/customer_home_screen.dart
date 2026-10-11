@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/auth_model.dart';
 import '../services/auth_api.dart';
 import '../services/cart_api.dart';
+import '../services/order_api.dart';
 import 'customer_cart_page.dart';
+import 'customer_orders_page.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 
@@ -14,12 +16,14 @@ class CustomerHomeScreen extends StatefulWidget {
     required this.authApi,
     required this.baseUrl,
     required this.cartApi,
+    required this.orderApi,
   });
 
   final LoginResponse user;
   final AuthApi authApi;
   final String baseUrl;
   final CartApi cartApi;
+  final OrderApi orderApi;
 
   @override
   State<CustomerHomeScreen> createState() => _CustomerHomeScreenState();
@@ -103,6 +107,18 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  void _openOrders() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerOrdersPage(
+          api: widget.orderApi,
+          customerId: widget.user.userId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,6 +129,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             onPressed: _openCart,
             icon: const Icon(Icons.shopping_cart_outlined),
             tooltip: 'Giỏ hàng',
+          ),
+          IconButton(
+            onPressed: _openOrders,
+            icon: const Icon(Icons.receipt_long_outlined),
+            tooltip: 'Đơn hàng của tôi',
           ),
           IconButton(
             onPressed: _openProfile,
@@ -208,6 +229,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     onPressed: _openCart,
                     icon: const Icon(Icons.shopping_cart_outlined),
                     label: const Text('Xem giỏ hàng'),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _openOrders,
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('My Orders'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
