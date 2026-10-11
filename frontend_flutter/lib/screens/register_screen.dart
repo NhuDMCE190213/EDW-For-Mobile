@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/auth_model.dart';
+import '../services/api_exception.dart';
 import '../services/auth_api.dart';
-import '../services/staff_variant_api.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key, required this.authApi});
@@ -77,9 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Đăng ký tài khoản'),
-      ),
+      appBar: AppBar(title: const Text('Đăng ký tài khoản')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -104,7 +102,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 6),
                     Text(
                       'Đăng ký để bắt đầu mua sắm điện thoại, laptop & phụ kiện',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -120,12 +121,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style: TextStyle(color: Colors.red.shade800, fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.red.shade800,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ],
@@ -192,7 +200,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Vui lòng nhập số điện thoại.';
                         }
-                        if (value.trim().length < 8 || value.trim().length > 15) {
+                        if (value.trim().length < 8 ||
+                            value.trim().length > 15) {
                           return 'Số điện thoại phải từ 8 đến 15 số.';
                         }
                         return null;
@@ -206,14 +215,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Mật khẩu',
-                        hintText: 'Tối thiểu 8 ký tự, có chữ, số & ký tự đặc biệt',
+                        hintText:
+                            'Tối thiểu 8 ký tự, có chữ, số & ký tự đặc biệt',
                         prefixIcon: const Icon(Icons.lock_outline),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                       ),
                       validator: (value) {
@@ -226,7 +240,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         // Kiểm tra regex theo rule backend BLL
                         final hasLetter = RegExp(r'[a-zA-Z]').hasMatch(value);
                         final hasNumber = RegExp(r'\d').hasMatch(value);
-                        final hasSpecial = RegExp(r'[!@#$%^&*()_+\-=\[\]{};:\x27"\\|,.<>\/?]').hasMatch(value);
+                        final hasSpecial = RegExp(
+                          r'[!@#$%^&*()_+\-=\[\]{};:\x27"\\|,.<>\/?]',
+                        ).hasMatch(value);
                         if (!hasLetter || !hasNumber || !hasSpecial) {
                           return 'Mật khẩu cần gồm chữ cái, số và ký tự đặc biệt.';
                         }
@@ -246,9 +262,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
-                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          onPressed: () => setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
+                          ),
                         ),
                       ),
                       validator: (value) {
@@ -277,11 +298,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text(
                               'Đăng ký tài khoản',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                     const SizedBox(height: 16),
@@ -290,7 +317,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Đã có tài khoản?', style: TextStyle(color: Colors.grey.shade700)),
+                        Text(
+                          'Đã có tài khoản?',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: const Text(

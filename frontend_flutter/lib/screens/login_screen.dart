@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../models/auth_model.dart';
+import '../services/api_exception.dart';
 import '../services/auth_api.dart';
 import '../services/cart_api.dart';
-import '../services/staff_variant_api.dart';
 import 'customer_home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
+import '../services/staff_variant_api.dart';
 
 enum LoginRoleTab { customer, staff }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({
-    super.key,
-    required this.authApi,
-    required this.baseUrl,
-  });
+  const LoginScreen({super.key, required this.authApi, required this.baseUrl});
 
   final AuthApi authApi;
   final String baseUrl;
@@ -185,7 +182,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       isCustomer
                           ? 'Đăng nhập để theo dõi đơn hàng và mua sắm'
                           : 'Đăng nhập dành cho nhân viên quản lý',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -225,12 +225,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style: TextStyle(color: Colors.red.shade800, fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.red.shade800,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ],
@@ -244,7 +251,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: isCustomer ? 'Email khách hàng' : 'Email nhân viên',
+                        labelText: isCustomer
+                            ? 'Email khách hàng'
+                            : 'Email nhân viên',
                         hintText: 'name@example.com',
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: const OutlineInputBorder(),
@@ -273,9 +282,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                       ),
                       validator: (value) {
@@ -295,9 +308,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Checkbox(
                               value: _rememberMe,
-                              onChanged: (val) => setState(() => _rememberMe = val ?? false),
+                              onChanged: (val) =>
+                                  setState(() => _rememberMe = val ?? false),
                             ),
-                            const Text('Ghi nhớ', style: TextStyle(fontSize: 14)),
+                            const Text(
+                              'Ghi nhớ',
+                              style: TextStyle(fontSize: 14),
+                            ),
                           ],
                         ),
                         TextButton(
@@ -329,11 +346,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(
-                              isCustomer ? 'Đăng nhập Khách hàng' : 'Đăng nhập Nhân viên',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              isCustomer
+                                  ? 'Đăng nhập Khách hàng'
+                                  : 'Đăng nhập Nhân viên',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                     const SizedBox(height: 20),
@@ -343,7 +368,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Chưa có tài khoản?', style: TextStyle(color: Colors.grey.shade700)),
+                          Text(
+                            'Chưa có tài khoản?',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
                           TextButton(
                             onPressed: _navigateToRegister,
                             child: const Text(

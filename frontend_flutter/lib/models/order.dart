@@ -1,5 +1,3 @@
-import 'package:frontend_flutter/models/product_variant.dart';
-
 class Order {
   final String orderId;
   final int customerId;

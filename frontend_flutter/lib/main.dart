@@ -1,14 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/admin_catalog_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/staff_variant_page.dart';
 import 'screens/staff_orders_page.dart';
+import 'screens/staff_variant_page.dart';
+import 'services/admin_catalog_api.dart';
 import 'services/auth_api.dart';
-import 'services/staff_variant_api.dart';
-import 'services/order_api.dart';
 import 'services/cart_api.dart';
+import 'services/order_api.dart';
+import 'services/staff_variant_api.dart';
 
 void main() {
   const configuredBaseUrl = String.fromEnvironment(
@@ -37,6 +39,7 @@ class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
     required this.baseUrl,
+    required this.adminApi,
     required this.authApi,
     required this.variantApi,
     required this.orderApi,
@@ -44,6 +47,7 @@ class MyApp extends StatelessWidget {
   });
 
   final String baseUrl;
+  final AdminCatalogApi adminApi;
   final AuthApi authApi;
   final StaffVariantApi variantApi;
   final OrderApi orderApi;
@@ -79,6 +83,7 @@ class MyApp extends StatelessWidget {
 class AppNavigation extends StatefulWidget {
   const AppNavigation({
     super.key,
+    required this.adminApi,
     required this.variantApi,
     required this.orderApi,
     required this.authApi,
@@ -86,6 +91,7 @@ class AppNavigation extends StatefulWidget {
     this.authToken,
   });
 
+  final AdminCatalogApi adminApi;
   final StaffVariantApi variantApi;
   final OrderApi orderApi;
   final AuthApi authApi;
@@ -155,6 +161,10 @@ class _AppNavigationState extends State<AppNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final title = _currentIndex == 1
+        ? 'Product Variant Management'
+        : 'Staff - View Orders';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(

@@ -21,8 +21,9 @@ class CartItem {
       customerId: json['customerId'] as int,
       productVariantId: json['productVariantId'] as String,
       quantity: json['quantity'] as int,
-      productVariant:
-          ProductVariant.fromJson(json['productVariant'] as Map<String, dynamic>),
+      productVariant: ProductVariant.fromJson(
+        json['productVariant'] as Map<String, dynamic>,
+      ),
     );
   }
 }

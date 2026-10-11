@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/order.dart';
 import '../services/order_api.dart';
 
@@ -31,9 +32,8 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading orders: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error loading orders: $e')));
       }
     }
   }
@@ -45,50 +45,59 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
       await widget.api.updateOrderStatus(orderId, status);
       await _fetchOrders();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order status updated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Order status updated')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating status: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error updating status: $e')));
       }
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchOrders,
-              child: ListView.builder(
-                itemCount: _orders.length,
-                itemBuilder: (context, index) {
-                  final order = _orders[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      title: Text('Order #${order.orderId.substring(0, 8)}'),
-                      subtitle: Text('Status: ${order.status}\nTotal: \$${order.totalAmount}'),
-                      trailing: DropdownButton<String>(
-                        value: order.status,
-                        items: ['Pending', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                            .toList(),
-                        onChanged: (newStatus) {
-                          if (newStatus != null && newStatus != order.status) {
-                            _updateStatus(order.orderId, newStatus);
-                          }
-                        },
-                      ),
-                      isThreeLine: true,
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: _fetchOrders,
+            child: ListView.builder(
+              itemCount: _orders.length,
+              itemBuilder: (context, index) {
+                final order = _orders[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: ListTile(
+                    title: Text('Order #${order.orderId.substring(0, 8)}'),
+                    subtitle: Text(
+                      'Status: ${order.status}\nTotal: \$${order.totalAmount}',
                     ),
-                  );
-                },
-              ),
-            );
+                    trailing: DropdownButton<String>(
+                      value: order.status,
+                      items: [
+                        'Pending',
+                        'Processing',
+                        'Confirmed',
+                        'Shipped',
+                        'Completed',
+                        'Cancelled',
+                      ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      onChanged: (newStatus) {
+                        if (newStatus != null && newStatus != order.status) {
+                          _updateStatus(order.orderId, newStatus);
+                        }
+                      },
+                    ),
+                    isThreeLine: true,
+                  ),
+                );
+              },
+            ),
+          );
   }
 }

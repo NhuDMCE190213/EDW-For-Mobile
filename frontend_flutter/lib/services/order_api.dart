@@ -1,10 +1,12 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../models/order.dart';
 
 class OrderApi {
   OrderApi({http.Client? client, required this.baseUrl})
-      : _client = client ?? http.Client();
+    : _client = client ?? http.Client();
 
   final http.Client _client;
   final String baseUrl;
@@ -13,7 +15,9 @@ class OrderApi {
 
   // Customer Orders
   Future<List<Order>> getMyOrders(int customerId) async {
-    final response = await _client.get(_uri('/api/customer/orders/$customerId'));
+    final response = await _client.get(
+      _uri('/api/customer/orders/$customerId'),
+    );
     _ensureSuccess(response);
     return (jsonDecode(response.body) as List)
         .map((item) => Order.fromJson(item as Map<String, dynamic>))
