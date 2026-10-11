@@ -2,9 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/admin_catalog_page.dart';
-import 'screens/customer_cart_page.dart';
-import 'screens/customer_orders_page.dart';
 import 'screens/login_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/staff_orders_page.dart';
 import 'screens/staff_variant_page.dart';
 import 'services/admin_catalog_api.dart';
@@ -22,8 +21,8 @@ void main() {
   final resolvedBaseUrl = configuredBaseUrl.isNotEmpty
       ? configuredBaseUrl
       : !kIsWeb && defaultTargetPlatform == TargetPlatform.android
-          ? 'http://10.0.2.2:5238'
-          : 'http://localhost:5238';
+      ? 'http://10.0.2.2:5238'
+      : 'http://localhost:5238';
 
   runApp(
     MyApp(
@@ -68,19 +67,16 @@ class MyApp extends StatelessWidget {
           fillColor: Color(0xFFF7F7F7),
         ),
       ),
-      
-home: LoginScreen(
-  authApi: authApi,
-  baseUrl: baseUrl,
-),
-      ),
+      home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
       routes: {
-        '/home': (_) => AppNavigation(
-              adminApi: adminApi,
-              variantApi: variantApi,
-              orderApi: orderApi,
-              cartApi: cartApi,
-            ),
+        '/home': (context) => AppNavigation(
+          adminApi: adminApi,
+          variantApi: variantApi,
+          orderApi: orderApi,
+          authApi: authApi,
+          baseUrl: baseUrl,
+          authToken: ModalRoute.of(context)?.settings.arguments as String?,
+        ),
       },
     );
   }
@@ -92,13 +88,17 @@ class AppNavigation extends StatefulWidget {
     required this.adminApi,
     required this.variantApi,
     required this.orderApi,
-    required this.cartApi,
+    required this.authApi,
+    required this.baseUrl,
+    this.authToken,
   });
 
   final AdminCatalogApi adminApi;
   final StaffVariantApi variantApi;
   final OrderApi orderApi;
-  final CartApi cartApi;
+  final AuthApi authApi;
+  final String baseUrl;
+  final String? authToken;
 
   @override
   State<AppNavigation> createState() => _AppNavigationState();
@@ -106,25 +106,95 @@ class AppNavigation extends StatefulWidget {
 
 class _AppNavigationState extends State<AppNavigation> {
   int _currentIndex = 0;
-  static const int mockCustomerId = 1;
-
   late final List<Widget> _pages;
+  final _variantPageKey = GlobalKey<StaffVariantPageState>();
+  final _ordersPageKey = GlobalKey<StaffOrdersPageState>();
 
   @override
   void initState() {
     super.initState();
     _pages = [
       AdminCatalogPage(api: widget.adminApi),
-      StaffVariantPage(api: widget.variantApi),
-      StaffOrdersPage(api: widget.orderApi),
-      CustomerOrdersPage(api: widget.orderApi, customerId: mockCustomerId),
-      CustomerCartPage(api: widget.cartApi, customerId: mockCustomerId),
+      StaffVariantPage(
+        key: _variantPageKey,
+        api: widget.variantApi,
+        showAppBar: false,
+      ),
+      StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
     ];
+  }
+
+  Future<void> _refreshCurrentPage() {
+    if (_currentIndex == 1) {
+      return _variantPageKey.currentState!.refresh();
+    }
+    if (_currentIndex == 2) {
+      return _ordersPageKey.currentState!.refresh();
+    }
+    return Future.value();
+  }
+
+  Future<void> _openProfile() async {
+    if (widget.authToken == null) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          token: widget.authToken!,
+          role: 'Staff',
+          baseUrl: widget.baseUrl,
+          authApi: widget.authApi,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    if (widget.authToken != null) {
+      try {
+        await widget.authApi.logout(widget.authToken!);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
+      ),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final title = _currentIndex == 1
+        ? 'Product Variant Management'
+        : 'Staff - View Orders';
+
     return Scaffold(
+      appBar: _currentIndex == 0
+          ? null
+          : AppBar(
+              title: Text(title),
+              actions: [
+                IconButton(
+                  onPressed: _refreshCurrentPage,
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh',
+                ),
+                IconButton(
+                  onPressed: _openProfile,
+                  icon: const Icon(Icons.account_circle_outlined),
+                  tooltip: 'Profile',
+                ),
+                IconButton(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout),
+                  tooltip: 'Logout',
+                ),
+              ],
+            ),
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -138,20 +208,12 @@ class _AppNavigationState extends State<AppNavigation> {
             label: 'Catalog',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.tune_outlined),
+            icon: Icon(Icons.inventory),
             label: 'Variants',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
+            icon: Icon(Icons.assignment),
             label: 'All Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            label: 'My Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            label: 'Cart',
           ),
         ],
       ),

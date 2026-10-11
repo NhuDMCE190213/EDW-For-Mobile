@@ -8,10 +8,10 @@ class StaffOrdersPage extends StatefulWidget {
   final OrderApi api;
 
   @override
-  State<StaffOrdersPage> createState() => _StaffOrdersPageState();
+  State<StaffOrdersPage> createState() => StaffOrdersPageState();
 }
 
-class _StaffOrdersPageState extends State<StaffOrdersPage> {
+class StaffOrdersPageState extends State<StaffOrdersPage> {
   List<Order> _orders = [];
   bool _isLoading = true;
 
@@ -38,6 +38,8 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
     }
   }
 
+  Future<void> refresh() => _fetchOrders();
+
   Future<void> _updateStatus(String orderId, String status) async {
     try {
       await widget.api.updateOrderStatus(orderId, status);
@@ -57,56 +59,51 @@ class _StaffOrdersPageState extends State<StaffOrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Staff - View Orders')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchOrders,
-              child: ListView.builder(
-                itemCount: _orders.length,
-                itemBuilder: (context, index) {
-                  final order = _orders[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: _fetchOrders,
+            child: ListView.builder(
+              itemCount: _orders.length,
+              itemBuilder: (context, index) {
+                final order = _orders[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: ListTile(
+                    title: Text('Order #${order.orderId.substring(0, 8)}'),
+                    subtitle: Text(
+                      'Status: ${order.status}\nTotal: \$${order.totalAmount}',
                     ),
-                    child: ListTile(
-                      title: Text('Order #${order.orderId.substring(0, 8)}'),
-                      subtitle: Text(
-                        'Status: ${order.status}\nTotal: \$${order.totalAmount}',
-                      ),
-                      trailing: DropdownButton<String>(
-                        value: order.status,
-                        items:
-                            [
-                                  'Pending',
-                                  'Processing',
-                                  'Confirmed',
-                                  'Shipped',
-                                  'Completed',
-                                  'Cancelled',
-                                ]
-                                .map(
-                                  (s) => DropdownMenuItem(
-                                    value: s,
-                                    child: Text(s),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (newStatus) {
-                          if (newStatus != null && newStatus != order.status) {
-                            _updateStatus(order.orderId, newStatus);
-                          }
-                        },
-                      ),
-                      isThreeLine: true,
+                    trailing: DropdownButton<String>(
+                      value: order.status,
+                      items:
+                          [
+                                'Pending',
+                                'Processing',
+                                'Confirmed',
+                                'Shipped',
+                                'Completed',
+                                'Cancelled',
+                              ]
+                              .map(
+                                (s) =>
+                                    DropdownMenuItem(value: s, child: Text(s)),
+                              )
+                              .toList(),
+                      onChanged: (newStatus) {
+                        if (newStatus != null && newStatus != order.status) {
+                          _updateStatus(order.orderId, newStatus);
+                        }
+                      },
                     ),
-                  );
-                },
-              ),
+                    isThreeLine: true,
+                  ),
+                );
+              },
             ),
-    );
+          );
   }
 }
