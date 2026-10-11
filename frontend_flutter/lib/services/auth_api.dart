@@ -3,13 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/auth_model.dart';
-import 'staff_variant_api.dart';
+import 'api_exception.dart';
 
 class AuthApi {
-  AuthApi({
-    http.Client? client,
-    required this.baseUrl,
-  }) : _client = client ?? http.Client();
+  AuthApi({http.Client? client, required this.baseUrl})
+    : _client = client ?? http.Client();
 
   final http.Client _client;
   final String baseUrl;
@@ -24,7 +22,9 @@ class AuthApi {
       body: jsonEncode(input.toJson()),
     );
     _ensureSuccess(response);
-    return LoginResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return LoginResponse.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 
   /// UC-01.2: Staff Login
@@ -35,7 +35,9 @@ class AuthApi {
       body: jsonEncode(input.toJson()),
     );
     _ensureSuccess(response);
-    return LoginResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return LoginResponse.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 
   /// UC-03: Register for Customer
@@ -108,12 +110,15 @@ class AuthApi {
         if (decoded is Map<String, dynamic>) {
           if (decoded.containsKey('message') && decoded['message'] != null) {
             message = decoded['message'].toString();
-          } else if (decoded.containsKey('errors') && decoded['errors'] is Map) {
+          } else if (decoded.containsKey('errors') &&
+              decoded['errors'] is Map) {
             final errors = decoded['errors'] as Map<String, dynamic>;
             final errorList = <String>[];
             for (final entry in errors.entries) {
               if (entry.value is List) {
-                errorList.addAll((entry.value as List).map((e) => e.toString()));
+                errorList.addAll(
+                  (entry.value as List).map((e) => e.toString()),
+                );
               } else if (entry.value != null) {
                 errorList.add(entry.value.toString());
               }
