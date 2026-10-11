@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 
 import 'screens/admin_catalog_page.dart';
 import 'screens/login_screen.dart';
+import 'screens/promotion_page.dart';
+import 'screens/staff_variant_page.dart';
 import 'screens/profile_screen.dart';
 import 'screens/staff_orders_page.dart';
 import 'screens/staff_variant_page.dart';
 import 'services/admin_catalog_api.dart';
 import 'services/auth_api.dart';
+import 'services/promotion_api.dart';
 import 'services/cart_api.dart';
 import 'services/order_api.dart';
 import 'services/staff_variant_api.dart';
@@ -29,6 +32,7 @@ void main() {
       baseUrl: resolvedBaseUrl,
       authApi: AuthApi(baseUrl: resolvedBaseUrl),
       variantApi: StaffVariantApi(baseUrl: resolvedBaseUrl),
+      promotionApi: PromotionApi(baseUrl: resolvedBaseUrl),
       orderApi: OrderApi(baseUrl: resolvedBaseUrl),
       cartApi: CartApi(baseUrl: resolvedBaseUrl),
     ),
@@ -42,6 +46,7 @@ class MyApp extends StatelessWidget {
     required this.adminApi,
     required this.authApi,
     required this.variantApi,
+    required this.promotionApi,
     required this.orderApi,
     required this.cartApi,
   });
@@ -50,6 +55,7 @@ class MyApp extends StatelessWidget {
   final AdminCatalogApi adminApi;
   final AuthApi authApi;
   final StaffVariantApi variantApi;
+  final PromotionApi promotionApi;
   final OrderApi orderApi;
   final CartApi cartApi;
 
@@ -70,6 +76,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home': (context) => AppNavigation(
           variantApi: variantApi,
+          promotionApi: promotionApi,
           orderApi: orderApi,
           authApi: authApi,
           baseUrl: baseUrl,
@@ -85,6 +92,7 @@ class AppNavigation extends StatefulWidget {
     super.key,
     required this.adminApi,
     required this.variantApi,
+    required this.promotionApi,
     required this.orderApi,
     required this.authApi,
     required this.baseUrl,
@@ -93,6 +101,7 @@ class AppNavigation extends StatefulWidget {
 
   final AdminCatalogApi adminApi;
   final StaffVariantApi variantApi;
+  final PromotionApi promotionApi;
   final OrderApi orderApi;
   final AuthApi authApi;
   final String baseUrl;
@@ -117,6 +126,7 @@ class _AppNavigationState extends State<AppNavigation> {
         api: widget.variantApi,
         authToken: widget.authToken,
       ),
+      PromotionPage(key: _promotionPageKey, api: widget.promotionApi),
       StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
     ];
   }
@@ -166,6 +176,7 @@ class _AppNavigationState extends State<AppNavigation> {
         : 'Staff - View Orders';
 
     return Scaffold(
+
       appBar: AppBar(
         title: Text(
           _currentIndex == 0
@@ -201,6 +212,11 @@ class _AppNavigationState extends State<AppNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.inventory),
             label: 'Variants',
+          ),
+          BottomNavigationBarItem(
+
+            icon: Icon(Icons.local_offer),
+            label: 'Promotions',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
