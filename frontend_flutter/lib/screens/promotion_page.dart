@@ -621,10 +621,10 @@ class _PromotionEditorDialogState extends State<PromotionEditorDialog> {
           ? ''
           : (p.type == PromotionType.percentage
                 ? '${p.percentage ?? ''}'
-                : '${p.salePrice ?? ''}'),
+                : p.salePrice?.toStringAsFixed(0) ?? ''),
     );
     _threshold = TextEditingController(
-      text: p?.thresholdPrice?.toString() ?? '',
+      text: p?.thresholdPrice?.toStringAsFixed(0) ?? '',
     );
     _stock = TextEditingController(text: p?.maxReservedStock?.toString() ?? '');
     _reserved = p?.isReservedStock ?? true;
