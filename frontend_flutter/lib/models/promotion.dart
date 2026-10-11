@@ -95,6 +95,25 @@ class PromotionInput {
   final DateTime? endAt;
   final bool isDisable;
 
+  factory PromotionInput.fromPromotion(
+    Promotion promotion, {
+    required bool isDisable,
+  }) {
+    return PromotionInput(
+      name: promotion.name,
+      type: promotion.type,
+      salePrice: promotion.salePrice,
+      thresholdPrice: promotion.thresholdPrice,
+      percentage: promotion.percentage,
+      isReservedStock: promotion.isReservedStock,
+      maxReservedStock: promotion.maxReservedStock,
+      isLimitedTime: promotion.isLimitedTime,
+      startAt: promotion.startAt,
+      endAt: promotion.endAt,
+      isDisable: isDisable,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
         'name': name,
         'promotionType': type == PromotionType.fixedAmount ? 1 : 0,
