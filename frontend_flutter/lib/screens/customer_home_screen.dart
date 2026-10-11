@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/auth_model.dart';
 import '../services/auth_api.dart';
+import '../services/cart_api.dart';
+import 'customer_cart_page.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 
@@ -11,11 +13,13 @@ class CustomerHomeScreen extends StatefulWidget {
     required this.user,
     required this.authApi,
     required this.baseUrl,
+    required this.cartApi,
   });
 
   final LoginResponse user;
   final AuthApi authApi;
   final String baseUrl;
+  final CartApi cartApi;
 
   @override
   State<CustomerHomeScreen> createState() => _CustomerHomeScreenState();
@@ -29,7 +33,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?'),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -37,7 +43,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE24B4A)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE24B4A),
+            ),
             child: const Text('Đăng xuất'),
           ),
         ],
@@ -55,17 +63,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã đăng xuất thành công.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Đã đăng xuất thành công.')));
 
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => LoginScreen(
-          authApi: widget.authApi,
-          baseUrl: widget.baseUrl,
-        ),
+        builder: (_) =>
+            LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
       ),
       (route) => false,
     );
@@ -85,12 +91,29 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  void _openCart() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerCartPage(
+          api: widget.cartApi,
+          customerId: widget.user.userId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EDW Customer'),
         actions: [
+          IconButton(
+            onPressed: _openCart,
+            icon: const Icon(Icons.shopping_cart_outlined),
+            tooltip: 'Giỏ hàng',
+          ),
           IconButton(
             onPressed: _openProfile,
             icon: const Icon(Icons.account_circle_outlined),
@@ -115,11 +138,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     borderRadius: BorderRadius.circular(16),
                     child: Card(
                       elevation: 0,
-                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                      color: Theme.of(context).colorScheme.primaryContainer
+                          .withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.2),
                         ),
                       ),
                       child: Padding(
@@ -157,7 +182,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                             Chip(
                               label: Text(
                                 'Vai trò: ${widget.user.roleDisplayName}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               backgroundColor: Colors.white,
                             ),
@@ -174,6 +202,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: _openCart,
+                    icon: const Icon(Icons.shopping_cart_outlined),
+                    label: const Text('Xem giỏ hàng'),
                   ),
                   const SizedBox(height: 16),
                   const Text(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/api_exception.dart';
 import '../services/auth_api.dart';
-import '../services/staff_variant_api.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key, required this.authApi});
@@ -57,7 +57,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Xác thực email thành công! Vui lòng nhập mật khẩu mới.'),
+          content: Text(
+            'Xác thực email thành công! Vui lòng nhập mật khẩu mới.',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -109,9 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quên mật khẩu'),
-      ),
+      appBar: AppBar(title: const Text('Quên mật khẩu')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -182,12 +182,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red.shade700,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: TextStyle(color: Colors.red.shade800, fontSize: 13),
+                              style: TextStyle(
+                                color: Colors.red.shade800,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -207,7 +214,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText: _isCustomer ? 'Email khách hàng' : 'Email nhân viên',
+                              labelText: _isCustomer
+                                  ? 'Email khách hàng'
+                                  : 'Email nhân viên',
                               hintText: 'name@example.com',
                               prefixIcon: const Icon(Icons.email_outlined),
                               border: const OutlineInputBorder(),
@@ -237,11 +246,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : const Text(
                                     'Xác thực Email',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                           ),
                         ],
@@ -256,7 +271,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         children: [
                           // Hiển thị email đã xác thực
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.shade50,
                               borderRadius: BorderRadius.circular(8),
@@ -264,12 +282,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     'Email: ${_emailController.text}',
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -286,16 +310,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               border: const OutlineInputBorder(),
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureNewPassword ? Icons.visibility_off : Icons.visibility),
-                                onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                                icon: Icon(
+                                  _obscureNewPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscureNewPassword =
+                                      !_obscureNewPassword,
+                                ),
                               ),
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Vui lòng nhập mật khẩu mới.';
-                              if (val.length < 8) return 'Mật khẩu phải từ 8 ký tự trở lên.';
-                              final hasLetter = RegExp(r'[a-zA-Z]').hasMatch(val);
+                              if (val == null || val.isEmpty) {
+                                return 'Vui lòng nhập mật khẩu mới.';
+                              }
+                              if (val.length < 8) {
+                                return 'Mật khẩu phải từ 8 ký tự trở lên.';
+                              }
+                              final hasLetter = RegExp(r'[a-zA-Z]')
+                                  .hasMatch(val);
                               final hasNumber = RegExp(r'\d').hasMatch(val);
-                              final hasSpecial = RegExp(r'[!@#$%^&*()_+\-=\[\]{};:\x27"\\|,.<>\/?]').hasMatch(val);
+                              final hasSpecial = RegExp(
+                                r'[!@#$%^&*()_+\-=\[\]{};:\x27"\\|,.<>\/?]',
+                              ).hasMatch(val);
                               if (!hasLetter || !hasNumber || !hasSpecial) {
                                 return 'Cần gồm chữ cái, số và ký tự đặc biệt.';
                               }
@@ -313,13 +351,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               prefixIcon: const Icon(Icons.lock_reset_outlined),
                               border: const OutlineInputBorder(),
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-                                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscureConfirmPassword =
+                                      !_obscureConfirmPassword,
+                                ),
                               ),
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Vui lòng xác nhận mật khẩu.';
-                              if (val != _newPasswordController.text) return 'Mật khẩu xác nhận không khớp.';
+                              if (val == null || val.isEmpty) {
+                                return 'Vui lòng xác nhận mật khẩu.';
+                              }
+                              if (val != _newPasswordController.text) {
+                                return 'Mật khẩu xác nhận không khớp.';
+                              }
                               return null;
                             },
                           ),
@@ -338,11 +387,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : const Text(
                                     'Cập nhật mật khẩu mới',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                           ),
                         ],

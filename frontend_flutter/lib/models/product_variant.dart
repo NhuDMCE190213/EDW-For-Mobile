@@ -58,7 +58,7 @@ class ProductVariant {
       price: (json['price'] as num?)?.toDouble() ?? 0,
       stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
       imageUrl: json['imageUrl'] as String?,
-      productId: (json['productId'] as num).toInt(),
+      productId: (json['productId'] as num?)?.toInt() ?? 0,
       promotionName: promotionName as String?,
       promotionId:
           json['promotionId'] as String? ?? json['PromotionId'] as String?,

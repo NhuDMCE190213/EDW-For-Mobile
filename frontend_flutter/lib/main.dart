@@ -1,17 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/admin_catalog_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/promotion_page.dart';
 import 'screens/staff_variant_page.dart';
+import 'screens/profile_screen.dart';
 import 'screens/staff_orders_page.dart';
-import 'screens/customer_orders_page.dart';
-import 'screens/customer_cart_page.dart';
+import 'screens/staff_variant_page.dart';
+import 'services/admin_catalog_api.dart';
 import 'services/auth_api.dart';
-import 'services/staff_variant_api.dart';
-import 'services/order_api.dart';
 import 'services/promotion_api.dart';
 import 'services/cart_api.dart';
+import 'services/order_api.dart';
+import 'services/staff_variant_api.dart';
 
 void main() {
   const configuredBaseUrl = String.fromEnvironment(
@@ -41,6 +43,7 @@ class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
     required this.baseUrl,
+    required this.adminApi,
     required this.authApi,
     required this.variantApi,
     required this.promotionApi,
@@ -49,6 +52,7 @@ class MyApp extends StatelessWidget {
   });
 
   final String baseUrl;
+  final AdminCatalogApi adminApi;
   final AuthApi authApi;
   final StaffVariantApi variantApi;
   final PromotionApi promotionApi;
@@ -70,11 +74,13 @@ class MyApp extends StatelessWidget {
       ),
       home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
       routes: {
-        '/home': (_) => AppNavigation(
+        '/home': (context) => AppNavigation(
           variantApi: variantApi,
           promotionApi: promotionApi,
           orderApi: orderApi,
-          cartApi: cartApi,
+          authApi: authApi,
+          baseUrl: baseUrl,
+          authToken: ModalRoute.of(context)?.settings.arguments as String?,
         ),
       },
     );
@@ -84,16 +90,22 @@ class MyApp extends StatelessWidget {
 class AppNavigation extends StatefulWidget {
   const AppNavigation({
     super.key,
+    required this.adminApi,
     required this.variantApi,
     required this.promotionApi,
     required this.orderApi,
-    required this.cartApi,
+    required this.authApi,
+    required this.baseUrl,
+    this.authToken,
   });
 
+  final AdminCatalogApi adminApi;
   final StaffVariantApi variantApi;
   final PromotionApi promotionApi;
   final OrderApi orderApi;
-  final CartApi cartApi;
+  final AuthApi authApi;
+  final String baseUrl;
+  final String? authToken;
 
   @override
   State<AppNavigation> createState() => _AppNavigationState();
@@ -101,25 +113,94 @@ class AppNavigation extends StatefulWidget {
 
 class _AppNavigationState extends State<AppNavigation> {
   int _currentIndex = 0;
-  static const int mockCustomerId = 1;
-
   late final List<Widget> _pages;
+  final _variantPageKey = GlobalKey<StaffVariantPageState>();
+  final _ordersPageKey = GlobalKey<StaffOrdersPageState>();
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      StaffVariantPage(api: widget.variantApi),
-      PromotionPage(api: widget.promotionApi),
-      StaffOrdersPage(api: widget.orderApi),
-      CustomerOrdersPage(api: widget.orderApi, customerId: mockCustomerId),
-      CustomerCartPage(api: widget.cartApi, customerId: mockCustomerId),
+      StaffVariantPage(
+        key: _variantPageKey,
+        api: widget.variantApi,
+        authToken: widget.authToken,
+      ),
+      PromotionPage(key: _promotionPageKey, api: widget.promotionApi),
+      StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
     ];
+  }
+
+  Future<void> _refreshCurrentPage() {
+    return _currentIndex == 0
+        ? _variantPageKey.currentState!.refresh()
+        : _ordersPageKey.currentState!.refresh();
+  }
+
+  Future<void> _openProfile() async {
+    if (widget.authToken == null) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          token: widget.authToken!,
+          role: 'Staff',
+          baseUrl: widget.baseUrl,
+          authApi: widget.authApi,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    if (widget.authToken != null) {
+      try {
+        await widget.authApi.logout(widget.authToken!);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
+      ),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final title = _currentIndex == 1
+        ? 'Product Variant Management'
+        : 'Staff - View Orders';
+
     return Scaffold(
+
+      appBar: AppBar(
+        title: Text(
+          _currentIndex == 0
+              ? 'Product Variant Management'
+              : 'Staff - View Orders',
+        ),
+        actions: [
+          IconButton(
+            onPressed: _refreshCurrentPage,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
+            onPressed: _openProfile,
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Profile',
+          ),
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -133,20 +214,13 @@ class _AppNavigationState extends State<AppNavigation> {
             label: 'Variants',
           ),
           BottomNavigationBarItem(
+
             icon: Icon(Icons.local_offer),
             label: 'Promotions',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'All Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'My Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
           ),
         ],
       ),

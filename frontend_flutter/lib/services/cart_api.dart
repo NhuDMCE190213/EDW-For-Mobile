@@ -1,10 +1,12 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../models/cart_item.dart';
 
 class CartApi {
   CartApi({http.Client? client, required this.baseUrl})
-      : _client = client ?? http.Client();
+    : _client = client ?? http.Client();
 
   final http.Client _client;
   final String baseUrl;
@@ -21,7 +23,8 @@ class CartApi {
 
   Future<void> removeFromCart(int cartItemId, int customerId) async {
     final response = await _client.delete(
-        _uri('/api/customer/cart/$cartItemId?customerId=$customerId'));
+      _uri('/api/customer/cart/$cartItemId?customerId=$customerId'),
+    );
     _ensureSuccess(response);
   }
 
