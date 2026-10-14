@@ -1,0 +1,38 @@
+﻿@page
+@model UserStaff.Razor.Pages.ProductVariants.IndexModel
+@{
+    ViewData["Title"] = "Qu?n lý Product Variant";
+}
+
+<h2>Danh sách Product Variant</h2>
+<a asp-page="Create" class="btn btn-primary mb-3">Thêm Product Variant</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>SKU</th>
+            <th>Product ID</th>
+            <th>Color</th>
+            <th>Storage</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Hành ??ng</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var variant in Model.ProductVariants)
+        {
+            <tr>
+                <td>@variant.Sku</td>
+                <td>@variant.ProductId</td>
+                <td>@variant.Color</td>
+                <td>@variant.Storage</td>
+                <td>@variant.Price.ToString("N0")</td>
+                <td>@variant.StockQuantity</td>
+                <td>
+                    <a asp-page="./Update" asp-route-id="@variant.ProductVariantId" class="btn btn-warning btn-sm">S?a</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
