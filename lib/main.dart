@@ -1,17 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'models/auth_model.dart';
 import 'screens/admin_catalog_page.dart';
 import 'screens/login_screen.dart';
-import 'screens/promotion_page.dart';
-import 'screens/staff_variant_page.dart';
 import 'screens/profile_screen.dart';
+import 'screens/promotion_page.dart';
 import 'screens/staff_orders_page.dart';
-import 'services/auth_api.dart';
+import 'screens/staff_reviews_page.dart';
+import 'screens/staff_variant_page.dart';
 import 'services/admin_catalog_api.dart';
-import 'services/promotion_api.dart';
+import 'services/auth_api.dart';
 import 'services/cart_api.dart';
 import 'services/order_api.dart';
+import 'services/promotion_api.dart';
+import 'services/review_api.dart';
 import 'services/staff_variant_api.dart';
 
 void main() {
@@ -20,11 +23,12 @@ void main() {
     defaultValue: '',
   );
 
-  final resolvedBaseUrl = configuredBaseUrl.isNotEmpty
-      ? configuredBaseUrl
-      : kIsWeb
-      ? 'http://localhost:5238'
-      : 'http://10.0.2.2:5238';
+  final resolvedBaseUrl =
+      configuredBaseUrl.isNotEmpty
+          ? configuredBaseUrl
+          : (kIsWeb || defaultTargetPlatform == TargetPlatform.windows)
+          ? 'http://localhost:5238'
+          : 'http://10.0.2.2:5238';
 
   runApp(
     MyApp(
@@ -35,6 +39,7 @@ void main() {
       promotionApi: PromotionApi(baseUrl: resolvedBaseUrl),
       orderApi: OrderApi(baseUrl: resolvedBaseUrl),
       cartApi: CartApi(baseUrl: resolvedBaseUrl),
+      reviewApi: ReviewApi(baseUrl: resolvedBaseUrl),
     ),
   );
 }
@@ -49,6 +54,7 @@ class MyApp extends StatelessWidget {
     required this.promotionApi,
     required this.orderApi,
     required this.cartApi,
+    required this.reviewApi,
   });
   final String baseUrl;
   final AuthApi authApi;
@@ -57,6 +63,7 @@ class MyApp extends StatelessWidget {
   final PromotionApi promotionApi;
   final OrderApi orderApi;
   final CartApi cartApi;
+  final ReviewApi reviewApi;
 
   @override
   Widget build(BuildContext context) {
@@ -73,15 +80,29 @@ class MyApp extends StatelessWidget {
       ),
       home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
       routes: {
-        '/home': (context) => AppNavigation(
-          variantApi: variantApi,
-          promotionApi: promotionApi,
-          orderApi: orderApi,
-          authApi: authApi,
-          catalogApi: catalogApi,
-          baseUrl: baseUrl,
-          authToken: ModalRoute.of(context)?.settings.arguments as String?,
-        ),
+        '/home': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          String? token;
+          String role = 'Staff';
+          if (args is LoginResponse) {
+            token = args.token;
+            role = args.role;
+          } else if (args is String) {
+            token = args;
+          }
+
+          return AppNavigation(
+            variantApi: variantApi,
+            promotionApi: promotionApi,
+            orderApi: orderApi,
+            authApi: authApi,
+            catalogApi: catalogApi,
+            reviewApi: reviewApi,
+            baseUrl: baseUrl,
+            authToken: token,
+            userRole: role,
+          );
+        },
       },
     );
   }
@@ -95,8 +116,10 @@ class AppNavigation extends StatefulWidget {
     required this.orderApi,
     required this.authApi,
     required this.catalogApi,
+    required this.reviewApi,
     required this.baseUrl,
     this.authToken,
+    this.userRole = 'Staff',
   });
 
   final StaffVariantApi variantApi;
@@ -104,8 +127,10 @@ class AppNavigation extends StatefulWidget {
   final OrderApi orderApi;
   final AuthApi authApi;
   final AdminCatalogApi catalogApi;
+  final ReviewApi reviewApi;
   final String baseUrl;
   final String? authToken;
+  final String userRole;
 
   @override
   State<AppNavigation> createState() => _AppNavigationState();
@@ -116,6 +141,7 @@ class _AppNavigationState extends State<AppNavigation> {
   late final List<Widget> _pages;
   final _variantPageKey = GlobalKey<StaffVariantPageState>();
   final _ordersPageKey = GlobalKey<StaffOrdersPageState>();
+  final _reviewsPageKey = GlobalKey<StaffReviewsPageState>();
 
   @override
   void initState() {
@@ -129,6 +155,11 @@ class _AppNavigationState extends State<AppNavigation> {
       PromotionPage(api: widget.promotionApi),
       StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
       AdminCatalogPage(api: widget.catalogApi),
+      StaffReviewsPage(
+        key: _reviewsPageKey,
+        api: widget.reviewApi,
+        userRole: widget.userRole,
+      ),
     ];
   }
 
@@ -139,6 +170,9 @@ class _AppNavigationState extends State<AppNavigation> {
     if (_currentIndex == 2) {
       return _ordersPageKey.currentState?.refresh() ?? Future.value();
     }
+    if (_currentIndex == 4) {
+      return _reviewsPageKey.currentState?.refresh() ?? Future.value();
+    }
     return Future.value();
   }
 
@@ -147,12 +181,13 @@ class _AppNavigationState extends State<AppNavigation> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          token: widget.authToken!,
-          role: 'Staff',
-          baseUrl: widget.baseUrl,
-          authApi: widget.authApi,
-        ),
+        builder:
+            (_) => ProfileScreen(
+              token: widget.authToken!,
+              role: widget.userRole,
+              baseUrl: widget.baseUrl,
+              authApi: widget.authApi,
+            ),
       ),
     );
   }
@@ -167,8 +202,9 @@ class _AppNavigationState extends State<AppNavigation> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
+        builder:
+            (_) =>
+                LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
       ),
       (route) => false,
     );
@@ -185,7 +221,9 @@ class _AppNavigationState extends State<AppNavigation> {
               ? 'Promotion Management'
               : _currentIndex == 2
               ? 'Staff - View Orders'
-              : 'Product and Category Management',
+              : _currentIndex == 3
+              ? 'Product and Category Management'
+              : 'Review Management',
         ),
         actions: [
           IconButton(
@@ -228,6 +266,11 @@ class _AppNavigationState extends State<AppNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.category_outlined),
             label: 'Catalog',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.rate_review_outlined),
+            activeIcon: Icon(Icons.rate_review),
+            label: 'Reviews',
           ),
         ],
       ),

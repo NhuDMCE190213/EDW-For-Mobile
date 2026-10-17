@@ -9,8 +9,10 @@ import '../services/cart_api.dart';
 import '../services/order_api.dart';
 import 'customer_cart_page.dart';
 import 'customer_orders_page.dart';
+import 'customer_reviews_page.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import '../services/review_api.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({
@@ -138,6 +140,19 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  void _openReviews() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerReviewsPage(
+          api: ReviewApi(baseUrl: widget.baseUrl),
+          customerId: widget.user.userId,
+          customerName: widget.user.fullName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,6 +174,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             onPressed: _openOrders,
             icon: const Icon(Icons.receipt_long_outlined),
             tooltip: 'Đơn hàng của tôi',
+          ),
+          IconButton(
+            onPressed: _openReviews,
+            icon: const Icon(Icons.rate_review_outlined),
+            tooltip: 'Đánh giá của tôi',
           ),
           IconButton(
             onPressed: _openProfile,
@@ -261,6 +281,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     onPressed: _openOrders,
                     icon: const Icon(Icons.receipt_long_outlined),
                     label: const Text('My Orders'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _openReviews,
+                    icon: const Icon(Icons.rate_review_outlined),
+                    label: const Text('Đánh giá của tôi'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
