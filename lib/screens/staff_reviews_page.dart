@@ -28,6 +28,9 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
   int? _selectedRating;
   bool _onlyFlagged = false;
 
+  bool get _isAdmin =>
+      widget.userRole.toLowerCase() == 'admin' || widget.userRole == '0';
+
   @override
   void initState() {
     super.initState();
@@ -147,7 +150,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
     }
   }
 
-  // UC-06.2: Unflag Review
+  // Unflag Review
   Future<void> _handleUnflag(ReviewItem review) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -187,6 +190,103 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lỗi khi gỡ cờ: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // UC-06.3: Moderate Review (Admin Only - Rule FR-01)
+  Future<void> _handleModerate(ReviewItem review) async {
+    if (!_isAdmin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Quy tắc FR-01: Chỉ Quản trị viên (Admin) mới có quyền kiểm duyệt ẩn/hiển thị đánh giá.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final willHide = !review.isHidden;
+    final noteController = TextEditingController();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text(
+              willHide ? 'Ẩn đánh giá khỏi cửa hàng' : 'Hiển thị lại đánh giá',
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  willHide
+                      ? 'Đánh giá này sẽ bị ẩn và khách hàng không thể nhìn thấy hoặc chỉnh sửa.'
+                      : 'Đánh giá này sẽ được công khai hiển thị lại trên sản phẩm.',
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Ghi chú kiểm duyệt (tùy chọn)',
+                    hintText: 'Nhập lý do kiểm duyệt...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Hủy'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: willHide ? Colors.red : Colors.green,
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(willHide ? 'Xác nhận ẩn' : 'Hiển thị lại'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await widget.api.moderateReview(
+        review.id,
+        isHidden: willHide,
+        note: noteController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            willHide
+                ? 'Đã ẩn đánh giá thành công.'
+                : 'Đã hiển thị lại đánh giá thành công.',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _fetchReviews();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi khi kiểm duyệt: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -408,6 +508,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Hàng đầu: Tên sản phẩm & Status
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -425,6 +526,8 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 4),
+
+                                // Thông tin khách hàng & ngày
                                 Row(
                                   children: [
                                     Text(
@@ -454,8 +557,12 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
+
+                                // Số sao đánh giá
                                 _buildStarRating(review.rating),
                                 const SizedBox(height: 8),
+
+                                // Nội dung đánh giá
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(10),
@@ -478,10 +585,11 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                 ),
                                 const SizedBox(height: 10),
 
-                                // UC-06.2: Action buttons for Flagging
+                                // Nút hành động
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
+                                    // UC-06.2: Gắn cờ / Gỡ cờ
                                     if (!review.isFlagged && !review.isHidden)
                                       OutlinedButton.icon(
                                         onPressed: () => _handleFlag(review),
@@ -503,6 +611,45 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                           size: 16,
                                         ),
                                         label: const Text('Gỡ cờ'),
+                                      ),
+
+                                    const SizedBox(width: 8),
+
+                                    // UC-06.3: Kiểm duyệt (Admin Only - Rule FR-01)
+                                    if (_isAdmin)
+                                      FilledButton.icon(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor:
+                                              review.isHidden
+                                                  ? Colors.green
+                                                  : Colors.red.shade700,
+                                        ),
+                                        onPressed:
+                                            () => _handleModerate(review),
+                                        icon: Icon(
+                                          review.isHidden
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          size: 16,
+                                        ),
+                                        label: Text(
+                                          review.isHidden
+                                              ? 'Hiện lại'
+                                              : 'Ẩn đánh giá',
+                                        ),
+                                      )
+                                    else
+                                      Tooltip(
+                                        message:
+                                            'Quy tắc FR-01: Chỉ Quản trị viên (Admin) mới có quyền ẩn/hiển thị đánh giá.',
+                                        child: Text(
+                                          'Chỉ Admin kiểm duyệt (FR-01)',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
                                       ),
                                   ],
                                 ),
