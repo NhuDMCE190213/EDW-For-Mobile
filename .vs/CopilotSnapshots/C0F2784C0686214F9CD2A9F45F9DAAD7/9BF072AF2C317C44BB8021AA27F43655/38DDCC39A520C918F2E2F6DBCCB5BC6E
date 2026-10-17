@@ -1,0 +1,80 @@
+﻿@page
+@model UserStaff.Razor.Pages.ProductVariants.CreateModel
+@{
+    ViewData["Title"] = "Thêm Product Variant";
+}
+
+<h2>Thêm m?i Product Variant</h2>
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label>Product ID</label>
+                <input asp-for="ProductVariant.ProductId" type="number" class="form-control" />
+                <span asp-validation-for="ProductVariant.ProductId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>SKU</label>
+                <input asp-for="ProductVariant.Sku" class="form-control" />
+                <span asp-validation-for="ProductVariant.Sku" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Màu s?c (Color)</label>
+                <input asp-for="ProductVariant.Color" class="form-control" />
+                <span asp-validation-for="ProductVariant.Color" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Dung l??ng (Storage)</label>
+                <input asp-for="ProductVariant.Storage" class="form-control" />
+                <span asp-validation-for="ProductVariant.Storage" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>RAM</label>
+                <input asp-for="ProductVariant.Ram" class="form-control" />
+                <span asp-validation-for="ProductVariant.Ram" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label>CPU</label>
+                <input asp-for="ProductVariant.Cpu" class="form-control" />
+                <span asp-validation-for="ProductVariant.Cpu" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Kích th??c màn hình (Screen Size)</label>
+                <input asp-for="ProductVariant.ScreenSize" class="form-control" />
+                <span asp-validation-for="ProductVariant.ScreenSize" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Giá (Price)</label>
+                <input asp-for="ProductVariant.Price" type="number" class="form-control" />
+                <span asp-validation-for="ProductVariant.Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>S? l??ng t?n (Stock)</label>
+                <input asp-for="ProductVariant.StockQuantity" type="number" class="form-control" />
+                <span asp-validation-for="ProductVariant.StockQuantity" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>URL Hình ?nh</label>
+                <input asp-for="ProductVariant.ImageUrl" class="form-control" />
+                <span asp-validation-for="ProductVariant.ImageUrl" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">L?u</button>
+    <a asp-page="./Index" class="btn btn-secondary">H?y</a>
+</form>

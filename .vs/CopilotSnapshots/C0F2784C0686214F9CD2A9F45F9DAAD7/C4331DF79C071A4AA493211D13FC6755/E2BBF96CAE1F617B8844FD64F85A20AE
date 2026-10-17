@@ -1,0 +1,92 @@
+﻿@page "{id:guid}"
+@page "{id:guid}"
+@model UserStaff.Razor.Pages.ProductVariants.UpdateModel
+@{
+    ViewData["Title"] = "Cập nhật biến thể sản phẩm";
+}
+
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a asp-page="./Index" class="btn btn-light shadow-sm text-secondary border rounded-circle p-2" title="Quay lại">
+        <i class="bi bi-arrow-left fs-5 lh-1"></i>
+    </a>
+    <h2 class="m-0 fw-bold border-start border-4 ps-3 border-danger">Cập nhật Biến thể sản phẩm</h2>
+</div>
+
+<div class="card shadow-sm border-0 rounded-3">
+    <div class="card-body p-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="ProductVariant.ProductVariantId" />
+
+            <h5 class="fw-bold text-secondary mb-3"><i class="bi bi-upc-scan me-2"></i>Thông tin định danh</h5>
+            <div class="row bg-light p-3 rounded-3 mb-4 mx-0">
+                <div class="col-md-4 form-group mb-3">
+                    <label class="fw-semibold mb-1">Mã Sản phẩm gốc (Product ID) <span class="text-danger">*</span></label>
+                    <input asp-for="ProductVariant.ProductId" type="number" class="form-control" placeholder="Ví dụ: 1" />
+                    <span asp-validation-for="ProductVariant.ProductId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label class="fw-semibold mb-1">Mã tham chiếu (Product Code) <span class="text-danger">*</span></label>
+                    <input asp-for="ProductVariant.ProductCode" class="form-control" placeholder="Ví dụ: IPH15-PRO-256-BLK" />
+                    <span asp-validation-for="ProductVariant.ProductCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label class="fw-semibold mb-1">Mã SKU <span class="text-danger">*</span></label>
+                    <input asp-for="ProductVariant.Sku" class="form-control" placeholder="Ví dụ: 8931234567" />
+                    <span asp-validation-for="ProductVariant.Sku" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-secondary mb-3"><i class="bi bi-cpu me-2"></i>Thông số kỹ thuật</h5>
+            <div class="row bg-light p-3 rounded-3 mb-4 mx-0">
+                <div class="col-md-3 form-group mb-3">
+                    <label class="fw-semibold mb-1">Màu sắc <span class="text-danger">*</span></label>
+                    <input asp-for="ProductVariant.Color" class="form-control" placeholder="Đen nhám, Titan..." />
+                    <span asp-validation-for="ProductVariant.Color" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3 form-group mb-3">
+                    <label class="fw-semibold mb-1">Dung lượng (Storage)</label>
+                    <input asp-for="ProductVariant.Storage" class="form-control" placeholder="128GB, 256GB..." />
+                </div>
+                <div class="col-md-3 form-group mb-3">
+                    <label class="fw-semibold mb-1">RAM</label>
+                    <input asp-for="ProductVariant.Ram" class="form-control" placeholder="8GB, 16GB..." />
+                </div>
+                <div class="col-md-3 form-group mb-3">
+                    <label class="fw-semibold mb-1">Kích cỡ màn hình</label>
+                    <input asp-for="ProductVariant.ScreenSize" class="form-control" placeholder="6.1 inch, 6.7 inch..." />
+                </div>
+                <div class="col-md-12 form-group mb-3">
+                    <label class="fw-semibold mb-1">Chip xử lý (CPU)</label>
+                    <input asp-for="ProductVariant.Cpu" class="form-control" placeholder="Apple A17 Pro, Snapdragon 8 Gen 3..." />
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-secondary mb-3"><i class="bi bi-tag me-2"></i>Giá bán & Quản lý kho</h5>
+            <div class="row bg-light p-3 rounded-3 mb-4 mx-0">
+                <div class="col-md-4 form-group mb-3">
+                    <label class="fw-semibold mb-1">Giá bán (VNĐ) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input asp-for="ProductVariant.Price" type="number" class="form-control" placeholder="29000000" />
+                        <span class="input-group-text fw-bold">VNĐ</span>
+                    </div>
+                    <span asp-validation-for="ProductVariant.Price" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label class="fw-semibold mb-1">Số lượng tồn kho <span class="text-danger">*</span></label>
+                    <input asp-for="ProductVariant.StockQuantity" type="number" class="form-control" min="0" placeholder="Số lượng trong kho" />
+                    <span asp-validation-for="ProductVariant.StockQuantity" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label class="fw-semibold mb-1">URL Hình ảnh</label>
+                    <input asp-for="ProductVariant.ImageUrl" class="form-control" placeholder="https://..." />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-2">
+                <a asp-page="./Index" class="btn btn-light border px-4">Hủy bỏ</a>
+                <button type="submit" class="btn btn-danger px-5"><i class="bi bi-floppy me-2"></i> Cập nhật dữ liệu</button>
+            </div>
+        </form>
+    </div>
+</div>

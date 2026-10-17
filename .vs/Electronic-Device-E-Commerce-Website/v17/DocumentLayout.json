@@ -1,0 +1,263 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\data\\seeddata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\data\\seeddata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{475698A5-9F2E-4A4B-A28F-B95B27B03AA7}|Admin.Blazor\\Admin.Blazor.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\admin.blazor\\admin.blazor.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{475698A5-9F2E-4A4B-A28F-B95B27B03AA7}|Admin.Blazor\\Admin.Blazor.csproj|solutionrelative:admin.blazor\\admin.blazor.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Migrations\\20261011132358_Initdatabase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DAL\\Migrations\\20261011132358_Initdatabase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\userstaff.razor\\pages\\productvariants\\create.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|solutionrelative:userstaff.razor\\pages\\productvariants\\create.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\userstaff.razor\\pages\\productvariants\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|solutionrelative:userstaff.razor\\pages\\productvariants\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\userstaff.razor\\pages\\productvariants\\createvariants.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|solutionrelative:userstaff.razor\\pages\\productvariants\\createvariants.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\userstaff.razor\\pages\\productvariants\\createvariants.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C62454DD-9882-4D8E-B482-68F6DDB00560}|UserStaff.Razor\\Staff.Razor.csproj|solutionrelative:userstaff.razor\\pages\\productvariants\\createvariants.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\productvariantrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\productvariantrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\productreviewrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\productreviewrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\interfaces\\iproductvariantrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\interfaces\\iproductvariantrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\interfaces\\irepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\interfaces\\irepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\interfaces\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\interfaces\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|d:\\caclopfpt\\ki8_se1902.02\\prm393\\project\\electronic-device-e-commerce-website\\dal\\repositories\\orderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{488983F1-2D25-4FC2-ABD3-6AAA915E62DB}|DAL\\DAL.csproj|solutionrelative:dal\\repositories\\orderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 11,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{66f449b5-c823-40bc-9016-02b4d06a1a8e}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:138:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Admin.Blazor",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\Admin.Blazor\\Admin.Blazor.csproj",
+              "RelativeDocumentMoniker": "Admin.Blazor\\Admin.Blazor.csproj",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\Admin.Blazor\\Admin.Blazor.csproj",
+              "RelativeToolTip": "Admin.Blazor\\Admin.Blazor.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABSAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-10-11T13:26:05.24Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "20261011132358_Initdatabase.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Migrations\\20261011132358_Initdatabase.cs",
+              "RelativeDocumentMoniker": "DAL\\Migrations\\20261011132358_Initdatabase.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Migrations\\20261011132358_Initdatabase.cs",
+              "RelativeToolTip": "DAL\\Migrations\\20261011132358_Initdatabase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-11T13:23:58.868Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\Index.cshtml",
+              "RelativeDocumentMoniker": "UserStaff.Razor\\Pages\\ProductVariants\\Index.cshtml",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\Index.cshtml",
+              "RelativeToolTip": "UserStaff.Razor\\Pages\\ProductVariants\\Index.cshtml",
+              "ViewState": "AgIAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-07-20T11:33:33.072Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Create.cshtml.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\Create.cshtml.cs",
+              "RelativeDocumentMoniker": "UserStaff.Razor\\Pages\\ProductVariants\\Create.cshtml.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\Create.cshtml.cs",
+              "RelativeToolTip": "UserStaff.Razor\\Pages\\ProductVariants\\Create.cshtml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T11:33:18.017Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CreateVariants.cshtml.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml.cs",
+              "RelativeDocumentMoniker": "UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml.cs",
+              "RelativeToolTip": "UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAA7wDEAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T11:32:17.87Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CreateVariants.cshtml",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml",
+              "RelativeDocumentMoniker": "UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml",
+              "RelativeToolTip": "UserStaff.Razor\\Pages\\ProductVariants\\CreateVariants.cshtml",
+              "ViewState": "AgIAAMYAAAAAAAAAAAAAAK8AAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-07-20T11:30:17.821Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Repository.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Repository.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\Repository.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Repository.cs",
+              "RelativeToolTip": "DAL\\Repositories\\Repository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T11:25:23.705Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "SeedData.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Data\\SeedData.cs",
+              "RelativeDocumentMoniker": "DAL\\Data\\SeedData.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Data\\SeedData.cs",
+              "RelativeToolTip": "DAL\\Data\\SeedData.cs",
+              "ViewState": "AgIAAP0AAAAAAAAAAIAwwAgBAABiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T11:00:04.164Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ProductReviewRepository.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\ProductReviewRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\ProductReviewRepository.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\ProductReviewRepository.cs",
+              "RelativeToolTip": "DAL\\Repositories\\ProductReviewRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T10:49:00.706Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "IRepository.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Interfaces\\IRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\Interfaces\\IRepository.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Interfaces\\IRepository.cs",
+              "RelativeToolTip": "DAL\\Repositories\\Interfaces\\IRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T10:47:28.522Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "IUnitOfWork.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Interfaces\\IUnitOfWork.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\Interfaces\\IUnitOfWork.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Interfaces\\IUnitOfWork.cs",
+              "RelativeToolTip": "DAL\\Repositories\\Interfaces\\IUnitOfWork.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T10:47:17.092Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "IProductVariantRepository.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Interfaces\\IProductVariantRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\Interfaces\\IProductVariantRepository.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\Interfaces\\IProductVariantRepository.cs",
+              "RelativeToolTip": "DAL\\Repositories\\Interfaces\\IProductVariantRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T10:45:33.618Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "OrderRepository.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\OrderRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\OrderRepository.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\OrderRepository.cs",
+              "RelativeToolTip": "DAL\\Repositories\\OrderRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T10:45:17.148Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ProductVariantRepository.cs",
+              "DocumentMoniker": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\ProductVariantRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\Repositories\\ProductVariantRepository.cs",
+              "ToolTip": "D:\\CacLopFPT\\Ki8_SE1902.02\\PRM393\\Project\\Electronic-Device-E-Commerce-Website\\DAL\\Repositories\\ProductVariantRepository.cs",
+              "RelativeToolTip": "DAL\\Repositories\\ProductVariantRepository.cs",
+              "ViewState": "AgIAAEEAAAAAAAAAAAAswAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-20T10:40:41.705Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

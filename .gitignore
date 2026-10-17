@@ -1,23 +1,48 @@
-## Tool hiển thị cấu hình hệ thống và file tạm của OS
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
 .DS_Store
-Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
 
-## Visual Studio cache và các file build tạm
-.vs/
-[Bb]in/
-[Oo]bj/
-*.user
-*.userosscache
-*.sln.docstates
-
-## JetBrains Rider / Resharper (nếu nhóm có ai dùng Rider)
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
 .idea/
-*.sln.iml
 
-## Các file cấu hình chứa thông tin nhạy cảm (BẢO MẬT KEY)
-**/appsettings.Development.json
-appsettings.json
-appsettings.*.json
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
 
-## Entity Framework Core Migrations cache
-*.pfx
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Widget Preview related
+.widget_preview/
