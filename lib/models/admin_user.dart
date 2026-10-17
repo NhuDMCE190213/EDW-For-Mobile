@@ -48,6 +48,7 @@ class AdminUser {
   }
 }
 
+
 class CreateAdminUserInput {
   const CreateAdminUserInput({
     required this.fullName,
