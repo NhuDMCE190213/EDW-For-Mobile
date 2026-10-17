@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
@@ -33,13 +33,41 @@ class OrderApi {
     _ensureSuccess(response);
   }
 
-  // Staff Orders
+  Future<CheckoutResult> checkoutCart(int customerId, List<int> selectedCartItemIds) async {
+    final response = await _client.post(
+      _uri('/api/customer/orders/checkout'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'customerId': customerId,
+        'selectedCartItemIds': selectedCartItemIds,
+      }),
+    );
+    _ensureSuccess(response);
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return CheckoutResult.fromJson(json);
+  }
+
+  Future<void> cancelOrder(String orderId) async {
+    final response = await _client.post(
+      _uri('/api/customer/orders/$orderId/cancel'),
+    );
+    _ensureSuccess(response);
+  }
+
+  // Staff / Admin Orders
   Future<List<Order>> getAllOrders() async {
     final response = await _client.get(_uri('/api/staff/orders'));
     _ensureSuccess(response);
     return (jsonDecode(response.body) as List)
         .map((item) => Order.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<OrderDashboard> getOrderDashboard() async {
+    final response = await _client.get(_uri('/api/staff/orders/dashboard'));
+    _ensureSuccess(response);
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return OrderDashboard.fromJson(json);
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
@@ -53,7 +81,14 @@ class OrderApi {
 
   void _ensureSuccess(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('API request failed (${response.statusCode})');
+      String errorMessage = 'API request failed (${response.statusCode})';
+      try {
+        final body = jsonDecode(response.body);
+        if (body is Map && body['message'] != null) {
+          errorMessage = body['message'].toString();
+        }
+      } catch (_) {}
+      throw Exception(errorMessage);
     }
   }
 }
