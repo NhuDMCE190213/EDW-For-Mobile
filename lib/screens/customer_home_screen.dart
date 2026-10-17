@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+//Tiêu Gia Huy
+import 'customer_shopping/customer_shopping_page.dart';
+
 import '../models/auth_model.dart';
 import '../services/auth_api.dart';
 import '../services/cart_api.dart';
@@ -97,6 +100,22 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  //Tiêu Gia Huy
+  void _openShoppingCart() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CustomerShoppingPage(
+          baseUrl: widget.baseUrl,
+          token: widget.user.token,
+          initialTab: 1,
+        ),
+      ),
+    );
+  }
+
+  //Tiêu Gia Huy
+  // Keep the legacy cart handler intact.
+  // ignore: unused_element
   void _openCart() {
     Navigator.push(
       context,
@@ -140,8 +159,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       appBar: AppBar(
         title: const Text('EDW Customer'),
         actions: [
+          //Tiêu Gia Huy
+          if (!_loggingOut) CustomerShoppingEntry(
+            baseUrl: widget.baseUrl,
+            token: widget.user.token,
+          ),
           IconButton(
-            onPressed: _openCart,
+            //Tiêu Gia Huy
+            onPressed: _openShoppingCart,
             icon: const Icon(Icons.shopping_cart_outlined),
             tooltip: 'Giỏ hàng',
           ),
@@ -246,7 +271,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
-                    onPressed: _openCart,
+                    //Tiêu Gia Huy
+                    onPressed: _openShoppingCart,
                     icon: const Icon(Icons.shopping_cart_outlined),
                     label: const Text('Xem giỏ hàng'),
                   ),
@@ -264,6 +290,23 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     onPressed: _openReviews,
                     icon: const Icon(Icons.rate_review_outlined),
                     label: const Text('Đánh giá của tôi'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  //Tiêu Gia Huy
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => CustomerShoppingPage(
+                          baseUrl: widget.baseUrl,
+                          token: widget.user.token,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.storefront_outlined),
+                    label: const Text('View Product'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
