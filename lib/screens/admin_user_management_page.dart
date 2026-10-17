@@ -85,6 +85,7 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
     } catch (error) {
       _message(error.toString(), error: true);
     }
+    
   }
 
   void _message(String text, {bool error = false}) {
