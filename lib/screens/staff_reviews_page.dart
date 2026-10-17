@@ -75,6 +75,124 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
     }
   }
 
+  // UC-06.2: Flag Review Dialog & API call
+  Future<void> _handleFlag(ReviewItem review) async {
+    final reasonController = TextEditingController();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Gắn cờ vi phạm'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bạn muốn gắn cờ đánh giá của "${review.customerName}" cho sản phẩm "${review.productName}"?',
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Lý do gắn cờ (tùy chọn)',
+                    hintText: 'Ví dụ: Ngôn từ không phù hợp, spam...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Hủy'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.amber[800]),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Gắn cờ'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await widget.api.flagReview(
+        review.id,
+        reason: reasonController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gắn cờ đánh giá thành công.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _fetchReviews();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi khi gắn cờ: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // UC-06.2: Unflag Review
+  Future<void> _handleUnflag(ReviewItem review) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Gỡ cờ đánh giá'),
+            content: Text(
+              'Xác nhận gỡ cờ cho đánh giá của "${review.customerName}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Hủy'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Gỡ cờ'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await widget.api.unflagReview(review.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gỡ cờ đánh giá.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _fetchReviews();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi khi gỡ cờ: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildStarRating(int rating) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -218,7 +336,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
           ),
         ),
 
-        // Danh sách đánh giá (UC-06.1)
+        // Danh sách đánh giá
         Expanded(
           child:
               _isLoading
@@ -357,6 +475,36 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                       height: 1.4,
                                     ),
                                   ),
+                                ),
+                                const SizedBox(height: 10),
+
+                                // UC-06.2: Action buttons for Flagging
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (!review.isFlagged && !review.isHidden)
+                                      OutlinedButton.icon(
+                                        onPressed: () => _handleFlag(review),
+                                        icon: const Icon(
+                                          Icons.flag_outlined,
+                                          size: 16,
+                                          color: Colors.amber,
+                                        ),
+                                        label: const Text(
+                                          'Gắn cờ',
+                                          style: TextStyle(color: Colors.amber),
+                                        ),
+                                      ),
+                                    if (review.isFlagged)
+                                      OutlinedButton.icon(
+                                        onPressed: () => _handleUnflag(review),
+                                        icon: const Icon(
+                                          Icons.outlined_flag,
+                                          size: 16,
+                                        ),
+                                        label: const Text('Gỡ cờ'),
+                                      ),
+                                  ],
                                 ),
                               ],
                             ),
