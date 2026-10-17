@@ -57,6 +57,7 @@ class Promotion {
       isDeleted: _bool(json['isDeleted'] ?? json['IsDeleted']),
       isDisabled: _bool(json['isDisabled'] ?? json['IsDisabled']),
     );
+    
   }
 
   static int _enumValue(Object? value) {
