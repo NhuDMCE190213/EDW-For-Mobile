@@ -2,8 +2,12 @@
 
 import '../models/order.dart';
 import '../services/cart_api.dart';
-import '../services/order_api.dart';
 import 'customer_cart_page.dart';
+import '../models/product_variant.dart';
+import '../services/order_api.dart';
+import '../services/review_api.dart';
+import '../services/staff_variant_api.dart';
+import 'write_review_page.dart';
 
 class CustomerOrdersPage extends StatefulWidget {
   const CustomerOrdersPage({
@@ -26,11 +30,25 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
   bool _isLoading = true;
   String _selectedFilter = 'All';
   final Set<String> _transferringOrderIds = {};
+  List<ProductVariant> _variants = [];
 
   @override
   void initState() {
     super.initState();
     _fetchOrders();
+    _loadVariants();
+  }
+
+  Future<void> _loadVariants() async {
+    try {
+      final variantApi = StaffVariantApi(baseUrl: widget.api.baseUrl);
+      final variants = await variantApi.getVariants();
+      if (mounted) {
+        setState(() => _variants = variants);
+      }
+    } catch (_) {
+      // Best-effort cache for product ID mapping
+    }
   }
 
   Future<void> _fetchOrders() async {
@@ -142,21 +160,63 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
     }
   }
 
-  Color _getStatusColor(String status) {
+Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.green;
-      case 'pending':
-        return Colors.orange;
+      case 'completed': return Colors.green;
+      case 'pending': return Colors.orange;
       case 'processing':
       case 'confirmed':
-      case 'shipped':
-        return Colors.blue;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
+      case 'shipped': return Colors.blue;
+      case 'cancelled': return Colors.red;
+      default: return Colors.grey;
     }
+  }
+
+  Future<void> _openReviewForItem(Order order, OrderItem item) async {
+    int productId = 1;
+    final matchedVariant = _variants.cast<ProductVariant?>().firstWhere(
+      (v) => v?.id.toLowerCase() == item.productVariantId.toLowerCase(),
+      orElse: () => null,
+    );
+
+    if (matchedVariant != null && matchedVariant.productId > 0) {
+      productId = matchedVariant.productId;
+    } else {
+      try {
+        final variantApi = StaffVariantApi(baseUrl: widget.api.baseUrl);
+        final freshVariants = await variantApi.getVariants();
+        _variants = freshVariants;
+        final found = freshVariants.cast<ProductVariant?>().firstWhere(
+          (v) => v?.id.toLowerCase() == item.productVariantId.toLowerCase(),
+          orElse: () => null,
+        );
+        if (found != null && found.productId > 0) {
+          productId = found.productId;
+        } else {
+          final products = await variantApi.getProducts();
+          final prod = products.cast<ProductSummary?>().firstWhere(
+            (p) => p?.name.toLowerCase() == item.productName.toLowerCase(),
+            orElse: () => null,
+          );
+          if (prod != null) productId = prod.id;
+        }
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WriteReviewPage(
+          api: ReviewApi(baseUrl: widget.api.baseUrl),
+          customerId: widget.customerId,
+          productId: productId,
+          productName: item.productName,
+          orderId: order.orderId,
+          orderItemId: item.orderItemId,
+        ),
+      ),
+    );
   }
 
   @override
@@ -173,7 +233,10 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
         title: const Text('My Orders'),
         actions: [
           IconButton(
-            onPressed: _fetchOrders,
+            onPressed: () async {
+              await _fetchOrders();
+              await _loadVariants();
+            },
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
           ),
@@ -181,34 +244,23 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
       ),
       body: Column(
         children: [
-          // Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
-              children: [
-                'All',
-                'Pending',
-                'Completed',
-                'Cancelled',
-              ].map((filter) {
+              children: ['All', 'Pending', 'Completed', 'Cancelled'].map((filter) {
                 final isSelected = _selectedFilter == filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(filter),
                     selected: isSelected,
-                    onSelected: (val) {
-                      setState(() => _selectedFilter = filter);
-                    },
+                    onSelected: (val) => setState(() => _selectedFilter = filter),
                     selectedColor: const Color(0xFFE24B4A).withValues(alpha: 0.15),
                     checkmarkColor: const Color(0xFFE24B4A),
                     labelStyle: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFFE24B4A)
-                          : Colors.black87,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? const Color(0xFFE24B4A) : Colors.black87,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -223,40 +275,31 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.receipt_long_outlined,
-                          size: 70,
-                          color: Colors.grey.shade400,
-                        ),
+                        Icon(Icons.receipt_long_outlined, size: 70, color: Colors.grey.shade400),
                         const SizedBox(height: 12),
                         Text(
-                          _selectedFilter == 'All'
-                              ? 'You have no orders yet'
-                              : 'No $_selectedFilter orders found',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          _selectedFilter == 'All' ? 'You have no orders yet' : 'No $_selectedFilter orders found',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                   )
                 : RefreshIndicator(
-                    onRefresh: _fetchOrders,
+                    onRefresh: () async {
+                      await _fetchOrders();
+                      await _loadVariants();
+                    },
                     child: ListView.builder(
                       padding: const EdgeInsets.only(bottom: 24),
                       itemCount: filteredOrders.length,
                       itemBuilder: (context, index) {
                         final order = filteredOrders[index];
                         final statusColor = _getStatusColor(order.status);
-                        final isTransferring =
-                            _transferringOrderIds.contains(order.orderId);
+                        final isTransferring = _transferringOrderIds.contains(order.orderId);
+                        final isCompleted = order.status.toLowerCase() == 'completed';
 
                         return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           elevation: 1.5,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -268,36 +311,22 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Order #${order.orderId.length > 8 ? order.orderId.substring(0, 8) : order.orderId}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: statusColor.withValues(alpha: 0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: statusColor.withValues(alpha: 0.3),
-                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                                       ),
                                       child: Text(
                                         order.status,
-                                        style: TextStyle(
-                                          color: statusColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
+                                        style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ),
                                   ],
@@ -305,66 +334,54 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
                                 const SizedBox(height: 6),
                                 Text(
                                   'Date: ${order.createdAt.toLocal().toString().substring(0, 16)}',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 12,
-                                  ),
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                                 ),
                                 const Divider(height: 20),
-                                const Text(
-                                  'Items:',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
+                                const Text('Items:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                                 const SizedBox(height: 4),
                                 ...order.orderItems.map(
                                   (item) => Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 3,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
-                                          child: Text(
-                                            '${item.productName} (x${item.quantity})',
-                                            style: const TextStyle(fontSize: 13),
-                                            overflow: TextOverflow.ellipsis,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                              Text(
+                                                'Qty: ${item.quantity} | Total: \$${(item.priceAtPurchase * item.quantity).toStringAsFixed(2)}',
+                                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        Text(
-                                          '\$${(item.priceAtPurchase * item.quantity).toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 13,
+                                        if (isCompleted)
+                                          TextButton.icon(
+                                            onPressed: () => _openReviewForItem(order, item),
+                                            icon: const Icon(Icons.rate_review_outlined, size: 16, color: Colors.amber),
+                                            label: const Text(
+                                              'Đánh giá',
+                                              style: TextStyle(fontSize: 13, color: Colors.amber, fontWeight: FontWeight.bold),
+                                            ),
+                                            style: TextButton.styleFrom(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              visualDensity: VisualDensity.compact,
+                                            ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),
                                 ),
                                 const Divider(height: 20),
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text(
-                                      'Total Amount:',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
+                                    const Text('Total Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                                     Text(
                                       '\$${order.totalAmount.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17,
-                                        color: Color(0xFFE24B4A),
-                                      ),
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFFE24B4A)),
                                     ),
                                   ],
                                 ),
@@ -372,50 +389,22 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    if (order.status == 'Pending') ...[
+                                    if (order.status.toLowerCase() == 'pending') ...[
                                       OutlinedButton.icon(
-                                        onPressed: () =>
-                                            _cancelOrder(order.orderId),
-                                        icon: const Icon(
-                                          Icons.cancel_outlined,
-                                          size: 16,
-                                          color: Colors.red,
-                                        ),
-                                        label: const Text(
-                                          'Cancel',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
+                                        onPressed: () => _cancelOrder(order.orderId),
+                                        icon: const Icon(Icons.cancel_outlined, size: 16, color: Colors.red),
+                                        label: const Text('Cancel', style: TextStyle(color: Colors.red)),
                                       ),
                                       const SizedBox(width: 8),
                                     ],
-                                    // Transfer to Cart / Re-order button
                                     FilledButton.icon(
-                                      onPressed: isTransferring
-                                          ? null
-                                          : () => _transferToCart(order.orderId),
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFFE24B4A),
-                                      ),
+                                      onPressed: isTransferring ? null : () => _transferToCart(order.orderId),
+                                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE24B4A)),
                                       icon: isTransferring
-                                          ? const SizedBox(
-                                              width: 14,
-                                              height: 14,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : const Icon(
-                                              Icons.shopping_cart_checkout,
-                                              size: 16,
-                                            ),
+                                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                          : const Icon(Icons.shopping_cart_checkout, size: 16),
                                       label: Text(
-                                        order.status == 'Completed' ||
-                                                order.status == 'Cancelled'
-                                            ? 'Re-order to Cart'
-                                            : 'Transfer to Cart',
+                                        isCompleted || order.status.toLowerCase() == 'cancelled' ? 'Re-order to Cart' : 'Transfer to Cart',
                                       ),
                                     ),
                                   ],
@@ -433,4 +422,3 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
     );
   }
 }
-
