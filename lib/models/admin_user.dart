@@ -28,7 +28,7 @@ class AdminUser {
         json['IsActive'] ??
         json['active'] ??
         json['Active'] ??
-        true;
+        _activeFromStatus(json['status'] ?? json['Status']);
     return AdminUser(
       id: rawId is num ? rawId.toInt() : int.tryParse('$rawId') ?? 0,
       fullName:
@@ -40,6 +40,11 @@ class AdminUser {
           : rawActive.toString().toLowerCase() == 'true',
       phoneNumber: (json['phoneNumber'] ?? json['PhoneNumber'])?.toString(),
     );
+  }
+
+  static bool _activeFromStatus(Object? value) {
+    final status = value?.toString().toLowerCase();
+    return status == 'active' || status == 'enabled';
   }
 }
 
@@ -60,6 +65,7 @@ class CreateAdminUserInput {
     'fullName': fullName,
     'email': email,
     'password': password,
+    'isActive': true,
     if (phoneNumber != null && phoneNumber!.isNotEmpty)
       'phoneNumber': phoneNumber,
   };

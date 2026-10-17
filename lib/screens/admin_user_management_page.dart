@@ -9,8 +9,7 @@ class AdminUserManagementPage extends StatefulWidget {
   final AdminUserApi api;
 
   @override
-  AdminUserManagementPageState createState() =>
-      AdminUserManagementPageState();
+  AdminUserManagementPageState createState() => AdminUserManagementPageState();
 }
 
 class AdminUserManagementPageState extends State<AdminUserManagementPage> {
@@ -28,21 +27,24 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
   Future<void> refresh() => _load();
 
   Future<void> _load() async {
+    final tab = _tab;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final users = _tab == 0
+      final users = tab == 0
           ? await widget.api.getStaff()
           : await widget.api.getCustomers();
       if (!mounted) return;
+      if (tab != _tab) return;
       setState(() {
         _users = users;
         _loading = false;
       });
     } catch (error) {
       if (!mounted) return;
+      if (tab != _tab) return;
       setState(() {
         _error = error.toString();
         _loading = false;
@@ -51,18 +53,19 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
   }
 
   Future<void> _create() async {
+    final tab = _tab;
     final input = await showDialog<CreateAdminUserInput>(
       context: context,
-      builder: (_) => _CreateUserDialog(isCustomer: _tab == 1),
+      builder: (_) => _CreateUserDialog(isCustomer: tab == 1),
     );
     if (input == null) return;
     try {
-      if (_tab == 0) {
+      if (tab == 0) {
         await widget.api.createStaff(input);
       } else {
         await widget.api.createCustomer(input);
       }
-      _message('${_tab == 0 ? 'Staff' : 'Customer'} created.');
+      _message('${tab == 0 ? 'Staff' : 'Customer'} created.');
       _load();
     } catch (error) {
       _message(error.toString(), error: true);
@@ -70,8 +73,9 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
   }
 
   Future<void> _toggle(AdminUser user) async {
+    final tab = _tab;
     try {
-      if (_tab == 0) {
+      if (tab == 0) {
         await widget.api.setStaffActive(user.id, !user.isActive);
       } else {
         await widget.api.setCustomerActive(user.id, !user.isActive);
@@ -85,10 +89,12 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
 
   void _message(String text, {bool error = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(text),
-      backgroundColor: error ? Colors.red.shade700 : null,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: error ? Colors.red.shade700 : null,
+      ),
+    );
   }
 
   @override
@@ -102,8 +108,16 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
               Expanded(
                 child: SegmentedButton<int>(
                   segments: const [
-                    ButtonSegment(value: 0, label: Text('Staff'), icon: Icon(Icons.badge_outlined)),
-                    ButtonSegment(value: 1, label: Text('Customers'), icon: Icon(Icons.people_outline)),
+                    ButtonSegment(
+                      value: 0,
+                      label: Text('Staff'),
+                      icon: Icon(Icons.badge_outlined),
+                    ),
+                    ButtonSegment(
+                      value: 1,
+                      label: Text('Customers'),
+                      icon: Icon(Icons.people_outline),
+                    ),
                   ],
                   selected: {_tab},
                   onSelectionChanged: (selected) {
@@ -156,20 +170,38 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
         itemBuilder: (_, index) {
           final user = _users[index];
           return ListTile(
-            leading: CircleAvatar(child: Text(user.fullName.isEmpty ? '?' : user.fullName[0].toUpperCase())),
+            leading: CircleAvatar(
+              child: Text(
+                user.fullName.isEmpty ? '?' : user.fullName[0].toUpperCase(),
+              ),
+            ),
             title: Text(user.fullName.isEmpty ? '(No name)' : user.fullName),
-            subtitle: Text([user.email, if (user.phoneNumber?.isNotEmpty == true) user.phoneNumber!].join(' • ')),
+            subtitle: Text(
+              [
+                user.email,
+                if (user.phoneNumber?.isNotEmpty == true) user.phoneNumber!,
+              ].join(' • '),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Chip(
                   label: Text(user.isActive ? 'Active' : 'Disabled'),
-                  avatar: Icon(user.isActive ? Icons.check : Icons.block, size: 16),
-                  backgroundColor: user.isActive ? Colors.green.shade50 : Colors.grey.shade200,
+                  avatar: Icon(
+                    user.isActive ? Icons.check : Icons.block,
+                    size: 16,
+                  ),
+                  backgroundColor: user.isActive
+                      ? Colors.green.shade50
+                      : Colors.grey.shade200,
                 ),
                 IconButton(
                   onPressed: () => _toggle(user),
-                  icon: Icon(user.isActive ? Icons.person_off_outlined : Icons.person_add_alt_1_outlined),
+                  icon: Icon(
+                    user.isActive
+                        ? Icons.person_off_outlined
+                        : Icons.person_add_alt_1_outlined,
+                  ),
                   tooltip: user.isActive ? 'Disable' : 'Enable',
                 ),
               ],
@@ -214,35 +246,65 @@ class _CreateUserDialogState extends State<_CreateUserDialog> {
         fullName: _name.text.trim(),
         email: _email.text.trim(),
         password: _password.text,
-        phoneNumber: _phone.text.trim(),
+        phoneNumber: widget.isCustomer ? _phone.text.trim() : null,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: Text(widget.isCustomer ? 'Create customer' : 'Create staff'),
-        content: SizedBox(
-          width: 420,
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _field(_name, 'Full name'),
-                  _field(_email, 'Email', keyboard: TextInputType.emailAddress),
-                  _field(_phone, 'Phone number', required: false, keyboard: TextInputType.phone),
-                  _field(_password, 'Password', obscure: true),
-                ],
+    title: Text(widget.isCustomer ? 'Create customer' : 'Create staff'),
+    content: SizedBox(
+      width: 420,
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _field(_name, 'Full name'),
+              _field(
+                _email,
+                'Email',
+                keyboard: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Required';
+                  return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                          .hasMatch(value.trim())
+                      ? null
+                      : 'Invalid email';
+                },
               ),
-            ),
+              if (widget.isCustomer)
+                _field(_phone, 'Phone number', keyboard: TextInputType.phone),
+              _field(
+                _password,
+                'Password',
+                obscure: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Required';
+                  if (value.length < 8) return 'At least 8 characters';
+                  if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                      !RegExp(r'\d').hasMatch(value) ||
+                      !RegExp(r'''[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]''')
+                          .hasMatch(value)) {
+                    return 'Must contain a letter, number and symbol';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: _submit, child: const Text('Create')),
-        ],
-      );
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(onPressed: _submit, child: const Text('Create')),
+    ],
+  );
 
   Widget _field(
     TextEditingController controller,
@@ -250,17 +312,23 @@ class _CreateUserDialogState extends State<_CreateUserDialog> {
     bool required = true,
     bool obscure = false,
     TextInputType? keyboard,
-  }) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: TextFormField(
-          controller: controller,
-          obscureText: obscure,
-          keyboardType: keyboard,
-          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
-          validator: required
-              ? (value) => value == null || value.trim().isEmpty ? 'Required' : null
-              : null,
-        ),
-      );
+    String? Function(String?)? validator,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboard,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      validator:
+          validator ??
+          (required
+              ? (value) =>
+                    value == null || value.trim().isEmpty ? 'Required' : null
+              : null),
+    ),
+  );
 }
