@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
@@ -21,6 +21,26 @@ class CartApi {
         .toList();
   }
 
+  Future<int> getCartCount(int customerId) async {
+    final response = await _client.get(_uri('/api/customer/cart/$customerId/count'));
+    _ensureSuccess(response);
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return (json['count'] ?? 0) as int;
+  }
+
+  Future<void> updateQuantity(int cartItemId, int quantity, int customerId) async {
+    final response = await _client.put(
+      _uri('/api/customer/cart/$cartItemId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'cartItemId': cartItemId,
+        'customerId': customerId,
+        'quantity': quantity,
+      }),
+    );
+    _ensureSuccess(response);
+  }
+
   Future<void> removeFromCart(int cartItemId, int customerId) async {
     final response = await _client.delete(
       _uri('/api/customer/cart/$cartItemId?customerId=$customerId'),
@@ -30,7 +50,14 @@ class CartApi {
 
   void _ensureSuccess(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('API request failed (${response.statusCode})');
+      String errorMessage = 'API request failed (${response.statusCode})';
+      try {
+        final body = jsonDecode(response.body);
+        if (body is Map && body['message'] != null) {
+          errorMessage = body['message'].toString();
+        }
+      } catch (_) {}
+      throw Exception(errorMessage);
     }
   }
 }
