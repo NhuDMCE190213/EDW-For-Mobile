@@ -87,11 +87,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       } else {
-        // Staff sử dụng navigation chứa cả Variants và Orders.
+        // Staff/Admin sử dụng navigation chứa Variants, Promotions, Orders, Catalog, Reviews.
         Navigator.pushReplacementNamed(
           context,
           '/home',
-          arguments: {'token': response.token, 'role': response.role},
+          arguments: response,
         );
       }
     } on ApiException catch (e) {

@@ -1,4 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
+//Tiêu Gia Huy
+import 'customer_shopping/customer_shopping_page.dart';
 
 import '../models/auth_model.dart';
 import '../services/auth_api.dart';
@@ -6,8 +9,10 @@ import '../services/cart_api.dart';
 import '../services/order_api.dart';
 import 'customer_cart_page.dart';
 import 'customer_orders_page.dart';
+import 'customer_reviews_page.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import '../services/review_api.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({
@@ -36,21 +41,21 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Đăng xuất'),
+        title: const Text('ÄÄƒng xuáº¥t'),
         content: const Text(
-          'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?',
+          'Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n Ä‘Äƒng xuáº¥t khá»i tÃ i khoáº£n khÃ´ng?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: const Text('Há»§y'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFE24B4A),
             ),
-            child: const Text('Đăng xuất'),
+            child: const Text('ÄÄƒng xuáº¥t'),
           ),
         ],
       ),
@@ -60,16 +65,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
     setState(() => _loggingOut = true);
     try {
-      // UC-02: Gọi API logout
+      // UC-02: Gá»i API logout
       await widget.authApi.logout(widget.user.token);
     } catch (_) {
-      // JWT là stateless, dù API có lỗi mạng thì vẫn xóa phiên ở client
+      // JWT lÃ  stateless, dÃ¹ API cÃ³ lá»—i máº¡ng thÃ¬ váº«n xÃ³a phiÃªn á»Ÿ client
     }
 
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Đã đăng xuất thành công.')));
+    ).showSnackBar(const SnackBar(content: Text('ÄÃ£ Ä‘Äƒng xuáº¥t thÃ nh cÃ´ng.')));
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -95,6 +100,22 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  //Tiêu Gia Huy
+  void _openShoppingCart() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CustomerShoppingPage(
+          baseUrl: widget.baseUrl,
+          token: widget.user.token,
+          initialTab: 1,
+        ),
+      ),
+    );
+  }
+
+  //Tiêu Gia Huy
+  // Keep the legacy cart handler intact.
+  // ignore: unused_element
   void _openCart() {
     Navigator.push(
       context,
@@ -119,31 +140,55 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  void _openReviews() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerReviewsPage(
+          api: ReviewApi(baseUrl: widget.baseUrl),
+          customerId: widget.user.userId,
+          customerName: widget.user.fullName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EDW Customer'),
         actions: [
+          //Tiêu Gia Huy
+          if (!_loggingOut) CustomerShoppingEntry(
+            baseUrl: widget.baseUrl,
+            token: widget.user.token,
+          ),
           IconButton(
-            onPressed: _openCart,
+            //Tiêu Gia Huy
+            onPressed: _openShoppingCart,
             icon: const Icon(Icons.shopping_cart_outlined),
-            tooltip: 'Giỏ hàng',
+            tooltip: 'Giá» hÃ ng',
           ),
           IconButton(
             onPressed: _openOrders,
             icon: const Icon(Icons.receipt_long_outlined),
-            tooltip: 'Đơn hàng của tôi',
+            tooltip: 'ÄÆ¡n hÃ ng cá»§a tÃ´i',
+          ),
+          IconButton(
+            onPressed: _openReviews,
+            icon: const Icon(Icons.rate_review_outlined),
+            tooltip: 'Đánh giá của tôi',
           ),
           IconButton(
             onPressed: _openProfile,
             icon: const Icon(Icons.account_circle_outlined),
-            tooltip: 'Hồ sơ cá nhân',
+            tooltip: 'Há»“ sÆ¡ cÃ¡ nhÃ¢n',
           ),
           IconButton(
             onPressed: _loggingOut ? null : _handleLogout,
             icon: const Icon(Icons.logout),
-            tooltip: 'Đăng xuất',
+            tooltip: 'ÄÄƒng xuáº¥t',
           ),
         ],
       ),
@@ -202,7 +247,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                             const SizedBox(height: 8),
                             Chip(
                               label: Text(
-                                'Vai trò: ${widget.user.roleDisplayName}',
+                                'Vai trÃ²: ${widget.user.roleDisplayName}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -219,16 +264,17 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   OutlinedButton.icon(
                     onPressed: _openProfile,
                     icon: const Icon(Icons.badge_outlined),
-                    label: const Text('Xem & Quản lý Hồ sơ'),
+                    label: const Text('Xem & Quáº£n lÃ½ Há»“ sÆ¡'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
-                    onPressed: _openCart,
+                    //Tiêu Gia Huy
+                    onPressed: _openShoppingCart,
                     icon: const Icon(Icons.shopping_cart_outlined),
-                    label: const Text('Xem giỏ hàng'),
+                    label: const Text('Xem giá» hÃ ng'),
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
@@ -240,20 +286,46 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _openReviews,
+                    icon: const Icon(Icons.rate_review_outlined),
+                    label: const Text('Đánh giá của tôi'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  //Tiêu Gia Huy
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => CustomerShoppingPage(
+                          baseUrl: widget.baseUrl,
+                          token: widget.user.token,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.storefront_outlined),
+                    label: const Text('View Product'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   const Text(
-                    'Chào mừng bạn đến với EDW Store!',
+                    'ChÃ o má»«ng báº¡n Ä‘áº¿n vá»›i EDW Store!',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bạn đã đăng nhập thành công với vai trò Khách hàng.',
+                    'Báº¡n Ä‘Ã£ Ä‘Äƒng nháº­p thÃ nh cÃ´ng vá»›i vai trÃ² KhÃ¡ch hÃ ng.',
                     style: TextStyle(color: Colors.grey.shade600, height: 1.4),
                   ),
                   const Spacer(),
                   FilledButton.icon(
                     onPressed: _loggingOut ? null : _handleLogout,
                     icon: const Icon(Icons.logout),
-                    label: const Text('Đăng xuất khỏi tài khoản'),
+                    label: const Text('ÄÄƒng xuáº¥t khá»i tÃ i khoáº£n'),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFE24B4A),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -265,3 +337,4 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 }
+
