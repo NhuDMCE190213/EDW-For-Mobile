@@ -6,6 +6,7 @@ import '../models/admin_user.dart';
 import 'api_exception.dart';
 
 class AdminUserApi {
+  
   AdminUserApi({http.Client? client, required this.baseUrl, this.authToken})
     : _client = client ?? http.Client();
 
