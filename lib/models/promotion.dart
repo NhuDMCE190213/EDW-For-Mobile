@@ -57,7 +57,6 @@ class Promotion {
       isDeleted: _bool(json['isDeleted'] ?? json['IsDeleted']),
       isDisabled: _bool(json['isDisabled'] ?? json['IsDisabled']),
     );
-    
   }
 
   static int _enumValue(Object? value) {
@@ -68,6 +67,7 @@ class Promotion {
       return value.toLowerCase() == 'fixedamount' ? 1 : 0;
     }
     return 0;
+    
   }
 
   static double? _double(Object? value) => value is num
