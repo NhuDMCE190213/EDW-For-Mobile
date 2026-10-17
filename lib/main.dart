@@ -138,6 +138,7 @@ class _AppNavigationState extends State<AppNavigation> {
   @override
   void initState() {
     super.initState();
+    widget.adminUserApi.setAuthToken(widget.authToken);
     _pages = [
       StaffVariantPage(
         key: _variantPageKey,
