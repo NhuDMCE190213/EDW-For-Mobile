@@ -4,7 +4,6 @@ import 'package:frontend_flutter/services/api_exception.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/promotion.dart';
-import 'staff_variant_api.dart';
 
 class PromotionApi {
   PromotionApi({http.Client? client, required this.baseUrl, this.authToken})

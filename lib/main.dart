@@ -7,12 +7,14 @@ import 'screens/promotion_page.dart';
 import 'screens/staff_variant_page.dart';
 import 'screens/profile_screen.dart';
 import 'screens/staff_orders_page.dart';
+import 'screens/admin_user_management_page.dart';
 import 'services/auth_api.dart';
 import 'services/admin_catalog_api.dart';
 import 'services/promotion_api.dart';
 import 'services/cart_api.dart';
 import 'services/order_api.dart';
 import 'services/staff_variant_api.dart';
+import 'services/admin_user_api.dart';
 
 void main() {
   const configuredBaseUrl = String.fromEnvironment(
@@ -35,6 +37,7 @@ void main() {
       promotionApi: PromotionApi(baseUrl: resolvedBaseUrl),
       orderApi: OrderApi(baseUrl: resolvedBaseUrl),
       cartApi: CartApi(baseUrl: resolvedBaseUrl),
+      adminUserApi: AdminUserApi(baseUrl: resolvedBaseUrl),
     ),
   );
 }
@@ -49,6 +52,7 @@ class MyApp extends StatelessWidget {
     required this.promotionApi,
     required this.orderApi,
     required this.cartApi,
+    required this.adminUserApi,
   });
   final String baseUrl;
   final AuthApi authApi;
@@ -57,6 +61,7 @@ class MyApp extends StatelessWidget {
   final PromotionApi promotionApi;
   final OrderApi orderApi;
   final CartApi cartApi;
+  final AdminUserApi adminUserApi;
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +84,16 @@ class MyApp extends StatelessWidget {
           orderApi: orderApi,
           authApi: authApi,
           catalogApi: catalogApi,
+          adminUserApi: adminUserApi,
           baseUrl: baseUrl,
-          authToken: ModalRoute.of(context)?.settings.arguments as String?,
+          authToken: ModalRoute.of(context)?.settings.arguments is Map
+              ? (ModalRoute.of(context)?.settings.arguments as Map)['token']
+                    as String?
+              : ModalRoute.of(context)?.settings.arguments as String?,
+          role: ModalRoute.of(context)?.settings.arguments is Map
+              ? (ModalRoute.of(context)?.settings.arguments as Map)['role']
+                    as String?
+              : null,
         ),
       },
     );
@@ -95,8 +108,10 @@ class AppNavigation extends StatefulWidget {
     required this.orderApi,
     required this.authApi,
     required this.catalogApi,
+    required this.adminUserApi,
     required this.baseUrl,
     this.authToken,
+    this.role,
   });
 
   final StaffVariantApi variantApi;
@@ -104,8 +119,10 @@ class AppNavigation extends StatefulWidget {
   final OrderApi orderApi;
   final AuthApi authApi;
   final AdminCatalogApi catalogApi;
+  final AdminUserApi adminUserApi;
   final String baseUrl;
   final String? authToken;
+  final String? role;
 
   @override
   State<AppNavigation> createState() => _AppNavigationState();
@@ -116,6 +133,7 @@ class _AppNavigationState extends State<AppNavigation> {
   late final List<Widget> _pages;
   final _variantPageKey = GlobalKey<StaffVariantPageState>();
   final _ordersPageKey = GlobalKey<StaffOrdersPageState>();
+  final _userPageKey = GlobalKey<AdminUserManagementPageState>();
 
   @override
   void initState() {
@@ -124,11 +142,14 @@ class _AppNavigationState extends State<AppNavigation> {
       StaffVariantPage(
         key: _variantPageKey,
         api: widget.variantApi,
+        promotionApi: widget.promotionApi,
         authToken: widget.authToken,
       ),
       PromotionPage(api: widget.promotionApi),
       StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
       AdminCatalogPage(api: widget.catalogApi),
+      if (widget.role?.toLowerCase() == 'admin' || widget.role == '0')
+        AdminUserManagementPage(key: _userPageKey, api: widget.adminUserApi),
     ];
   }
 
@@ -138,6 +159,9 @@ class _AppNavigationState extends State<AppNavigation> {
     }
     if (_currentIndex == 2) {
       return _ordersPageKey.currentState?.refresh() ?? Future.value();
+    }
+    if (_currentIndex == 4) {
+      return _userPageKey.currentState?.refresh() ?? Future.value();
     }
     return Future.value();
   }
@@ -149,7 +173,7 @@ class _AppNavigationState extends State<AppNavigation> {
       MaterialPageRoute(
         builder: (_) => ProfileScreen(
           token: widget.authToken!,
-          role: 'Staff',
+          role: widget.role ?? 'Staff',
           baseUrl: widget.baseUrl,
           authApi: widget.authApi,
         ),
@@ -185,7 +209,9 @@ class _AppNavigationState extends State<AppNavigation> {
               ? 'Promotion Management'
               : _currentIndex == 2
               ? 'Staff - View Orders'
-              : 'Product and Category Management',
+              : _currentIndex == 3
+              ? 'Product and Category Management'
+              : 'Staff and Customer Management',
         ),
         actions: [
           IconButton(
@@ -212,23 +238,28 @@ class _AppNavigationState extends State<AppNavigation> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.inventory),
             label: 'Variants',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.local_offer),
             label: 'Promotions',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'All Orders',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.category_outlined),
             label: 'Catalog',
           ),
+          if (widget.role?.toLowerCase() == 'admin' || widget.role == '0')
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.manage_accounts_outlined),
+              label: 'Users',
+            ),
         ],
       ),
     );

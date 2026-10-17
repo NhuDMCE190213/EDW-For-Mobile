@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(
           context,
           '/home',
-          arguments: response.token,
+          arguments: {'token': response.token, 'role': response.role},
         );
       }
     } on ApiException catch (e) {
