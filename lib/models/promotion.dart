@@ -67,6 +67,7 @@ class Promotion {
       return value.toLowerCase() == 'fixedamount' ? 1 : 0;
     }
     return 0;
+    
   }
 
   static double? _double(Object? value) => value is num

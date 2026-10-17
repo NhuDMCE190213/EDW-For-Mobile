@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product_variant.dart';
 import '../services/staff_variant_api.dart';
+import '../services/promotion_api.dart';
 import 'staff_variant/widgets/variant_card.dart';
 import 'staff_variant/widgets/variant_display_widgets.dart';
 import 'staff_variant/widgets/variant_editor_dialog.dart';
@@ -10,10 +11,12 @@ class StaffVariantPage extends StatefulWidget {
   const StaffVariantPage({
     super.key,
     required this.api,
+    required this.promotionApi,
     this.authToken,
   });
 
   final StaffVariantApi api;
+  final PromotionApi promotionApi;
   final String? authToken;
 
   @override
@@ -68,6 +71,7 @@ class StaffVariantPageState extends State<StaffVariantPage> {
       context: context,
       builder: (_) => VariantEditorDialog(
         api: widget.api,
+        promotionApi: widget.promotionApi,
         productId: productId,
         variant: variant,
       ),

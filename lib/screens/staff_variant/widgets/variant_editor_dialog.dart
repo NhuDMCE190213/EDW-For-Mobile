@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../../models/product_variant.dart';
 import '../../../services/staff_variant_api.dart';
+import '../../../services/promotion_api.dart';
+import '../../../models/promotion.dart';
 
 class VariantEditorDialog extends StatefulWidget {
   const VariantEditorDialog({
     super.key,
     required this.api,
+    required this.promotionApi,
     required this.productId,
     this.variant,
   });
 
   final StaffVariantApi api;
+  final PromotionApi promotionApi;
   final int productId;
   final ProductVariant? variant;
 
@@ -23,11 +27,15 @@ class _VariantEditorDialogState extends State<VariantEditorDialog> {
   late final Map<String, TextEditingController> _controllers;
   bool _saving = false;
   String? _error;
+  List<Promotion> _promotions = [];
+  String? _promotionId;
 
   @override
   void initState() {
     super.initState();
     final variant = widget.variant;
+    _promotionId = variant?.promotionId;
+    _loadPromotions();
     _controllers = {
       'color': TextEditingController(text: variant?.color),
       'storage': TextEditingController(text: variant?.storage),
@@ -42,6 +50,15 @@ class _VariantEditorDialogState extends State<VariantEditorDialog> {
       ),
       'imageUrl': TextEditingController(text: variant?.imageUrl),
     };
+  }
+
+  Future<void> _loadPromotions() async {
+    try {
+      final result = await widget.promotionApi.list(pageSize: 100);
+      if (mounted) setState(() => _promotions = result.items);
+    } catch (_) {
+      // Promotion selection is optional; variant editing remains available.
+    }
   }
 
   @override
@@ -82,6 +99,7 @@ class _VariantEditorDialogState extends State<VariantEditorDialog> {
       stockQuantity: stock,
       imageUrl: _optional('imageUrl'),
       productId: widget.productId,
+      promotionId: _promotionId,
     );
     try {
       if (widget.variant == null) {
@@ -159,6 +177,26 @@ class _VariantEditorDialogState extends State<VariantEditorDialog> {
                 ],
               ),
               _field('imageUrl', 'Image URL', hint: 'https://...'),
+              DropdownButtonFormField<String?>(
+                initialValue: _promotionId,
+                decoration: const InputDecoration(
+                  labelText: 'Promotion',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('No promotion'),
+                  ),
+                  ..._promotions.map(
+                    (promotion) => DropdownMenuItem<String?>(
+                      value: promotion.id,
+                      child: Text(promotion.name),
+                    ),
+                  ),
+                ],
+                onChanged: _saving ? null : (value) => setState(() => _promotionId = value),
+              ),
             ],
           ),
         ),
