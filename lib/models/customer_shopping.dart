@@ -72,13 +72,34 @@ class ShopCartItem {
   final double unitPrice, totalPrice;
   factory ShopCartItem.fromJson(Map<String, dynamic> json) => ShopCartItem(
     id: json['cartItemId'] as int,
-    name: json['productName'] as String,
-    sku: json['sku'] as String? ?? '',
+    name:
+        json['productName'] as String? ??
+        ((json['productVariant'] as Map?)?['product'] as Map?)?['productName']
+            as String? ??
+        'Product',
+    sku:
+        json['sku'] as String? ??
+        (json['productVariant'] as Map?)?['sku'] as String? ??
+        '',
     quantity: json['quantity'] as int,
-    stock: json['stockQuantity'] as int,
-    unitPrice: (json['unitPrice'] as num).toDouble(),
-    totalPrice: (json['totalPrice'] as num).toDouble(),
-    imageUrl: json['imageUrl'] as String?,
+    stock:
+        (json['stockQuantity'] as num?)?.toInt() ??
+        ((json['productVariant'] as Map?)?['stockQuantity'] as num?)?.toInt() ??
+        0,
+    unitPrice:
+        (json['unitPrice'] as num?)?.toDouble() ??
+        ((json['productVariant'] as Map?)?['price'] as num?)?.toDouble() ??
+        0,
+    totalPrice:
+        (json['totalPrice'] as num?)?.toDouble() ??
+        (((json['unitPrice'] as num?)?.toDouble() ??
+                ((json['productVariant'] as Map?)?['price'] as num?)
+                    ?.toDouble() ??
+                0) *
+            (json['quantity'] as num).toInt()),
+    imageUrl:
+        json['imageUrl'] as String? ??
+        (json['productVariant'] as Map?)?['imageUrl'] as String?,
   );
 }
 

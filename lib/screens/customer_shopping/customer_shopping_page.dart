@@ -10,8 +10,10 @@ class CustomerShoppingEntry extends StatelessWidget {
     super.key,
     required this.baseUrl,
     required this.token,
+    required this.customerId,
   });
   final String baseUrl, token;
+  final int customerId;
   @override
   Widget build(BuildContext context) => PopupMenuButton<int>(
     tooltip: 'Shopping',
@@ -21,6 +23,7 @@ class CustomerShoppingEntry extends StatelessWidget {
         builder: (_) => CustomerShoppingPage(
           baseUrl: baseUrl,
           token: token,
+          customerId: customerId,
           initialTab: tab,
         ),
       ),
@@ -37,9 +40,11 @@ class CustomerShoppingPage extends StatefulWidget {
     super.key,
     required this.baseUrl,
     required this.token,
+    this.customerId = 0,
     this.initialTab = 0,
   });
   final String baseUrl, token;
+  final int customerId;
   final int initialTab;
   @override
   State<CustomerShoppingPage> createState() => _CustomerShoppingPageState();
@@ -52,7 +57,11 @@ class _CustomerShoppingPageState extends State<CustomerShoppingPage> {
   void initState() {
     super.initState();
     _tab = widget.initialTab;
-    _api = CustomerShoppingApi(baseUrl: widget.baseUrl, token: widget.token);
+    _api = CustomerShoppingApi(
+      baseUrl: widget.baseUrl,
+      token: widget.token,
+      customerId: widget.customerId,
+    );
   }
 
   @override
@@ -64,7 +73,9 @@ class _CustomerShoppingPageState extends State<CustomerShoppingPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(_tab == 0 ? 'Products' : 'My cart')),
-    body: _tab == 0 ? ProductCatalogView(api: _api) : MyCartView(api: _api),
+    body: _tab == 0
+        ? ProductCatalogView(api: _api, customerId: widget.customerId)
+        : MyCartView(api: _api),
     bottomNavigationBar: NavigationBar(
       selectedIndex: _tab,
       onDestinationSelected: (index) => setState(() => _tab = index),

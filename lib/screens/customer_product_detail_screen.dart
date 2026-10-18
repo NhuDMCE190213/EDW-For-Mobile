@@ -114,6 +114,30 @@ class _CustomerProductDetailScreenState
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   Text('${_product.brand} • ${_product.category}'),
+                  const SizedBox(height: 14),
+                  const Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      Chip(
+                        avatar: Icon(Icons.verified_outlined, size: 18),
+                        label: Text('Genuine products'),
+                      ),
+                      Chip(
+                        avatar: Icon(Icons.local_shipping_outlined, size: 18),
+                        label: Text('Fast delivery'),
+                      ),
+                      Chip(
+                        avatar: Icon(Icons.support_agent_outlined, size: 18),
+                        label: Text('Expert support'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Choose the configuration that fits your needs. '
+                    'Every device is checked before shipping and supported by EDW.',
+                  ),
                   const SizedBox(height: 20),
                   Text(
                     'Available variants',

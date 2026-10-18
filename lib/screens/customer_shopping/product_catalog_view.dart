@@ -79,9 +79,41 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Column(
             children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upgrade your everyday tech',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Discover devices selected for work, study and entertainment.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
@@ -136,47 +168,70 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
               ? ShoppingMessage(message: 'No products found.', onRetry: _load)
               : RefreshIndicator(
                   onRefresh: _load,
-                  child: ListView.separated(
+                  child: GridView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: visible.length,
-                    separatorBuilder: (_, _) => const Divider(),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 240,
+                          mainAxisExtent: 245,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
                     itemBuilder: (context, index) {
                       final product = visible[index];
-                      return InkWell(
-                        onTap: () => _details(product),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            children: [
-                              ShoppingImage(
-                                url: widget.api.imageUrl(product.imageUrl),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product.name,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
+                      return Card(
+                        clipBehavior: Clip.antiAlias,
+                        elevation: 1,
+                        child: InkWell(
+                          onTap: () => _details(product),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: ShoppingImage(
+                                      url: widget.api.imageUrl(
+                                        product.imageUrl,
+                                      ),
+                                      size: 125,
                                     ),
-                                    Text(
-                                      '${product.brand} / ${product.category}',
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      product.fromPrice == null
-                                          ? 'No variants available'
-                                          : 'From ${shoppingMoney(product.fromPrice!)}',
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              const Icon(Icons.chevron_right),
-                            ],
+                                Text(
+                                  product.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  product.category.isEmpty
+                                      ? product.brand
+                                      : product.category,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                ),
+                                if (product.fromPrice != null) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'From ${shoppingMoney(product.fromPrice!)}',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                       );

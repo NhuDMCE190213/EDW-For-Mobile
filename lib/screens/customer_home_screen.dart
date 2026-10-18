@@ -125,6 +125,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         builder: (_) => CustomerShoppingPage(
           baseUrl: widget.baseUrl,
           token: widget.user.token,
+          customerId: widget.user.userId,
           initialTab: 1,
         ),
       ),
@@ -182,6 +183,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             CustomerShoppingEntry(
               baseUrl: widget.baseUrl,
               token: widget.user.token,
+              customerId: widget.user.userId,
             ),
           IconButton(
             //Tiêu Gia Huy

@@ -10,9 +10,11 @@ class CustomerShoppingApi {
   CustomerShoppingApi({
     required this.baseUrl,
     required this.token,
+    this.customerId,
     http.Client? client,
   }) : _client = client ?? http.Client();
   final String baseUrl, token;
+  final int? customerId;
   final http.Client _client;
   Map<String, String> get _headers => {
     'Authorization': 'Bearer $token',
@@ -78,7 +80,14 @@ class CustomerShoppingApi {
 
   Future<List<ShopCartItem>> getCart() async {
     final response = await _client
-        .get(_uri('cart'), headers: _headers)
+        .get(
+          customerId == null
+              ? _uri('cart')
+              : Uri.parse(
+                  '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart/$customerId',
+                ),
+          headers: _headers,
+        )
         .timeout(const Duration(seconds: 20));
     _check(response);
     return (jsonDecode(response.body) as List)
@@ -91,9 +100,21 @@ class CustomerShoppingApi {
     _check(
       await _client
           .put(
-            _uri('cart/$id/quantity'),
+            customerId == null
+                ? _uri('cart/$id/quantity')
+                : Uri.parse(
+                    '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart/$id',
+                  ),
             headers: _headers,
-            body: jsonEncode({'quantity': quantity}),
+            body: jsonEncode(
+              customerId == null
+                  ? {'quantity': quantity}
+                  : {
+                      'cartItemId': id,
+                      'customerId': customerId,
+                      'quantity': quantity,
+                    },
+            ),
           )
           .timeout(const Duration(seconds: 20)),
     );
@@ -102,7 +123,14 @@ class CustomerShoppingApi {
   Future<void> removeItem(int id) async {
     _check(
       await _client
-          .delete(_uri('cart/$id'), headers: _headers)
+          .delete(
+            customerId == null
+                ? _uri('cart/$id')
+                : Uri.parse(
+                    '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart/$id?customerId=$customerId',
+                  ),
+            headers: _headers,
+          )
           .timeout(const Duration(seconds: 20)),
     );
   }
