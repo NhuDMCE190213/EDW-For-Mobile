@@ -70,37 +70,70 @@ class ShopCartItem {
   final String name, sku;
   final String? imageUrl;
   final double unitPrice, totalPrice;
-  factory ShopCartItem.fromJson(Map<String, dynamic> json) => ShopCartItem(
-    id: json['cartItemId'] as int,
-    name:
-        json['productName'] as String? ??
-        ((json['productVariant'] as Map?)?['product'] as Map?)?['productName']
-            as String? ??
-        'Product',
-    sku:
-        json['sku'] as String? ??
-        (json['productVariant'] as Map?)?['sku'] as String? ??
-        '',
-    quantity: json['quantity'] as int,
-    stock:
-        (json['stockQuantity'] as num?)?.toInt() ??
-        ((json['productVariant'] as Map?)?['stockQuantity'] as num?)?.toInt() ??
-        0,
-    unitPrice:
-        (json['unitPrice'] as num?)?.toDouble() ??
-        ((json['productVariant'] as Map?)?['price'] as num?)?.toDouble() ??
-        0,
-    totalPrice:
-        (json['totalPrice'] as num?)?.toDouble() ??
-        (((json['unitPrice'] as num?)?.toDouble() ??
-                ((json['productVariant'] as Map?)?['price'] as num?)
-                    ?.toDouble() ??
-                0) *
-            (json['quantity'] as num).toInt()),
-    imageUrl:
-        json['imageUrl'] as String? ??
-        (json['productVariant'] as Map?)?['imageUrl'] as String?,
-  );
+  factory ShopCartItem.fromJson(Map<String, dynamic> json) {
+    final variant = _mapValue(json, 'productVariant');
+    final product = _mapValue(variant, 'product');
+    final quantity = _numberValue(json, 'quantity').toInt();
+    final unitPrice = _numberValue(
+      json,
+      'unitPrice',
+      fallback: _numberValue(variant, 'price'),
+    ).toDouble();
+    return ShopCartItem(
+      id: _numberValue(json, 'cartItemId').toInt(),
+      name:
+          _stringValue(
+            json,
+            'productName',
+            fallback: _stringValue(product, 'productName'),
+          ) ??
+          'Product',
+      sku:
+          _stringValue(json, 'sku', fallback: _stringValue(variant, 'sku')) ??
+          '',
+      quantity: quantity,
+      stock: _numberValue(
+        json,
+        'stockQuantity',
+        fallback: _numberValue(variant, 'stockQuantity'),
+      ).toInt(),
+      unitPrice: unitPrice,
+      totalPrice: _numberValue(
+        json,
+        'totalPrice',
+        fallback: unitPrice * quantity,
+      ).toDouble(),
+      imageUrl: _stringValue(
+        json,
+        'imageUrl',
+        fallback: _stringValue(variant, 'imageUrl'),
+      ),
+    );
+  }
+}
+
+Map<String, dynamic>? _mapValue(Map<String, dynamic>? json, String key) {
+  final value = json?[key] ?? json?[key[0].toUpperCase() + key.substring(1)];
+  if (value is Map) {
+    return value.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return null;
+}
+
+String? _stringValue(
+  Map<String, dynamic>? json,
+  String key, {
+  String? fallback,
+}) {
+  final value = json?[key] ?? json?[key[0].toUpperCase() + key.substring(1)];
+  return value?.toString() ?? fallback;
+}
+
+num _numberValue(Map<String, dynamic>? json, String key, {num fallback = 0}) {
+  final value = json?[key] ?? json?[key[0].toUpperCase() + key.substring(1)];
+  return value is num
+      ? value
+      : num.tryParse(value?.toString() ?? '') ?? fallback;
 }
 
 String shoppingMoney(double amount) =>

@@ -126,6 +126,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           baseUrl: widget.baseUrl,
           token: widget.user.token,
           customerId: widget.user.userId,
+          orderApi: widget.orderApi,
           initialTab: 1,
         ),
       ),
@@ -142,6 +143,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         builder: (_) => CustomerCartPage(
           api: widget.cartApi,
           customerId: widget.user.userId,
+          orderApi: widget.orderApi,
         ),
       ),
     );
@@ -184,6 +186,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               baseUrl: widget.baseUrl,
               token: widget.user.token,
               customerId: widget.user.userId,
+              orderApi: widget.orderApi,
             ),
           IconButton(
             //Tiêu Gia Huy

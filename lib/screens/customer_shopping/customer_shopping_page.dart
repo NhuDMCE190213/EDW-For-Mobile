@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/customer_shopping_api.dart';
+import '../../services/order_api.dart';
 import 'product_catalog_view.dart';
 import 'my_cart_view.dart';
 
@@ -11,9 +12,11 @@ class CustomerShoppingEntry extends StatelessWidget {
     required this.baseUrl,
     required this.token,
     required this.customerId,
+    required this.orderApi,
   });
   final String baseUrl, token;
   final int customerId;
+  final OrderApi orderApi;
   @override
   Widget build(BuildContext context) => PopupMenuButton<int>(
     tooltip: 'Shopping',
@@ -24,6 +27,7 @@ class CustomerShoppingEntry extends StatelessWidget {
           baseUrl: baseUrl,
           token: token,
           customerId: customerId,
+          orderApi: orderApi,
           initialTab: tab,
         ),
       ),
@@ -42,9 +46,11 @@ class CustomerShoppingPage extends StatefulWidget {
     required this.token,
     this.customerId = 0,
     this.initialTab = 0,
+    required this.orderApi,
   });
   final String baseUrl, token;
   final int customerId;
+  final OrderApi orderApi;
   final int initialTab;
   @override
   State<CustomerShoppingPage> createState() => _CustomerShoppingPageState();
@@ -75,7 +81,11 @@ class _CustomerShoppingPageState extends State<CustomerShoppingPage> {
     appBar: AppBar(title: Text(_tab == 0 ? 'Products' : 'My cart')),
     body: _tab == 0
         ? ProductCatalogView(api: _api, customerId: widget.customerId)
-        : MyCartView(api: _api),
+        : MyCartView(
+            api: _api,
+            orderApi: widget.orderApi,
+            customerId: widget.customerId,
+          ),
     bottomNavigationBar: NavigationBar(
       selectedIndex: _tab,
       onDestinationSelected: (index) => setState(() => _tab = index),

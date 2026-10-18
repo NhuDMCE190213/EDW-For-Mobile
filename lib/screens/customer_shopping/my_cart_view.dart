@@ -4,11 +4,19 @@ import 'package:flutter/services.dart';
 
 import '../../models/customer_shopping.dart';
 import '../../services/customer_shopping_api.dart';
+import '../../services/order_api.dart';
 import 'shopping_widgets.dart';
 
 class MyCartView extends StatefulWidget {
-  const MyCartView({super.key, required this.api});
+  const MyCartView({
+    super.key,
+    required this.api,
+    this.orderApi,
+    this.customerId = 0,
+  });
   final CustomerShoppingApi api;
+  final OrderApi? orderApi;
+  final int customerId;
   @override
   State<MyCartView> createState() => _MyCartViewState();
 }
@@ -16,6 +24,7 @@ class MyCartView extends StatefulWidget {
 class _MyCartViewState extends State<MyCartView> {
   List<ShopCartItem> _items = [];
   bool _loading = true, _busy = false;
+  bool _checkingOut = false;
   String? _error;
   @override
   void initState() {
@@ -86,6 +95,68 @@ class _MyCartViewState extends State<MyCartView> {
     }
   }
 
+  Future<void> _checkout() async {
+      if (_checkingOut || _items.isEmpty || widget.orderApi == null) return;
+      final total = _items.fold<double>(
+        0,
+        (sum, item) => sum + item.totalPrice,
+      );
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm checkout'),
+          content: Text(
+            '${_items.length} item(s)\nTotal: ${shoppingMoney(total)}\n\n'
+            'Place this order now?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Place order'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      setState(() => _checkingOut = true);
+      try {
+        final result = await widget.orderApi!.checkoutCart(
+          widget.customerId,
+          _items.map((item) => item.id).toList(),
+        );
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.check_circle, color: Colors.green, size: 52),
+            title: const Text('Checkout successful'),
+            content: Text(
+              'Order created successfully.\n'
+              'Total: ${shoppingMoney(result.total)}',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+        );
+        if (mounted) await _load();
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(error.toString())));
+        }
+      } finally {
+        if (mounted) setState(() => _checkingOut = false);
+      }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
@@ -98,7 +169,7 @@ class _MyCartViewState extends State<MyCartView> {
     final total = _items.fold<double>(0, (sum, item) => sum + item.totalPrice);
     return Column(
       children: [
-        if (_busy) const LinearProgressIndicator(),
+        if (_busy || _checkingOut) const LinearProgressIndicator(),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
@@ -208,6 +279,12 @@ class _MyCartViewState extends State<MyCartView> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
+                if (widget.orderApi != null)
+                  FilledButton.icon(
+                    onPressed: _busy || _checkingOut ? null : _checkout,
+                    icon: const Icon(Icons.shopping_cart_checkout),
+                    label: const Text('Checkout'),
+                  ),
                 IconButton(
                   onPressed: _busy ? null : _load,
                   tooltip: 'Refresh cart',

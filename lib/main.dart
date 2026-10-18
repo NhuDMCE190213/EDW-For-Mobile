@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'models/auth_model.dart';
-import 'screens/admin_catalog_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/promotion_page.dart';
@@ -26,12 +25,11 @@ void main() {
     defaultValue: '',
   );
 
-  final resolvedBaseUrl =
-      configuredBaseUrl.isNotEmpty
-          ? configuredBaseUrl
-          : (kIsWeb || defaultTargetPlatform == TargetPlatform.windows)
-          ? 'http://localhost:5238'
-          : 'http://10.0.2.2:5238';
+  final resolvedBaseUrl = configuredBaseUrl.isNotEmpty
+      ? configuredBaseUrl
+      : (kIsWeb || defaultTargetPlatform == TargetPlatform.windows)
+      ? 'http://localhost:5238'
+      : 'http://10.0.2.2:5238';
 
   runApp(
     MyApp(
@@ -86,7 +84,7 @@ class MyApp extends StatelessWidget {
       ),
       home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
       routes: {
-      '/home': (context) {
+        '/home': (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           String? token;
           String role = 'Staff';
@@ -170,25 +168,28 @@ class _AppNavigationState extends State<AppNavigation> {
       ),
       PromotionPage(api: widget.promotionApi),
       StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
-      AdminCatalogPage(api: widget.catalogApi),
       if (widget.role.toLowerCase() == 'admin' || widget.role == '0')
         AdminUserManagementPage(key: _userPageKey, api: widget.adminUserApi),
       StaffReviewsPage(
         key: _reviewsPageKey,
         api: widget.reviewApi,
-        userRole: widget.userRole,
+        userRole: widget.role,
       ),
     ];
   }
 
   Future<void> _refreshCurrentPage() {
     final currentWidget = _pages[_currentIndex];
-    
-    if (currentWidget is StaffVariantPage) return _variantPageKey.currentState?.refresh() ?? Future.value();
-    if (currentWidget is StaffOrdersPage) return _ordersPageKey.currentState?.refresh() ?? Future.value();
-    if (currentWidget is AdminUserManagementPage) return _userPageKey.currentState?.refresh() ?? Future.value();
-    if (currentWidget is StaffReviewsPage) return _reviewsPageKey.currentState?.refresh() ?? Future.value();
-    
+
+    if (currentWidget is StaffVariantPage)
+      return _variantPageKey.currentState?.refresh() ?? Future.value();
+    if (currentWidget is StaffOrdersPage)
+      return _ordersPageKey.currentState?.refresh() ?? Future.value();
+    if (currentWidget is AdminUserManagementPage)
+      return _userPageKey.currentState?.refresh() ?? Future.value();
+    if (currentWidget is StaffReviewsPage)
+      return _reviewsPageKey.currentState?.refresh() ?? Future.value();
+
     return Future.value();
   }
 
@@ -217,9 +218,8 @@ class _AppNavigationState extends State<AppNavigation> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder:
-            (_) =>
-                LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
+        builder: (_) =>
+            LoginScreen(authApi: widget.authApi, baseUrl: widget.baseUrl),
       ),
       (route) => false,
     );
@@ -230,11 +230,14 @@ class _AppNavigationState extends State<AppNavigation> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _pages[_currentIndex] is StaffVariantPage ? 'Product Variant Management'
-              : _pages[_currentIndex] is PromotionPage ? 'Promotion Management'
-              : _pages[_currentIndex] is StaffOrdersPage ? 'Staff - View Orders'
-              : _pages[_currentIndex] is AdminCatalogPage ? 'Product and Category Management'
-              : _pages[_currentIndex] is AdminUserManagementPage ? 'Staff and Customer Management'
+          _pages[_currentIndex] is StaffVariantPage
+              ? 'Product Variant Management'
+              : _pages[_currentIndex] is PromotionPage
+              ? 'Promotion Management'
+              : _pages[_currentIndex] is StaffOrdersPage
+              ? 'Staff - View Orders'
+              : _pages[_currentIndex] is AdminUserManagementPage
+              ? 'Staff and Customer Management'
               : 'Review Management',
         ),
         actions: [
@@ -274,10 +277,6 @@ class _AppNavigationState extends State<AppNavigation> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'All Orders',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.category_outlined),
-            label: 'Catalog',
           ),
           if (widget.role?.toLowerCase() == 'admin' || widget.role == '0')
             const BottomNavigationBarItem(
