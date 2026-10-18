@@ -107,8 +107,8 @@ void main() {
       expect(find.text('Phone Alpha'), findsNothing);
       await tester.tap(find.text('Laptop Beta'));
       await tester.pumpAndSettle();
-      expect(find.text('SKU2 - Black'), findsOneWidget);
-      await tester.tap(find.text('Close'));
+      expect(find.text('Product details'), findsOneWidget);
+      await tester.pageBack();
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).first, '');
       await tester.tap(find.text('All categories'));
@@ -182,8 +182,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Total: 2,700 VND'), findsOneWidget);
     expect(
-      tester.widget<IconButton>(find.byWidgetPredicate((widget) =>
-        widget is IconButton && widget.tooltip == 'Increase quantity')).onPressed,
+      tester
+          .widget<IconButton>(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is IconButton && widget.tooltip == 'Increase quantity',
+            ),
+          )
+          .onPressed,
       isNull,
     );
     await tester.tap(find.byTooltip('Remove product'));

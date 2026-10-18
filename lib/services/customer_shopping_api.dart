@@ -52,6 +52,30 @@ class CustomerShoppingApi {
     );
   }
 
+  Future<void> addToCart({
+    required int customerId,
+    required String productVariantId,
+    int quantity = 1,
+  }) async {
+    if (quantity < 1) {
+      throw const ApiException('Quantity must be at least 1.');
+    }
+    final response = await _client
+        .post(
+          Uri.parse(
+            '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart',
+          ),
+          headers: _headers,
+          body: jsonEncode({
+            'customerId': customerId,
+            'productVariantId': productVariantId,
+            'quantity': quantity,
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+    _check(response);
+  }
+
   Future<List<ShopCartItem>> getCart() async {
     final response = await _client
         .get(_uri('cart'), headers: _headers)

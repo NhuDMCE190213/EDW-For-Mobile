@@ -12,11 +12,13 @@ class CustomerProductDetailScreen extends StatefulWidget {
     required this.product,
     required this.api,
     required this.reviewApi,
+    required this.customerId,
   });
 
   final ShopProduct product;
   final CustomerShoppingApi api;
   final ReviewApi reviewApi;
+  final int customerId;
 
   @override
   State<CustomerProductDetailScreen> createState() =>
@@ -29,11 +31,40 @@ class _CustomerProductDetailScreenState
   List<ReviewItem> _reviews = [];
   bool _loading = true;
   String? _error;
+  bool _adding = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  Future<void> _addToCart(ShopVariant variant) async {
+    if (variant.stock < 1 || _adding) return;
+    final quantity = await showDialog<int>(
+      context: context,
+      builder: (context) => _QuantityDialog(max: variant.stock),
+    );
+    if (!mounted || quantity == null) return;
+    setState(() => _adding = true);
+    try {
+      await widget.api.addToCart(
+        customerId: widget.customerId,
+        productVariantId: variant.id,
+        quantity: quantity,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product added to cart.')));
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _adding = false);
+    }
   }
 
   Future<void> _load() async {
@@ -101,7 +132,18 @@ class _CustomerProductDetailScreenState
                             '${variant.stock > 0 ? 'In stock: ${variant.stock}' : 'Out of stock'}',
                           ),
                           isThreeLine: true,
-                          trailing: Text(shoppingMoney(variant.price)),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(shoppingMoney(variant.price)),
+                              TextButton(
+                                onPressed: variant.stock > 0 && !_adding
+                                    ? () => _addToCart(variant)
+                                    : null,
+                                child: const Text('Add to cart'),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -145,4 +187,54 @@ class _CustomerProductDetailScreenState
             ),
     );
   }
+}
+
+class _QuantityDialog extends StatefulWidget {
+  const _QuantityDialog({required this.max});
+  final int max;
+
+  @override
+  State<_QuantityDialog> createState() => _QuantityDialogState();
+}
+
+class _QuantityDialogState extends State<_QuantityDialog> {
+  final _controller = TextEditingController(text: '1');
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final quantity = int.tryParse(_controller.text.trim());
+    if (quantity == null || quantity < 1 || quantity > widget.max) {
+      setState(() => _error = 'Enter a quantity from 1 to ${widget.max}.');
+      return;
+    }
+    Navigator.pop(context, quantity);
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Add to cart'),
+    content: TextField(
+      controller: _controller,
+      autofocus: true,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: 'Quantity',
+        helperText: 'Available: ${widget.max}',
+        errorText: _error,
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(onPressed: _submit, child: const Text('Add')),
+    ],
+  );
 }

@@ -8,8 +8,9 @@ import '../customer_product_detail_screen.dart';
 import 'shopping_widgets.dart';
 
 class ProductCatalogView extends StatefulWidget {
-  const ProductCatalogView({super.key, required this.api});
+  const ProductCatalogView({super.key, required this.api, this.customerId = 0});
   final CustomerShoppingApi api;
+  final int customerId;
   @override
   State<ProductCatalogView> createState() => _ProductCatalogViewState();
 }
@@ -51,6 +52,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
           product: product,
           api: widget.api,
           reviewApi: ReviewApi(baseUrl: widget.api.baseUrl),
+          customerId: widget.customerId,
         ),
       ),
     );

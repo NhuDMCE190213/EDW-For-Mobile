@@ -213,7 +213,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       ),
       body: _loggingOut
           ? const Center(child: CircularProgressIndicator())
-          : ProductCatalogView(api: _shoppingApi),
+          : ProductCatalogView(
+              api: _shoppingApi,
+              customerId: widget.user.userId,
+            ),
     );
   }
 }
