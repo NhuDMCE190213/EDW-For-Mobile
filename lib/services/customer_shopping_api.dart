@@ -24,12 +24,32 @@ class CustomerShoppingApi {
 
   Future<List<ShopProduct>> getProducts() async {
     final response = await _client
-        .get(_uri('products'), headers: _headers)
+        .get(
+          Uri.parse(
+            '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/products',
+          ),
+          headers: _headers,
+        )
         .timeout(const Duration(seconds: 20));
     _check(response);
     return (jsonDecode(response.body) as List)
         .map((p) => ShopProduct.fromJson(p as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<ShopProduct> getProduct(int productId) async {
+    final response = await _client
+        .get(
+          Uri.parse(
+            '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/products/$productId',
+          ),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 20));
+    _check(response);
+    return ShopProduct.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 
   Future<List<ShopCartItem>> getCart() async {

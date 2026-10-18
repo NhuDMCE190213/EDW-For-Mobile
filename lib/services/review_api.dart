@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 import '../models/review.dart';
@@ -45,6 +46,17 @@ class ReviewApi {
     });
 
     final response = await _client.get(uri);
+    _ensureSuccess(response);
+    final decoded = jsonDecode(response.body) as List;
+    return decoded
+        .map((item) => ReviewItem.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<ReviewItem>> getProductReviews(int productId) async {
+    final response = await _client.get(
+      _uri('/api/staff/reviews', {'productId': productId}),
+    );
     _ensureSuccess(response);
     final decoded = jsonDecode(response.body) as List;
     return decoded
@@ -145,7 +157,8 @@ class ReviewApi {
         if (decoded is Map<String, dynamic>) {
           if (decoded.containsKey('message') && decoded['message'] != null) {
             message = decoded['message'].toString();
-          } else if (decoded.containsKey('errors') && decoded['errors'] is Map) {
+          } else if (decoded.containsKey('errors') &&
+              decoded['errors'] is Map) {
             final errors = decoded['errors'] as Map<String, dynamic>;
             final errorList = <String>[];
             for (final entry in errors.entries) {
@@ -166,10 +179,9 @@ class ReviewApi {
         }
       } catch (_) {
         if (response.body.isNotEmpty) {
-          message =
-              response.body.length > 200
-                  ? response.body.substring(0, 200)
-                  : response.body;
+          message = response.body.length > 200
+              ? response.body.substring(0, 200)
+              : response.body;
         }
       }
       throw ApiException(message);

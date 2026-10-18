@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/customer_shopping.dart';
 import '../../services/customer_shopping_api.dart';
+import '../../services/review_api.dart';
+import '../customer_product_detail_screen.dart';
 import 'shopping_widgets.dart';
 
 class ProductCatalogView extends StatefulWidget {
@@ -43,53 +45,13 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
   }
 
   void _details(ShopProduct product) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(product.name),
-        content: SizedBox(
-          width: 440,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: ShoppingImage(
-                    url: widget.api.imageUrl(product.imageUrl),
-                    size: 160,
-                  ),
-                ),
-                Text('${product.brand} / ${product.category}'),
-                if (product.variants.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16),
-                    child: Text('No variants available.'),
-                  ),
-                for (final variant in product.variants) ...[
-                  const Divider(height: 24),
-                  Text(
-                    '${variant.sku} - ${variant.color}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(variant.configuration),
-                  Text(shoppingMoney(variant.price)),
-                  Text(
-                    variant.stock > 0
-                        ? 'In stock: ${variant.stock}'
-                        : 'Out of stock',
-                  ),
-                ],
-              ],
-            ),
-          ),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CustomerProductDetailScreen(
+          product: product,
+          api: widget.api,
+          reviewApi: ReviewApi(baseUrl: widget.api.baseUrl),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

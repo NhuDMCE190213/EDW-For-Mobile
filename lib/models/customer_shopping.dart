@@ -14,12 +14,12 @@ class ShopProduct {
   final List<ShopVariant> variants;
 
   factory ShopProduct.fromJson(Map<String, dynamic> json) => ShopProduct(
-    id: json['productId'] as int,
-    name: json['productName'] as String,
+    id: (json['productId'] ?? json['ProductId']) as int,
+    name: (json['productName'] ?? json['ProductName']) as String,
     brand: json['brand'] as String? ?? '',
     category: json['categoryName'] as String? ?? '',
     imageUrl: json['imageUrl'] as String?,
-    variants: (json['variants'] as List)
+    variants: ((json['variants'] ?? json['productVariants'] ?? []) as List)
         .map((v) => ShopVariant.fromJson(v as Map<String, dynamic>))
         .toList(),
   );
@@ -41,7 +41,7 @@ class ShopVariant {
   final double price;
   final int stock;
   factory ShopVariant.fromJson(Map<String, dynamic> json) => ShopVariant(
-    id: json['productVariantId'] as String,
+    id: (json['productVariantId'] ?? json['ProductVariantId']) as String,
     sku: json['sku'] as String? ?? '',
     color: json['color'] as String? ?? '',
     configuration: [
