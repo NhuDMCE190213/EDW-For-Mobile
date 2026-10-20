@@ -22,7 +22,9 @@ class AdminUser {
         json['staffId'] ??
         json['customerId'] ??
         json['Id'] ??
-        json['UserId'];
+        json['UserId'] ??
+        json['StaffId'] ??
+        json['CustomerId'];
     final rawActive =
         json['isActive'] ??
         json['IsActive'] ??
@@ -47,7 +49,6 @@ class AdminUser {
     return status == 'active' || status == 'enabled';
   }
 }
-
 
 class CreateAdminUserInput {
   const CreateAdminUserInput({

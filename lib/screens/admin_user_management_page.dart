@@ -65,8 +65,8 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
       } else {
         await widget.api.createCustomer(input);
       }
+      await _load();
       _message('${tab == 0 ? 'Staff' : 'Customer'} created.');
-      _load();
     } catch (error) {
       _message(error.toString(), error: true);
     }
@@ -80,12 +80,11 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
       } else {
         await widget.api.setCustomerActive(user.id, !user.isActive);
       }
+      await _load();
       _message(user.isActive ? 'User disabled.' : 'User enabled.');
-      _load();
     } catch (error) {
       _message(error.toString(), error: true);
     }
-
   }
 
   void _message(String text, {bool error = false}) {
@@ -97,7 +96,6 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

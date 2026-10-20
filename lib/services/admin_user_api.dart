@@ -23,13 +23,13 @@ class AdminUserApi {
       'Authorization': 'Bearer $authToken',
   };
 
-  Future<List<AdminUser>> getStaff() => _get('/api/admin/staff/list');
+  Future<List<AdminUser>> getStaff() => _get('/api/admin/staffs/list');
 
   Future<List<AdminUser>> getCustomers() => _get('/api/admin/customers/list');
 
   Future<void> createStaff(CreateAdminUserInput input) async {
     final response = await _client.post(
-      _uri('/api/admin/staff'),
+      _uri('/api/admin/staffs'),
       headers: _headers,
       body: jsonEncode(input.toJson()),
     );
@@ -46,10 +46,10 @@ class AdminUserApi {
   }
 
   Future<void> setStaffActive(int id, bool isActive) =>
-      _setActive('/api/admin/staff/$id/status', isActive);
+      _toggleActive('/api/admin/staffs/$id/toggle-status');
 
   Future<void> setCustomerActive(int id, bool isActive) =>
-      _setActive('/api/admin/customers/$id/status', isActive);
+      _toggleActive('/api/admin/customers/$id/toggle-status');
 
   Future<List<AdminUser>> _get(String path) async {
     final response = await _client.post(
@@ -57,10 +57,9 @@ class AdminUserApi {
       headers: _headers,
       body: jsonEncode({
         'searchTerm': null,
-        'includeDeleted': false,
-        'includeDisabled': true,
-        'page': 1,
-        'pageSize': 100,
+        'includeDelete': false,
+        'includeDisable': true,
+        'pagination': {'page': 1, 'pageSize': 100},
       }),
     );
     _ensureSuccess(response);
@@ -73,12 +72,8 @@ class AdminUserApi {
         .toList();
   }
 
-  Future<void> _setActive(String path, bool isActive) async {
-    final response = await _client.patch(
-      _uri(path),
-      headers: _headers,
-      body: jsonEncode({'isActive': isActive}),
-    );
+  Future<void> _toggleActive(String path) async {
+    final response = await _client.put(_uri(path), headers: _headers);
     _ensureSuccess(response);
   }
 
@@ -87,6 +82,14 @@ class AdminUserApi {
     if (decoded is! Map) return const <Object>[];
     return decoded['items'] ??
         decoded['Items'] ??
+        (decoded['pagination'] is Map
+            ? (decoded['pagination'] as Map)['items'] ??
+                  (decoded['pagination'] as Map)['Items']
+            : null) ??
+        (decoded['Pagination'] is Map
+            ? (decoded['Pagination'] as Map)['items'] ??
+                  (decoded['Pagination'] as Map)['Items']
+            : null) ??
         decoded['data'] ??
         decoded['Data'] ??
         const <Object>[];
