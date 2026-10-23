@@ -2,6 +2,7 @@
 
 import '../models/order.dart';
 import '../services/order_api.dart';
+import '../widgets/management_header.dart';
 
 class StaffOrdersPage extends StatefulWidget {
   const StaffOrdersPage({super.key, required this.api});
@@ -224,6 +225,11 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const ManagementHeader(
+                    title: 'Order command center',
+                    subtitle: 'Track progress, review activity and manage fulfillment.',
+                    icon: Icons.receipt_long_rounded,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
