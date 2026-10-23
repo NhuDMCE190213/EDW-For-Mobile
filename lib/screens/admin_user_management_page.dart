@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/admin_user.dart';
 import '../services/admin_user_api.dart';
+import '../widgets/management_header.dart';
 
 class AdminUserManagementPage extends StatefulWidget {
   const AdminUserManagementPage({super.key, required this.api});
@@ -103,6 +104,12 @@ class AdminUserManagementPageState extends State<AdminUserManagementPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          const ManagementHeader(
+            title: 'People & access',
+            subtitle: 'Manage staff and customer accounts from one place.',
+            icon: Icons.groups_rounded,
+            compact: true,
+          ),
           Row(
             children: [
               Expanded(

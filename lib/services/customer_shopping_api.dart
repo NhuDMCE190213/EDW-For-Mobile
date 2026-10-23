@@ -28,7 +28,7 @@ class CustomerShoppingApi {
     final response = await _client
         .get(
           Uri.parse(
-            '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/products',
+            '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/shopping/products',
           ),
           headers: _headers,
         )
@@ -40,17 +40,13 @@ class CustomerShoppingApi {
   }
 
   Future<ShopProduct> getProduct(int productId) async {
-    final response = await _client
-        .get(
-          Uri.parse(
-            '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/products/$productId',
-          ),
-          headers: _headers,
-        )
-        .timeout(const Duration(seconds: 20));
-    _check(response);
-    return ShopProduct.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
+    // The current API exposes the customer product list, but no product-by-id
+    // route. The list already includes variants, so resolve the selected item
+    // from that supported endpoint.
+    final products = await getProducts();
+    return products.firstWhere(
+      (product) => product.id == productId,
+      orElse: () => throw const ApiException('Product not found.'),
     );
   }
 
@@ -81,11 +77,7 @@ class CustomerShoppingApi {
   Future<List<ShopCartItem>> getCart() async {
     final response = await _client
         .get(
-          customerId == null
-              ? _uri('cart')
-              : Uri.parse(
-                  '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart/$customerId',
-                ),
+          _uri('cart'),
           headers: _headers,
         )
         .timeout(const Duration(seconds: 20));
@@ -100,21 +92,9 @@ class CustomerShoppingApi {
     _check(
       await _client
           .put(
-            customerId == null
-                ? _uri('cart/$id/quantity')
-                : Uri.parse(
-                    '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart/$id',
-                  ),
+            _uri('cart/$id/quantity'),
             headers: _headers,
-            body: jsonEncode(
-              customerId == null
-                  ? {'quantity': quantity}
-                  : {
-                      'cartItemId': id,
-                      'customerId': customerId,
-                      'quantity': quantity,
-                    },
-            ),
+            body: jsonEncode({'quantity': quantity}),
           )
           .timeout(const Duration(seconds: 20)),
     );
@@ -124,11 +104,7 @@ class CustomerShoppingApi {
     _check(
       await _client
           .delete(
-            customerId == null
-                ? _uri('cart/$id')
-                : Uri.parse(
-                    '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api/customer/cart/$id?customerId=$customerId',
-                  ),
+            _uri('cart/$id'),
             headers: _headers,
           )
           .timeout(const Duration(seconds: 20)),
