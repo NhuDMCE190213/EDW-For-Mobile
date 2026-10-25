@@ -139,16 +139,6 @@ class _PromotionPageState extends State<PromotionPage> {
   Widget build(BuildContext context) {
     final result = _result;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Promotion Management'),
-        actions: [
-          IconButton(
-            onPressed: _loading || _actionInProgress ? null : _load,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
