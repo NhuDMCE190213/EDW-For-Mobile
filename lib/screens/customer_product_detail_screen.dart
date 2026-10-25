@@ -105,7 +105,7 @@ class _CustomerProductDetailScreenState
                 children: [
                   Center(
                     child: ShoppingImage(
-                      url: widget.api.imageUrl(_product.imageUrl),
+                      url: widget.api.imageUrl(_product.displayImageUrl),
                       size: 220,
                     ),
                   ),
@@ -154,7 +154,10 @@ class _CustomerProductDetailScreenState
                           leading: ProductImage(
                             // Variant has no image field here -> use the
                             // product image; placeholder icon if that fails.
-                            urls: [widget.api.imageUrl(_product.imageUrl)],
+                            urls: [
+                              widget.api.imageUrl(variant.imageUrl),
+                              widget.api.imageUrl(_product.displayImageUrl),
+                            ],
                             size: 52,
                             fit: BoxFit.contain,
                           ),

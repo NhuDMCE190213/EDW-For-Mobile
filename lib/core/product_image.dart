@@ -26,9 +26,12 @@ class ProductImage extends StatelessWidget {
 
   List<String> get _candidates {
     final result = <String>[];
-    for (final raw in urls) {
-      final value = raw?.trim();
-      if (value == null || value.isEmpty) continue;
+    // The backend may store several images in one string: "a.jpg;b.jpg".
+    final parts = urls
+        .expand((raw) => (raw ?? '').split(';'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty);
+    for (final value in parts) {
       var uri = Uri.tryParse(value);
       if (uri == null) continue;
       if (!uri.hasScheme && baseUrl != null) {
@@ -62,6 +65,9 @@ class ProductImage extends StatelessWidget {
       width: size,
       height: size,
       fit: fit,
+      // On Flutter Web, most CDNs send no CORS headers, so the canvas decoder
+      // fails. 'prefer' falls back to a plain <img> element, which works.
+      webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
       loadingBuilder: (context, child, progress) => progress == null
           ? child
           : Container(
@@ -74,7 +80,10 @@ class ProductImage extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-      errorBuilder: (_, _, _) => _load(list, index + 1),
+      errorBuilder: (_, error, _) {
+        debugPrint('ProductImage failed: ${list[index]} -> $error');
+        return _load(list, index + 1);
+      },
     );
   }
 

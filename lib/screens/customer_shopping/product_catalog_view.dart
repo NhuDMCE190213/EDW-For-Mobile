@@ -38,11 +38,32 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
         _products = products;
         if (!products.any((p) => p.category == _category)) _category = '';
       });
+      _hydrateDetails(products);
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  /// GET /api/customer/products returns no variants, and Product.ImageUrl may be
+  /// empty. The detail endpoint includes variants (with their images and
+  /// prices), so fetch it per product in the background to fill image + price.
+  Future<void> _hydrateDetails(List<ShopProduct> products) async {
+    await Future.wait(
+      products.map((product) async {
+        try {
+          final detail = await widget.api.getProduct(product.id);
+          if (!mounted) return;
+          setState(() {
+            final index = _products.indexWhere((p) => p.id == product.id);
+            if (index != -1) _products[index] = detail;
+          });
+        } catch (_) {
+          // Keep the basic product card if the detail request fails.
+        }
+      }),
+    );
   }
 
   void _details(ShopProduct product) {
@@ -195,7 +216,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                                   child: Center(
                                     child: ShoppingImage(
                                       url: widget.api.imageUrl(
-                                        product.imageUrl,
+                                        product.displayImageUrl,
                                       ),
                                       size: 125,
                                     ),

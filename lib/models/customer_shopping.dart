@@ -25,6 +25,16 @@ class ShopProduct {
         .map((v) => ShopVariant.fromJson(v as Map<String, dynamic>))
         .toList(),
   );
+  /// Product image, or the first variant image when the product has none.
+  String? get displayImageUrl {
+    bool ok(String? v) => v != null && v.trim().isNotEmpty;
+    if (ok(imageUrl)) return imageUrl;
+    for (final v in variants) {
+      if (ok(v.imageUrl)) return v.imageUrl;
+    }
+    return null;
+  }
+
   double? get fromPrice => variants.isEmpty
       ? null
       : variants.map((v) => v.price).reduce((a, b) => a < b ? a : b);
@@ -38,8 +48,10 @@ class ShopVariant {
     required this.configuration,
     required this.price,
     required this.stock,
+    this.imageUrl,
   });
   final String id, sku, color, configuration;
+  final String? imageUrl;
   final double price;
   final int stock;
   factory ShopVariant.fromJson(Map<String, dynamic> json) => ShopVariant(
@@ -52,6 +64,7 @@ class ShopVariant {
       json['storage'],
       json['screenSize'],
     ].whereType<String>().where((s) => s.isNotEmpty).join(' / '),
+    imageUrl: (json['imageUrl'] ?? json['ImageUrl']) as String?,
     price: (json['price'] as num).toDouble(),
     stock: json['stockQuantity'] as int,
   );

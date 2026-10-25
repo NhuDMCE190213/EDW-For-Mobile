@@ -136,8 +136,13 @@ class CustomerShoppingApi {
   }
 
   String? imageUrl(String? path) {
-    if (path == null || path.trim().isEmpty) return null;
-    final uri = Uri.tryParse(baseUrl)?.resolve(path.trim());
+    // Backend may store several images as "a.jpg;b.jpg" -> use the first.
+    final first = path?.split(';').map((e) => e.trim()).firstWhere(
+      (e) => e.isNotEmpty,
+      orElse: () => '',
+    );
+    if (first == null || first.isEmpty) return null;
+    final uri = Uri.tryParse(baseUrl)?.resolve(first);
     return uri != null && (uri.scheme == 'http' || uri.scheme == 'https')
         ? uri.toString()
         : null;
