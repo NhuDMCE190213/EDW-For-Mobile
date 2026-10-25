@@ -6,29 +6,16 @@ class ShoppingImage extends StatelessWidget {
   final String? url;
   final double size;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => SizedBox(
     width: size,
     height: size,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    clipBehavior: Clip.antiAlias,
     child: url == null
-        ? Icon(
-            Icons.devices_outlined,
-            size: 36,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          )
+        ? const Icon(Icons.devices_outlined, size: 36)
         : Image.network(
             url!,
             fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => Icon(
-              Icons.broken_image_outlined,
-              size: 36,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            errorBuilder: (_, _, _) =>
+                const Icon(Icons.broken_image_outlined, size: 36),
           ),
   );
 }
@@ -38,13 +25,9 @@ class ShoppingMessage extends StatelessWidget {
     super.key,
     required this.message,
     required this.onRetry,
-    this.icon = Icons.info_outline,
-    this.retryLabel = 'Refresh',
   });
   final String message;
   final VoidCallback onRetry;
-  final IconData icon;
-  final String retryLabel;
   @override
   Widget build(BuildContext context) => Center(
     child: Padding(
@@ -52,18 +35,12 @@ class ShoppingMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-        Icon(icon, size: 44, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 16),
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        const SizedBox(height: 18),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-          label: Text(retryLabel),
+            label: const Text('Refresh'),
           ),
         ],
       ),

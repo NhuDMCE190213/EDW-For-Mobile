@@ -6,7 +6,6 @@ import '../services/promotion_api.dart';
 import 'staff_variant/widgets/variant_card.dart';
 import 'staff_variant/widgets/variant_display_widgets.dart';
 import 'staff_variant/widgets/variant_editor_dialog.dart';
-import '../widgets/management_header.dart';
 
 class StaffVariantPage extends StatefulWidget {
   const StaffVariantPage({
@@ -170,12 +169,6 @@ class StaffVariantPageState extends State<StaffVariantPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ManagementHeader(
-              title: 'Inventory workspace',
-              subtitle: 'Review product variants, stock levels and promotions.',
-              icon: Icons.inventory_2_rounded,
-              compact: true,
-            ),
             LayoutBuilder(
               builder: (context, constraints) {
                 final productPicker = DropdownButtonFormField<int?>(

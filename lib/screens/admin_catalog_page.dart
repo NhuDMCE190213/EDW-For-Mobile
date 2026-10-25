@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../models/admin_catalog.dart';
 import '../services/admin_catalog_api.dart';
-import '../widgets/management_header.dart';
 
 class AdminCatalogPage extends StatelessWidget {
   const AdminCatalogPage({super.key, required this.api});
@@ -143,12 +142,6 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const ManagementHeader(
-            title: 'Category library',
-            subtitle: 'Organize the departments customers browse.',
-            icon: Icons.category_rounded,
-            compact: true,
-          ),
           _CatalogToolbar(
             searchController: _searchController,
             searchLabel: 'Search categories',
@@ -377,12 +370,6 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const ManagementHeader(
-            title: 'Product catalog',
-            subtitle: 'Keep product details and categories up to date.',
-            icon: Icons.devices_other_rounded,
-            compact: true,
-          ),
           _CatalogToolbar(
             searchController: _searchController,
             searchLabel: 'Search products',

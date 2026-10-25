@@ -79,12 +79,12 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Column(
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -92,7 +92,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                       Theme.of(context).colorScheme.secondary,
                     ],
                   ),
-                borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +101,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                       'Upgrade your everyday tech',
                       style: TextStyle(
                         color: Colors.white,
-                      fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -113,7 +113,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
@@ -133,40 +133,29 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                   ),
                 ],
               ),
-              if (categories.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Browse by category',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                key: ValueKey(_category),
+                initialValue: _category,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: '',
+                    child: Text('All categories'),
+                  ),
+                  ...categories.map(
+                    (c) => DropdownMenuItem(
+                      value: c,
+                      child: Text(c, overflow: TextOverflow.ellipsis),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 42,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _CategoryChip(
-                        label: 'All',
-                        selected: _category.isEmpty,
-                        onSelected: () => setState(() => _category = ''),
-                      ),
-                      ...categories.map(
-                        (category) => _CategoryChip(
-                          label: category,
-                          selected: _category == category,
-                          onSelected: () =>
-                              setState(() => _category = category),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+                onChanged: (value) => setState(() => _category = value ?? ''),
+              ),
             ],
           ),
         ),
@@ -174,42 +163,31 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-              ? ShoppingMessage(
-                  message: 'Could not load products. Please try again.',
-                  icon: Icons.wifi_off_outlined,
-                  onRetry: _load,
-                )
+              ? ShoppingMessage(message: _error!, onRetry: _load)
               : visible.isEmpty
-              ? ShoppingMessage(
-                  message: _query.isEmpty && _category.isEmpty
-                      ? 'There are no products to show yet.'
-                      : 'No products match your search. Try another name or category.',
-                  icon: Icons.search_off_rounded,
-                  onRetry: _load,
-                  retryLabel: 'Refresh products',
-                )
+              ? ShoppingMessage(message: 'No products found.', onRetry: _load)
               : RefreshIndicator(
                   onRefresh: _load,
                   child: GridView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: visible.length,
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 280,
-                          mainAxisExtent: 270,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
+                          maxCrossAxisExtent: 240,
+                          mainAxisExtent: 245,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
                         ),
                     itemBuilder: (context, index) {
                       final product = visible[index];
                       return Card(
                         clipBehavior: Clip.antiAlias,
-                        elevation: 0,
+                        elevation: 1,
                         child: InkWell(
                           onTap: () => _details(product),
                           child: Padding(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(12),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -219,7 +197,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                                       url: widget.api.imageUrl(
                                         product.imageUrl,
                                       ),
-                                      size: 138,
+                                      size: 125,
                                     ),
                                   ),
                                 ),
@@ -238,12 +216,7 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
                                       : product.category,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                      fontSize: 13,
-                                    ),
+                                  style: TextStyle(color: Colors.grey.shade600),
                                 ),
                                 if (product.fromPrice != null) ...[
                                   const SizedBox(height: 6),
@@ -269,31 +242,4 @@ class _ProductCatalogViewState extends State<ProductCatalogView> {
       ],
     );
   }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(right: 8),
-    child: ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => onSelected(),
-      showCheckmark: false,
-      labelStyle: TextStyle(
-        color: selected ? Theme.of(context).colorScheme.primary : null,
-        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-      ),
-    ),
-  );
 }

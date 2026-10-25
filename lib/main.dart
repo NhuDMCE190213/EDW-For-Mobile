@@ -75,70 +75,11 @@ class MyApp extends StatelessWidget {
       title: 'EDW Mobile',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFC62828),
-          primary: const Color(0xFFB4232C),
-          surface: const Color(0xFFFFFEFC),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF7F7F5),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE24B4A)),
         useMaterial3: true,
-        visualDensity: VisualDensity.standard,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFFFEFC),
-          foregroundColor: Color(0xFF202124),
-          surfaceTintColor: Colors.transparent,
-          centerTitle: false,
-          elevation: 0,
-          titleTextStyle: TextStyle(
-            color: Color(0xFF202124),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: const Color(0xFFFFFEFC),
-          surfaceTintColor: Colors.transparent,
-          elevation: 1,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE9E7E2)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
+        inputDecorationTheme: const InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFFFFEFC),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 15,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFD9D7D2)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFD9D7D2)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFB4232C), width: 1.8),
-          ),
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: const Color(0xFFFFFEFC),
-          indicatorColor: const Color(0xFFF8E3E2),
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            final selected = states.contains(WidgetState.selected);
-            return TextStyle(
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            );
-          }),
-        ),
-        snackBarTheme: SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          fillColor: Color(0xFFF7F7F7),
         ),
       ),
       home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
@@ -288,8 +229,6 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        scrolledUnderElevation: 1,
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 8),
         title: Text(
           _pages[_currentIndex] is StaffVariantPage
               ? 'Product Variant Management'
@@ -320,35 +259,33 @@ class _AppNavigationState extends State<AppNavigation> {
         ],
       ),
       body: IndexedStack(index: _currentIndex, children: _pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _currentIndex = index),
-        destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.inventory),
             label: 'Variants',
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.local_offer_outlined),
-            selectedIcon: Icon(Icons.local_offer),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.local_offer),
             label: 'Promotions',
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Orders',
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.assignment),
+            label: 'All Orders',
           ),
-          if (widget.role.toLowerCase() == 'admin' || widget.role == '0')
-            const NavigationDestination(
+          if (widget.role?.toLowerCase() == 'admin' || widget.role == '0')
+            const BottomNavigationBarItem(
               icon: Icon(Icons.manage_accounts_outlined),
-              selectedIcon: Icon(Icons.manage_accounts),
               label: 'Users',
             ),
-          const NavigationDestination(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.rate_review_outlined),
-            selectedIcon: Icon(Icons.rate_review),
+            activeIcon: Icon(Icons.rate_review),
             label: 'Reviews',
           ),
         ],

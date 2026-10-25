@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/review.dart';
 import '../services/api_exception.dart';
 import '../services/review_api.dart';
-import '../widgets/management_header.dart';
 
 class StaffReviewsPage extends StatefulWidget {
   const StaffReviewsPage({
@@ -351,15 +350,6 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: ManagementHeader(
-            title: 'Review center',
-            subtitle: 'Search feedback and keep the store community healthy.',
-            icon: Icons.rate_review_rounded,
-            compact: true,
-          ),
-        ),
         // Thanh tìm kiếm và bộ lọc (UC-06.1)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
