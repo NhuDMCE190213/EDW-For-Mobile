@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 
 import '../models/promotion.dart';
 import '../services/promotion_api.dart';
-import '../widgets/management_header.dart';
 
 class PromotionPage extends StatefulWidget {
   const PromotionPage({super.key, required this.api});
@@ -154,12 +153,6 @@ class _PromotionPageState extends State<PromotionPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const ManagementHeader(
-              title: 'Promotion studio',
-              subtitle: 'Create and manage offers across the store.',
-              icon: Icons.local_offer_rounded,
-              compact: true,
-            ),
             _buildToolbar(),
             const SizedBox(height: 12),
             if (result != null) _buildStats(result),
