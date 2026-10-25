@@ -1,4 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+import '../core/app_theme.dart';
+
+import '../core/format.dart';
 
 import '../models/order.dart';
 import '../services/order_api.dart';
@@ -91,7 +95,7 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE24B4A),
+              backgroundColor: AppTheme.brand,
             ),
             child: const Text('Confirm'),
           ),
@@ -259,7 +263,7 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                       Expanded(
                         child: _buildKpiCard(
                           title: 'Total Revenue',
-                          value: '\$${(_dashboard?.totalRevenue ?? 0).toStringAsFixed(1)}',
+                          value: '${formatVnd((_dashboard?.totalRevenue ?? 0))}',
                           icon: Icons.payments,
                           color: Colors.teal.shade700,
                         ),
@@ -344,11 +348,11 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                             onSelected: (_) {
                               setState(() => _selectedStatusFilter = status);
                             },
-                            selectedColor: const Color(0xFFE24B4A).withValues(alpha: 0.15),
-                            checkmarkColor: const Color(0xFFE24B4A),
+                            selectedColor: AppTheme.brand.withValues(alpha: 0.15),
+                            checkmarkColor: AppTheme.brand,
                             labelStyle: TextStyle(
                               color: isSelected
-                                  ? const Color(0xFFE24B4A)
+                                  ? AppTheme.brand
                                   : Colors.black87,
                               fontWeight: isSelected
                                   ? FontWeight.bold
@@ -427,11 +431,11 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                               ),
                               const Spacer(),
                               Text(
-                                '\$${order.totalAmount.toStringAsFixed(2)}',
+                                '${formatVnd(order.totalAmount)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
-                                  color: Color(0xFFE24B4A),
+                                  color: AppTheme.brand,
                                 ),
                               ),
                             ],
@@ -516,7 +520,7 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                                             ),
                                           ),
                                           Text(
-                                            '\$${(item.priceAtPurchase * item.quantity).toStringAsFixed(2)}',
+                                            '${formatVnd((item.priceAtPurchase * item.quantity))}',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w500,
                                               fontSize: 13,

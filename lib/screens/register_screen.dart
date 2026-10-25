@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
+
 import '../models/auth_model.dart';
 import '../services/api_exception.dart';
 import '../services/auth_api.dart';
@@ -58,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đăng ký tài khoản thành công! Vui lòng đăng nhập.'),
+          content: Text('Registration successful! Please log in.'),
           backgroundColor: Colors.green,
         ),
       );
@@ -68,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on ApiException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(() => _errorMessage = 'Đã xảy ra lỗi: $e');
+      setState(() => _errorMessage = 'An error occurred: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -77,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Đăng ký tài khoản')),
+      appBar: AppBar(title: const Text('Create account')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -91,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     // Tiêu đề & giới thiệu (giống Web _AuthLayout)
                     const Text(
-                      'Tạo tài khoản EDW',
+                      'Create an EDW account',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -101,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Đăng ký để bắt đầu mua sắm điện thoại, laptop & phụ kiện',
+                      'Sign up to start shopping for phones, laptops & accessories',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -142,21 +144,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    // Họ và tên
+                    // Full name
                     TextFormField(
                       controller: _fullNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Họ và tên',
-                        hintText: 'Nhập đầy đủ họ và tên',
+                        labelText: 'Full name',
+                        hintText: 'Enter your full name',
                         prefixIcon: Icon(Icons.person_outline),
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập họ và tên.';
+                          return 'Please enter your full name.';
                         }
                         if (value.trim().length > 100) {
-                          return 'Họ tên không được vượt quá 100 ký tự.';
+                          return 'Name must not exceed 100 characters.';
                         }
                         return null;
                       },
@@ -175,48 +177,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập email.';
+                          return 'Please enter your email.';
                         }
                         final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                         if (!emailRegExp.hasMatch(value.trim())) {
-                          return 'Địa chỉ email không hợp lệ.';
+                          return 'Invalid email address.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Số điện thoại
+                    // Phone number
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(
-                        labelText: 'Số điện thoại',
+                        labelText: 'Phone number',
                         hintText: '0901234567',
                         prefixIcon: Icon(Icons.phone_outlined),
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập số điện thoại.';
+                          return 'Please enter your phone number.';
                         }
                         if (value.trim().length < 8 ||
                             value.trim().length > 15) {
-                          return 'Số điện thoại phải từ 8 đến 15 số.';
+                          return 'Phone number must be 8 to 15 digits.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Mật khẩu
+                    // Password
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
+                        labelText: 'Password',
                         hintText:
-                            'Tối thiểu 8 ký tự, có chữ, số & ký tự đặc biệt',
+                            'At least 8 characters, with letters, numbers & special characters',
                         prefixIcon: const Icon(Icons.lock_outline),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
@@ -232,10 +234,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Vui lòng nhập mật khẩu.';
+                          return 'Please enter your password.';
                         }
                         if (value.length < 8) {
-                          return 'Mật khẩu phải từ 8 ký tự trở lên.';
+                          return 'Password must be at least 8 characters.';
                         }
                         // Kiểm tra regex theo rule backend BLL
                         final hasLetter = RegExp(r'[a-zA-Z]').hasMatch(value);
@@ -244,20 +246,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           r'[!@#$%^&*()_+\-=\[\]{};:\x27"\\|,.<>\/?]',
                         ).hasMatch(value);
                         if (!hasLetter || !hasNumber || !hasSpecial) {
-                          return 'Mật khẩu cần gồm chữ cái, số và ký tự đặc biệt.';
+                          return 'Password must include letters, numbers and special characters.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Xác nhận mật khẩu
+                    // Confirm password
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
-                        labelText: 'Xác nhận mật khẩu',
-                        hintText: 'Nhập lại mật khẩu',
+                        labelText: 'Confirm password',
+                        hintText: 'Re-enter password',
                         prefixIcon: const Icon(Icons.lock_reset_outlined),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
@@ -274,10 +276,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Vui lòng xác nhận mật khẩu.';
+                          return 'Please confirm your password.';
                         }
                         if (value != _passwordController.text) {
-                          return 'Mật khẩu xác nhận không trùng khớp.';
+                          return 'Passwords do not match.';
                         }
                         return null;
                       },
@@ -288,7 +290,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     FilledButton(
                       onPressed: _loading ? null : _submitRegister,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFE24B4A),
+                        backgroundColor: AppTheme.brand,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -304,7 +306,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             )
                           : const Text(
-                              'Đăng ký tài khoản',
+                              'Create account',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -318,15 +320,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Đã có tài khoản?',
+                          'Already have an account?',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: const Text(
-                            'Đăng nhập ngay',
+                            'Log in now',
                             style: TextStyle(
-                              color: Color(0xFFE24B4A),
+                              color: AppTheme.brand,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

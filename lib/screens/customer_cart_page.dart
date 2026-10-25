@@ -1,4 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+import '../core/app_theme.dart';
+
+import '../core/format.dart';
+import '../core/product_image.dart';
 
 import '../models/cart_item.dart';
 import '../services/cart_api.dart';
@@ -177,7 +182,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       builder: (ctx) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.shopping_bag_outlined, color: Color(0xFFE24B4A)),
+            Icon(Icons.shopping_bag_outlined, color: AppTheme.brand),
             SizedBox(width: 8),
             Text('Confirm Checkout'),
           ],
@@ -189,11 +194,11 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
             Text('Selected Items: ${_selectedItemIds.length}'),
             const SizedBox(height: 8),
             Text(
-              'Total Amount: \$${total.toStringAsFixed(2)}',
+              'Total Amount: ${formatVnd(total)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Color(0xFFE24B4A),
+                color: AppTheme.brand,
               ),
             ),
             const SizedBox(height: 12),
@@ -211,7 +216,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE24B4A),
+              backgroundColor: AppTheme.brand,
             ),
             child: const Text('Place Order'),
           ),
@@ -251,20 +256,20 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
-              Text('Subtotal: \$${result.subtotal.toStringAsFixed(2)}'),
+              Text('Subtotal: ${formatVnd(result.subtotal)}'),
               if (result.discount > 0)
                 Text(
-                  'Discount: -\$${result.discount.toStringAsFixed(2)}',
+                  'Discount: -${formatVnd(result.discount)}',
                   style: const TextStyle(color: Colors.green),
                 ),
-              Text('Shipping: \$${result.shipping.toStringAsFixed(2)}'),
+              Text('Shipping: ${formatVnd(result.shipping)}'),
               const Divider(),
               Text(
-                'Total Paid: \$${result.total.toStringAsFixed(2)}',
+                'Total Paid: ${formatVnd(result.total)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: Color(0xFFE24B4A),
+                  color: AppTheme.brand,
                 ),
               ),
               const SizedBox(height: 8),
@@ -310,7 +315,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
               icon: const Icon(Icons.receipt_long),
               label: const Text('View Orders'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE24B4A),
+                backgroundColor: AppTheme.brand,
               ),
             ),
           ],
@@ -439,28 +444,10 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                               });
                             },
                           ),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: variant.imageUrl != null &&
-                                    variant.imageUrl!.isNotEmpty
-                                ? Image.network(
-                                    variant.imageUrl!,
-                                    width: 68,
-                                    height: 68,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => Container(
-                                      width: 68,
-                                      height: 68,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(Icons.devices, size: 30),
-                                    ),
-                                  )
-                                : Container(
-                                    width: 68,
-                                    height: 68,
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.devices, size: 30),
-                                  ),
+                          ProductImage(
+                            urls: [variant.imageUrl],
+                            size: 68,
+                            radius: 8,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -488,7 +475,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                                 ],
                                 const SizedBox(height: 6),
                                 Text(
-                                  '\$${variant.price.toStringAsFixed(2)}',
+                                  '${formatVnd(variant.price)}',
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.bold,
@@ -621,11 +608,11 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                           ),
                         ),
                         Text(
-                          '\$${selectedTotal.toStringAsFixed(2)}',
+                          '${formatVnd(selectedTotal)}',
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFE24B4A),
+                            color: AppTheme.brand,
                           ),
                         ),
                       ],
@@ -636,7 +623,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                           ? null
                           : _handleCheckout,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFE24B4A),
+                        backgroundColor: AppTheme.brand,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 14,
@@ -670,4 +657,3 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     );
   }
 }
-

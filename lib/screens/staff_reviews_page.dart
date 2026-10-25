@@ -72,7 +72,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Lỗi tải danh sách đánh giá: $e';
+        _errorMessage = 'Failed to load reviews: $e';
         _isLoading = false;
       });
     }
@@ -85,20 +85,20 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Gắn cờ vi phạm'),
+            title: const Text('Flag violation'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bạn muốn gắn cờ đánh giá của "${review.customerName}" cho sản phẩm "${review.productName}"?',
+                  'Flag the review by "${review.customerName}" for product "${review.productName}"?',
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: reasonController,
                   decoration: const InputDecoration(
-                    labelText: 'Lý do gắn cờ (tùy chọn)',
-                    hintText: 'Ví dụ: Ngôn từ không phù hợp, spam...',
+                    labelText: 'Flag reason (optional)',
+                    hintText: 'e.g. Inappropriate language, spam...',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
@@ -108,12 +108,12 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Hủy'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.amber[800]),
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Gắn cờ'),
+                child: const Text('Flag'),
               ),
             ],
           ),
@@ -129,7 +129,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đã gắn cờ đánh giá thành công.'),
+          content: Text('Review flagged successfully.'),
           backgroundColor: Colors.green,
         ),
       );
@@ -143,7 +143,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi khi gắn cờ: $e'),
+          content: Text('Error flagging review: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -156,18 +156,18 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Gỡ cờ đánh giá'),
+            title: const Text('Unflag review'),
             content: Text(
-              'Xác nhận gỡ cờ cho đánh giá của "${review.customerName}"?',
+              'Unflag the review by "${review.customerName}"?',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Hủy'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Gỡ cờ'),
+                child: const Text('Unflag'),
               ),
             ],
           ),
@@ -180,7 +180,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đã gỡ cờ đánh giá.'),
+          content: Text('Review unflagged.'),
           backgroundColor: Colors.green,
         ),
       );
@@ -189,7 +189,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi khi gỡ cờ: $e'),
+          content: Text('Error unflagging review: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -202,7 +202,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Quy tắc FR-01: Chỉ Quản trị viên (Admin) mới có quyền kiểm duyệt ẩn/hiển thị đánh giá.',
+            'Rule FR-01: Only Administrators can hide or show reviews.',
           ),
           backgroundColor: Colors.red,
         ),
@@ -218,7 +218,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       builder:
           (ctx) => AlertDialog(
             title: Text(
-              willHide ? 'Ẩn đánh giá khỏi cửa hàng' : 'Hiển thị lại đánh giá',
+              willHide ? 'Hide review from store' : 'Show review again',
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -226,15 +226,15 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
               children: [
                 Text(
                   willHide
-                      ? 'Đánh giá này sẽ bị ẩn và khách hàng không thể nhìn thấy hoặc chỉnh sửa.'
-                      : 'Đánh giá này sẽ được công khai hiển thị lại trên sản phẩm.',
+                      ? 'This review will be hidden and the customer cannot see or edit it.'
+                      : 'This review will be publicly visible on the product again.',
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: noteController,
                   decoration: const InputDecoration(
-                    labelText: 'Ghi chú kiểm duyệt (tùy chọn)',
-                    hintText: 'Nhập lý do kiểm duyệt...',
+                    labelText: 'Moderation note (optional)',
+                    hintText: 'Enter moderation reason...',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
@@ -244,14 +244,14 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Hủy'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: willHide ? Colors.red : Colors.green,
                 ),
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(willHide ? 'Xác nhận ẩn' : 'Hiển thị lại'),
+                child: Text(willHide ? 'Confirm hide' : 'Show again'),
               ),
             ],
           ),
@@ -270,8 +270,8 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
         SnackBar(
           content: Text(
             willHide
-                ? 'Đã ẩn đánh giá thành công.'
-                : 'Đã hiển thị lại đánh giá thành công.',
+                ? 'Review hidden successfully.'
+                : 'Review shown again successfully.',
           ),
           backgroundColor: Colors.green,
         ),
@@ -286,7 +286,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi khi kiểm duyệt: $e'),
+          content: Text('Moderation error: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -309,7 +309,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
   Widget _buildStatusChip(ReviewItem review) {
     if (review.isHidden) {
       return Chip(
-        label: const Text('Đã ẩn (Hidden)'),
+        label: const Text('Hidden'),
         backgroundColor: Colors.red.shade100,
         labelStyle: TextStyle(
           color: Colors.red.shade900,
@@ -322,7 +322,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
     }
     if (review.isFlagged) {
       return Chip(
-        label: const Text('Bị gắn cờ (Flagged)'),
+        label: const Text('Flagged'),
         backgroundColor: Colors.amber.shade100,
         labelStyle: TextStyle(
           color: Colors.amber.shade900,
@@ -334,7 +334,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
       );
     }
     return Chip(
-      label: const Text('Hiển thị (Published)'),
+      label: const Text('Published'),
       backgroundColor: Colors.green.shade100,
       labelStyle: TextStyle(
         color: Colors.green.shade900,
@@ -359,7 +359,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Tìm kiếm sản phẩm, khách hàng, nội dung...',
+                  hintText: 'Search product, customer, content...',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon:
                       _searchController.text.isNotEmpty
@@ -385,7 +385,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                 child: Row(
                   children: [
                     FilterChip(
-                      label: const Text('Tất cả sao'),
+                      label: const Text('All ratings'),
                       selected: _selectedRating == null,
                       onSelected: (selected) {
                         if (selected) {
@@ -422,7 +422,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                         color: Colors.amber,
                         size: 16,
                       ),
-                      label: const Text('Bị gắn cờ'),
+                      label: const Text('Flagged'),
                       selected: _onlyFlagged,
                       onSelected: (selected) {
                         setState(() => _onlyFlagged = selected);
@@ -457,7 +457,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                           ElevatedButton.icon(
                             onPressed: _fetchReviews,
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Thử lại'),
+                            label: const Text('Retry'),
                           ),
                         ],
                       ),
@@ -475,7 +475,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          'Không tìm thấy đánh giá nào.',
+                          'No reviews found.',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey,
@@ -576,7 +576,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                   child: Text(
                                     review.comment.isNotEmpty
                                         ? review.comment
-                                        : '(Không có lời bình luận)',
+                                        : '(No comment)',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       height: 1.4,
@@ -589,7 +589,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    // UC-06.2: Gắn cờ / Gỡ cờ
+                                    // UC-06.2: Flag / Unflag
                                     if (!review.isFlagged && !review.isHidden)
                                       OutlinedButton.icon(
                                         onPressed: () => _handleFlag(review),
@@ -599,7 +599,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                           color: Colors.amber,
                                         ),
                                         label: const Text(
-                                          'Gắn cờ',
+                                          'Flag',
                                           style: TextStyle(color: Colors.amber),
                                         ),
                                       ),
@@ -610,7 +610,7 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                           Icons.outlined_flag,
                                           size: 16,
                                         ),
-                                        label: const Text('Gỡ cờ'),
+                                        label: const Text('Unflag'),
                                       ),
 
                                     const SizedBox(width: 8),
@@ -634,16 +634,16 @@ class StaffReviewsPageState extends State<StaffReviewsPage> {
                                         ),
                                         label: Text(
                                           review.isHidden
-                                              ? 'Hiện lại'
-                                              : 'Ẩn đánh giá',
+                                              ? 'Show'
+                                              : 'Hide review',
                                         ),
                                       )
                                     else
                                       Tooltip(
                                         message:
-                                            'Quy tắc FR-01: Chỉ Quản trị viên (Admin) mới có quyền ẩn/hiển thị đánh giá.',
+                                            'Rule FR-01: Only Administrators can hide or show reviews.',
                                         child: Text(
-                                          'Chỉ Admin kiểm duyệt (FR-01)',
+                                          'Admin-only moderation (FR-01)',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontStyle: FontStyle.italic,

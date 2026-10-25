@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
+
 //Tiêu Gia Huy
 import 'customer_shopping/customer_shopping_page.dart';
 
@@ -59,21 +61,21 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Đăng xuất'),
+        title: const Text('Log out'),
         content: const Text(
-          'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?',
+          'Are you sure you want to log out of your account?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE24B4A),
+              backgroundColor: AppTheme.brand,
             ),
-            child: const Text('Đăng xuất'),
+            child: const Text('Log out'),
           ),
         ],
       ),
@@ -92,7 +94,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Đã đăng xuất thành công.')));
+    ).showSnackBar(const SnackBar(content: Text('Logged out successfully.')));
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -192,27 +194,27 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             //Tiêu Gia Huy
             onPressed: _openShoppingCart,
             icon: const Icon(Icons.shopping_cart_outlined),
-            tooltip: 'Giỏ hàng',
+            tooltip: 'Cart',
           ),
           IconButton(
             onPressed: _openOrders,
             icon: const Icon(Icons.receipt_long_outlined),
-            tooltip: 'Đơn hàng của tôi',
+            tooltip: 'My orders',
           ),
           IconButton(
             onPressed: _openReviews,
             icon: const Icon(Icons.rate_review_outlined),
-            tooltip: 'Đánh giá của tôi',
+            tooltip: 'My reviews',
           ),
           IconButton(
             onPressed: _openProfile,
             icon: const Icon(Icons.account_circle_outlined),
-            tooltip: 'Hồ sơ cá nhân',
+            tooltip: 'My profile',
           ),
           IconButton(
             onPressed: _loggingOut ? null : _handleLogout,
             icon: const Icon(Icons.logout),
-            tooltip: 'Đăng xuất',
+            tooltip: 'Log out',
           ),
         ],
       ),

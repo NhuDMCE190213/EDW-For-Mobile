@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'core/app_theme.dart';
 import 'models/auth_model.dart';
+import 'screens/admin_category_page.dart';
+import 'screens/admin_product_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/promotion_page.dart';
@@ -11,7 +14,6 @@ import 'services/auth_api.dart';
 import 'screens/staff_reviews_page.dart';
 import 'screens/staff_variant_page.dart';
 import 'services/admin_catalog_api.dart';
-import 'services/auth_api.dart';
 import 'services/cart_api.dart';
 import 'services/order_api.dart';
 import 'services/promotion_api.dart';
@@ -74,14 +76,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'EDW Mobile',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE24B4A)),
-        useMaterial3: true,
-        inputDecorationTheme: const InputDecorationTheme(
-          filled: true,
-          fillColor: Color(0xFFF7F7F7),
-        ),
-      ),
+      theme: AppTheme.light(),
       home: LoginScreen(authApi: authApi, baseUrl: baseUrl),
       routes: {
         '/home': (context) {
@@ -147,49 +142,135 @@ class AppNavigation extends StatefulWidget {
   State<AppNavigation> createState() => _AppNavigationState();
 }
 
+class _NavDestination {
+  const _NavDestination({
+    required this.title,
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.page,
+  });
+
+  final String title;
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final Widget page;
+}
+
 class _AppNavigationState extends State<AppNavigation> {
   int _currentIndex = 0;
-  late final List<Widget> _pages;
+  late final List<_NavDestination> _destinations;
   final _variantPageKey = GlobalKey<StaffVariantPageState>();
+  final _categoryPageKey = GlobalKey<AdminCategoryPageState>();
+  final _productPageKey = GlobalKey<AdminProductPageState>();
   final _ordersPageKey = GlobalKey<StaffOrdersPageState>();
   final _userPageKey = GlobalKey<AdminUserManagementPageState>();
   final _reviewsPageKey = GlobalKey<StaffReviewsPageState>();
+
+  bool get _isAdmin =>
+      widget.role.toLowerCase() == 'admin' || widget.role == '0';
 
   @override
   void initState() {
     super.initState();
     widget.adminUserApi.setAuthToken(widget.authToken);
-    _pages = [
-      StaffVariantPage(
-        key: _variantPageKey,
-        api: widget.variantApi,
-        promotionApi: widget.promotionApi,
-        authToken: widget.authToken,
+    _destinations = [
+      _NavDestination(
+        title: 'Product Variant Management',
+        label: 'Variants',
+        icon: Icons.inventory_2_outlined,
+        activeIcon: Icons.inventory_2,
+        page: StaffVariantPage(
+          key: _variantPageKey,
+          api: widget.variantApi,
+          promotionApi: widget.promotionApi,
+          authToken: widget.authToken,
+        ),
       ),
-      PromotionPage(api: widget.promotionApi),
-      StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
-      if (widget.role.toLowerCase() == 'admin' || widget.role == '0')
-        AdminUserManagementPage(key: _userPageKey, api: widget.adminUserApi),
-      StaffReviewsPage(
-        key: _reviewsPageKey,
-        api: widget.reviewApi,
-        userRole: widget.role,
+      if (_isAdmin)
+        _NavDestination(
+          title: 'Product Category Management',
+          label: 'Categories',
+          icon: Icons.category_outlined,
+          activeIcon: Icons.category,
+          page: AdminCategoryPage(
+            key: _categoryPageKey,
+            api: widget.catalogApi,
+          ),
+        ),
+      if (_isAdmin)
+        _NavDestination(
+          title: 'Product Management',
+          label: 'Products',
+          icon: Icons.devices_other_outlined,
+          activeIcon: Icons.devices_other,
+          page: AdminProductPage(
+            key: _productPageKey,
+            api: widget.catalogApi,
+            baseUrl: widget.baseUrl,
+          ),
+        ),
+      _NavDestination(
+        title: 'Promotion Management',
+        label: 'Promotions',
+        icon: Icons.local_offer_outlined,
+        activeIcon: Icons.local_offer,
+        page: PromotionPage(api: widget.promotionApi),
+      ),
+      _NavDestination(
+        title: 'Staff - View Orders',
+        label: 'Orders',
+        icon: Icons.assignment_outlined,
+        activeIcon: Icons.assignment,
+        page: StaffOrdersPage(key: _ordersPageKey, api: widget.orderApi),
+      ),
+      if (_isAdmin)
+        _NavDestination(
+          title: 'Staff and Customer Management',
+          label: 'Users',
+          icon: Icons.manage_accounts_outlined,
+          activeIcon: Icons.manage_accounts,
+          page: AdminUserManagementPage(
+            key: _userPageKey,
+            api: widget.adminUserApi,
+          ),
+        ),
+      _NavDestination(
+        title: 'Review Management',
+        label: 'Reviews',
+        icon: Icons.rate_review_outlined,
+        activeIcon: Icons.rate_review,
+        page: StaffReviewsPage(
+          key: _reviewsPageKey,
+          api: widget.reviewApi,
+          userRole: widget.role,
+        ),
       ),
     ];
   }
 
   Future<void> _refreshCurrentPage() {
-    final currentWidget = _pages[_currentIndex];
+    final page = _destinations[_currentIndex].page;
 
-    if (currentWidget is StaffVariantPage)
+    if (page is StaffVariantPage) {
       return _variantPageKey.currentState?.refresh() ?? Future.value();
-    if (currentWidget is StaffOrdersPage)
+    }
+    if (page is AdminProductPage) {
+      return _productPageKey.currentState?.refresh() ?? Future.value();
+    }
+    if (page is AdminCategoryPage) {
+      return _categoryPageKey.currentState?.refresh() ?? Future.value();
+    }
+    if (page is StaffOrdersPage) {
       return _ordersPageKey.currentState?.refresh() ?? Future.value();
-    if (currentWidget is AdminUserManagementPage)
+    }
+    if (page is AdminUserManagementPage) {
       return _userPageKey.currentState?.refresh() ?? Future.value();
-    if (currentWidget is StaffReviewsPage)
+    }
+    if (page is StaffReviewsPage) {
       return _reviewsPageKey.currentState?.refresh() ?? Future.value();
-
+    }
     return Future.value();
   }
 
@@ -229,17 +310,7 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _pages[_currentIndex] is StaffVariantPage
-              ? 'Product Variant Management'
-              : _pages[_currentIndex] is PromotionPage
-              ? 'Promotion Management'
-              : _pages[_currentIndex] is StaffOrdersPage
-              ? 'Staff - View Orders'
-              : _pages[_currentIndex] is AdminUserManagementPage
-              ? 'Staff and Customer Management'
-              : 'Review Management',
-        ),
+        title: Text(_destinations[_currentIndex].title),
         actions: [
           IconButton(
             onPressed: _refreshCurrentPage,
@@ -258,36 +329,21 @@ class _AppNavigationState extends State<AppNavigation> {
           ),
         ],
       ),
-      body: IndexedStack(index: _currentIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.inventory),
-            label: 'Variants',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.local_offer),
-            label: 'Promotions',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'All Orders',
-          ),
-          if (widget.role?.toLowerCase() == 'admin' || widget.role == '0')
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.manage_accounts_outlined),
-              label: 'Users',
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _destinations.map((d) => d.page).toList(),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (i) => setState(() => _currentIndex = i),
+        destinations: [
+          for (final d in _destinations)
+            NavigationDestination(
+              icon: Icon(d.icon),
+              selectedIcon: Icon(d.activeIcon),
+              label: d.label,
             ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.rate_review_outlined),
-            activeIcon: Icon(Icons.rate_review),
-            label: 'Reviews',
-          ),
         ],
       ),
     );

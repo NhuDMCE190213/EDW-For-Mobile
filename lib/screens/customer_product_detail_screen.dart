@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/product_image.dart';
 import '../models/customer_shopping.dart';
 import '../models/review.dart';
 import '../services/customer_shopping_api.dart';
@@ -150,6 +151,13 @@ class _CustomerProductDetailScreenState
                     ..._product.variants.map(
                       (variant) => Card(
                         child: ListTile(
+                          leading: ProductImage(
+                            // Variant has no image field here -> use the
+                            // product image; placeholder icon if that fails.
+                            urls: [widget.api.imageUrl(_product.imageUrl)],
+                            size: 52,
+                            fit: BoxFit.contain,
+                          ),
                           title: Text('${variant.sku} • ${variant.color}'),
                           subtitle: Text(
                             '${variant.configuration}\n'

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
+
 import '../models/review.dart';
 import '../services/api_exception.dart';
 import '../services/review_api.dart';
@@ -63,7 +65,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Gửi đánh giá thành công! Cảm ơn phản hồi của bạn.',
+            'Review submitted! Thank you for your feedback.',
           ),
           backgroundColor: Colors.green,
         ),
@@ -74,7 +76,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
       setState(() => _errorMessage = e.message);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorMessage = 'Lỗi kết nối: $e');
+      setState(() => _errorMessage = 'Connection error: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -101,15 +103,15 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
   String _getRatingText(int rating) {
     switch (rating) {
       case 5:
-        return 'Tuyệt vời (5/5)';
+        return 'Excellent (5/5)';
       case 4:
-        return 'Rất tốt (4/5)';
+        return 'Very good (4/5)';
       case 3:
-        return 'Bình thường (3/5)';
+        return 'Average (3/5)';
       case 2:
-        return 'Chưa hài lòng (2/5)';
+        return 'Dissatisfied (2/5)';
       case 1:
-        return 'Rất tệ (1/5)';
+        return 'Very poor (1/5)';
       default:
         return '$rating sao';
     }
@@ -119,7 +121,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Viết đánh giá sản phẩm'),
+        title: const Text('Write a product review'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -160,7 +162,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Đánh giá cho sản phẩm:',
+                              'Reviewing product:',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -176,7 +178,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                             ),
                             if (widget.orderId != null)
                               Text(
-                                'Đơn hàng: #${widget.orderId!.length > 8 ? widget.orderId!.substring(0, 8) : widget.orderId}',
+                                'Order: #${widget.orderId!.length > 8 ? widget.orderId!.substring(0, 8) : widget.orderId}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
@@ -193,7 +195,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
 
               // Chọn số sao
               const Text(
-                'Mức độ hài lòng của bạn:',
+                'Your rating:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
@@ -212,7 +214,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
 
               // Nhập lời nhận xét
               const Text(
-                'Nội dung nhận xét (tối đa 1000 ký tự):',
+                'Review content (max 1000 characters):',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -221,19 +223,19 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                 maxLength: 1000,
                 maxLines: 5,
                 decoration: const InputDecoration(
-                  hintText: 'Hãy chia sẻ cảm nhận của bạn về chất lượng sản phẩm, đóng gói và dịch vụ...',
+                  hintText: 'Share your thoughts on product quality, packaging and service...',
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return 'Vui lòng nhập nội dung nhận xét.';
+                    return 'Please enter review content.';
                   }
                   if (val.trim().length < 5) {
-                    return 'Nội dung nhận xét phải có ít nhất 5 ký tự.';
+                    return 'Review must be at least 5 characters.';
                   }
                   if (val.trim().length > 1000) {
-                    return 'Nội dung nhận xét không được vượt quá 1000 ký tự.';
+                    return 'Review must not exceed 1000 characters.';
                   }
                   return null;
                 },
@@ -264,7 +266,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                   ),
                 ),
 
-              // Nút Gửi Đánh Giá
+              // Nút Submit Review
               FilledButton.icon(
                 onPressed: _submitting ? null : _submit,
                 icon: _submitting
@@ -277,10 +279,10 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                         ),
                       )
                     : const Icon(Icons.send),
-                label: Text(_submitting ? 'Đang gửi...' : 'Gửi Đánh Giá'),
+                label: Text(_submitting ? 'Submitting...' : 'Submit Review'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: const Color(0xFFE24B4A),
+                  backgroundColor: AppTheme.brand,
                 ),
               ),
             ],

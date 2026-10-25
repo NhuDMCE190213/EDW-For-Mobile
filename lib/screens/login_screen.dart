@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
+
 import '../models/auth_model.dart';
 import '../services/api_exception.dart';
 import '../services/auth_api.dart';
@@ -67,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đăng nhập thành công! Chào ${response.fullName}.'),
+          content: Text('Login successful! Welcome ${response.fullName}.'),
           backgroundColor: Colors.green,
         ),
       );
@@ -97,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on ApiException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(() => _errorMessage = 'Lỗi kết nối: $e');
+      setState(() => _errorMessage = 'Connection error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -156,13 +158,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE24B4A).withValues(alpha: 0.1),
+                          color: AppTheme.brand.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.devices_outlined,
                           size: 38,
-                          color: Color(0xFFE24B4A),
+                          color: AppTheme.brand,
                         ),
                       ),
                     ),
@@ -181,8 +183,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 4),
                     Text(
                       isCustomer
-                          ? 'Đăng nhập để theo dõi đơn hàng và mua sắm'
-                          : 'Đăng nhập dành cho nhân viên quản lý',
+                          ? 'Log in to track orders and shop'
+                          : 'Login for management staff',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -197,12 +199,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ButtonSegment(
                           value: LoginRoleTab.customer,
                           icon: Icon(Icons.person_outline),
-                          label: Text('Khách hàng'),
+                          label: Text('Customer'),
                         ),
                         ButtonSegment(
                           value: LoginRoleTab.staff,
                           icon: Icon(Icons.badge_outlined),
-                          label: Text('Nhân viên'),
+                          label: Text('Staff'),
                         ),
                       ],
                       selected: {_selectedTab},
@@ -253,32 +255,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: isCustomer
-                            ? 'Email khách hàng'
-                            : 'Email nhân viên',
+                            ? 'Customer email'
+                            : 'Staff email',
                         hintText: 'name@example.com',
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập email.';
+                          return 'Please enter your email.';
                         }
                         final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                         if (!emailRegExp.hasMatch(value.trim())) {
-                          return 'Địa chỉ email không đúng định dạng.';
+                          return 'Invalid email format.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Ô nhập Mật khẩu
+                    // Ô nhập Password
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
-                        hintText: 'Nhập mật khẩu của bạn',
+                        labelText: 'Password',
+                        hintText: 'Enter your password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
@@ -294,14 +296,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Vui lòng nhập mật khẩu.';
+                          return 'Please enter your password.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 8),
 
-                    // Ghi nhớ đăng nhập & Quên mật khẩu
+                    // Remember me đăng nhập & Forgot password
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -313,7 +315,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   setState(() => _rememberMe = val ?? false),
                             ),
                             const Text(
-                              'Ghi nhớ',
+                              'Remember me',
                               style: TextStyle(fontSize: 14),
                             ),
                           ],
@@ -321,9 +323,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextButton(
                           onPressed: _navigateToForgotPassword,
                           child: const Text(
-                            'Quên mật khẩu?',
+                            'Forgot password?',
                             style: TextStyle(
-                              color: Color(0xFFE24B4A),
+                              color: AppTheme.brand,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -337,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     FilledButton(
                       onPressed: _loading ? null : _submitLogin,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFE24B4A),
+                        backgroundColor: AppTheme.brand,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -354,8 +356,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             )
                           : Text(
                               isCustomer
-                                  ? 'Đăng nhập Khách hàng'
-                                  : 'Đăng nhập Nhân viên',
+                                  ? 'Customer Login'
+                                  : 'Staff Login',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -370,15 +372,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Chưa có tài khoản?',
+                            'Don\'t have an account?',
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                           TextButton(
                             onPressed: _navigateToRegister,
                             child: const Text(
-                              'Đăng ký ngay',
+                              'Sign up now',
                               style: TextStyle(
-                                color: Color(0xFFE24B4A),
+                                color: AppTheme.brand,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -389,7 +391,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          '* Tài khoản nhân viên được cấp bởi quản trị viên hệ thống.',
+                          '* Staff accounts are issued by the system administrator.',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,

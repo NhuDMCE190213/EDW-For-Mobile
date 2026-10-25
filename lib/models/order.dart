@@ -1,4 +1,4 @@
-﻿class Order {
+class Order {
   final String orderId;
   final int customerId;
   final String customerName;

@@ -54,7 +54,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Lỗi kết nối: $e';
+        _errorMessage = 'Connection error: $e';
         _isLoading = false;
       });
     }
@@ -106,7 +106,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
             Icon(Icons.lock_outline, size: 14, color: Colors.red.shade700),
             const SizedBox(width: 4),
             Text(
-              'Bị khóa bởi Admin',
+              'Locked by Admin',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -131,7 +131,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
             Icon(Icons.flag_outlined, size: 14, color: Colors.amber.shade800),
             const SizedBox(width: 4),
             Text(
-              'Đang xem xét',
+              'Under review',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -159,7 +159,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
           ),
           const SizedBox(width: 4),
           Text(
-            'Đã công khai',
+            'Published',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -175,12 +175,12 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đánh giá của tôi'),
+        title: const Text('My reviews'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _fetchMyReviews,
-            tooltip: 'Làm mới',
+            tooltip: 'Refresh',
           ),
         ],
       ),
@@ -203,7 +203,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
                       FilledButton.icon(
                         onPressed: _fetchMyReviews,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Thử lại'),
+                        label: const Text('Retry'),
                       ),
                     ],
                   ),
@@ -223,7 +223,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Bạn chưa có đánh giá nào',
+                        'You have no reviews yet',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -231,7 +231,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Các đánh giá sản phẩm sau khi mua hàng sẽ hiển thị tại đây.',
+                        'Your product reviews will appear here after you make a purchase.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
@@ -330,7 +330,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
                                   OutlinedButton.icon(
                                     onPressed: () => _openEditReview(review),
                                     icon: const Icon(Icons.edit, size: 16),
-                                    label: const Text('Chỉnh sửa'),
+                                    label: const Text('Edit'),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor:
                                           Theme.of(context).colorScheme.primary,
@@ -338,7 +338,7 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage> {
                                   )
                                 else
                                   Text(
-                                    'Đánh giá bị khóa chỉnh sửa',
+                                    'Review is locked for editing',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontStyle: FontStyle.italic,

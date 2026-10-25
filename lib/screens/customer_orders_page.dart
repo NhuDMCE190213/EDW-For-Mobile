@@ -1,4 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+import '../core/app_theme.dart';
+
+import '../core/format.dart';
 
 import '../models/order.dart';
 import '../services/cart_api.dart';
@@ -256,10 +260,10 @@ Color _getStatusColor(String status) {
                     label: Text(filter),
                     selected: isSelected,
                     onSelected: (val) => setState(() => _selectedFilter = filter),
-                    selectedColor: const Color(0xFFE24B4A).withValues(alpha: 0.15),
-                    checkmarkColor: const Color(0xFFE24B4A),
+                    selectedColor: AppTheme.brand.withValues(alpha: 0.15),
+                    checkmarkColor: AppTheme.brand,
                     labelStyle: TextStyle(
-                      color: isSelected ? const Color(0xFFE24B4A) : Colors.black87,
+                      color: isSelected ? AppTheme.brand : Colors.black87,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -351,7 +355,7 @@ Color _getStatusColor(String status) {
                                             children: [
                                               Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
                                               Text(
-                                                'Qty: ${item.quantity} | Total: \$${(item.priceAtPurchase * item.quantity).toStringAsFixed(2)}',
+                                                'Qty: ${item.quantity} | Total: ${formatVnd((item.priceAtPurchase * item.quantity))}',
                                                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                                               ),
                                             ],
@@ -362,7 +366,7 @@ Color _getStatusColor(String status) {
                                             onPressed: () => _openReviewForItem(order, item),
                                             icon: const Icon(Icons.rate_review_outlined, size: 16, color: Colors.amber),
                                             label: const Text(
-                                              'Đánh giá',
+                                              'Review',
                                               style: TextStyle(fontSize: 13, color: Colors.amber, fontWeight: FontWeight.bold),
                                             ),
                                             style: TextButton.styleFrom(
@@ -380,8 +384,8 @@ Color _getStatusColor(String status) {
                                   children: [
                                     const Text('Total Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                                     Text(
-                                      '\$${order.totalAmount.toStringAsFixed(2)}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFFE24B4A)),
+                                      '${formatVnd(order.totalAmount)}',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: AppTheme.brand),
                                     ),
                                   ],
                                 ),
@@ -399,7 +403,7 @@ Color _getStatusColor(String status) {
                                     ],
                                     FilledButton.icon(
                                       onPressed: isTransferring ? null : () => _transferToCart(order.orderId),
-                                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE24B4A)),
+                                      style: FilledButton.styleFrom(backgroundColor: AppTheme.brand),
                                       icon: isTransferring
                                           ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                           : const Icon(Icons.shopping_cart_checkout, size: 16),

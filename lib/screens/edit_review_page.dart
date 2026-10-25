@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
+
 import '../models/review.dart';
 import '../services/api_exception.dart';
 import '../services/review_api.dart';
@@ -60,7 +62,7 @@ class _EditReviewPageState extends State<EditReviewPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cập nhật đánh giá thành công!'),
+          content: Text('Review updated successfully!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -70,7 +72,7 @@ class _EditReviewPageState extends State<EditReviewPage> {
       setState(() => _errorMessage = e.message);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorMessage = 'Lỗi kết nối: $e');
+      setState(() => _errorMessage = 'Connection error: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -97,15 +99,15 @@ class _EditReviewPageState extends State<EditReviewPage> {
   String _getRatingText(int rating) {
     switch (rating) {
       case 5:
-        return 'Tuyệt vời (5/5)';
+        return 'Excellent (5/5)';
       case 4:
-        return 'Rất tốt (4/5)';
+        return 'Very good (4/5)';
       case 3:
-        return 'Bình thường (3/5)';
+        return 'Average (3/5)';
       case 2:
-        return 'Chưa hài lòng (2/5)';
+        return 'Dissatisfied (2/5)';
       case 1:
-        return 'Rất tệ (1/5)';
+        return 'Very poor (1/5)';
       default:
         return '$rating sao';
     }
@@ -115,7 +117,7 @@ class _EditReviewPageState extends State<EditReviewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chỉnh sửa đánh giá'),
+        title: const Text('Edit review'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -147,7 +149,7 @@ class _EditReviewPageState extends State<EditReviewPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Đang chỉnh sửa đánh giá cho:',
+                              'Editing review for:',
                               style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                             const SizedBox(height: 2),
@@ -169,7 +171,7 @@ class _EditReviewPageState extends State<EditReviewPage> {
 
               // Chọn số sao
               const Text(
-                'Mức độ hài lòng của bạn:',
+                'Your rating:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
@@ -188,7 +190,7 @@ class _EditReviewPageState extends State<EditReviewPage> {
 
               // Sửa nội dung
               const Text(
-                'Nội dung nhận xét (tối đa 1000 ký tự):',
+                'Review content (max 1000 characters):',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -197,19 +199,19 @@ class _EditReviewPageState extends State<EditReviewPage> {
                 maxLength: 1000,
                 maxLines: 5,
                 decoration: const InputDecoration(
-                  hintText: 'Nhập nội dung nhận xét của bạn...',
+                  hintText: 'Write your review...',
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return 'Vui lòng nhập nội dung nhận xét.';
+                    return 'Please enter review content.';
                   }
                   if (val.trim().length < 5) {
-                    return 'Nội dung nhận xét phải có ít nhất 5 ký tự.';
+                    return 'Review must be at least 5 characters.';
                   }
                   if (val.trim().length > 1000) {
-                    return 'Nội dung nhận xét không được vượt quá 1000 ký tự.';
+                    return 'Review must not exceed 1000 characters.';
                   }
                   return null;
                 },
@@ -253,10 +255,10 @@ class _EditReviewPageState extends State<EditReviewPage> {
                         ),
                       )
                     : const Icon(Icons.check),
-                label: Text(_submitting ? 'Đang lưu...' : 'Lưu Thay Đổi'),
+                label: Text(_submitting ? 'Saving...' : 'Save Changes'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: const Color(0xFFE24B4A),
+                  backgroundColor: AppTheme.brand,
                 ),
               ),
             ],

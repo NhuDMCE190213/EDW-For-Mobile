@@ -75,7 +75,7 @@ class ProfileApi {
 
   void _ensureSuccess(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      String message = 'Thao tác thất bại (${response.statusCode})';
+      String message = 'Operation failed (${response.statusCode})';
       try {
         final decoded = jsonDecode(response.body);
         if (decoded is Map<String, dynamic>) {

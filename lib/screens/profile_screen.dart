@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
+
 import '../models/profile_model.dart';
 import '../services/api_exception.dart';
 import '../services/auth_api.dart';
@@ -60,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Không thể tải thông tin hồ sơ: $e';
+        _error = 'Unable to load profile: $e';
         _loading = false;
       });
     }
@@ -82,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text('Chỉnh sửa thông tin'),
+            title: const Text('Edit profile'),
             content: Form(
               key: formKey,
               child: SingleChildScrollView(
@@ -92,13 +94,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     TextFormField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Họ và tên',
+                        labelText: 'Full name',
                         prefixIcon: Icon(Icons.person_outline),
                         border: OutlineInputBorder(),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
-                          return 'Vui lòng nhập họ tên.';
+                          return 'Please enter your full name.';
                         }
                         return null;
                       },
@@ -109,13 +111,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         controller: phoneController,
                         keyboardType: TextInputType.phone,
                         decoration: const InputDecoration(
-                          labelText: 'Số điện thoại',
+                          labelText: 'Phone number',
                           prefixIcon: Icon(Icons.phone_outlined),
                           border: OutlineInputBorder(),
                         ),
                         validator: (val) {
                           if (val == null || val.trim().isEmpty) {
-                            return 'Vui lòng nhập số điện thoại.';
+                            return 'Please enter your phone number.';
                           }
                           return null;
                         },
@@ -127,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             actions: [
               TextButton(
                 onPressed: updating ? null : () => Navigator.pop(ctx),
-                child: const Text('Hủy'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: updating
@@ -146,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (ctx.mounted) Navigator.pop(ctx);
                           messenger.showSnackBar(
                             const SnackBar(
-                              content: Text('Cập nhật thông tin thành công!'),
+                              content: Text('Profile updated successfully!'),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -163,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           setDialogState(() => updating = false);
                           messenger.showSnackBar(
                             SnackBar(
-                              content: Text('Lỗi: $e'),
+                              content: Text('Error: $e'),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -178,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Lưu thay đổi'),
+                    : const Text('Save changes'),
               ),
             ],
           );
@@ -204,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text('Đổi mật khẩu'),
+            title: const Text('Change password'),
             content: Form(
               key: formKey,
               child: SingleChildScrollView(
@@ -215,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       controller: newPasswordController,
                       obscureText: obscureNew,
                       decoration: InputDecoration(
-                        labelText: 'Mật khẩu mới',
+                        labelText: 'New password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
@@ -230,16 +232,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       validator: (val) {
                         if (val == null || val.isEmpty) {
-                          return 'Vui lòng nhập mật khẩu mới.';
+                          return 'Please enter a new password.';
                         }
-                        if (val.length < 8) return 'Tối thiểu 8 ký tự.';
+                        if (val.length < 8) return 'At least 8 characters.';
                         final hasLetter = RegExp(r'[a-zA-Z]').hasMatch(val);
                         final hasNumber = RegExp(r'\d').hasMatch(val);
                         final hasSpecial = RegExp(
                           r'[!@#$%^&*()_+\-=\[\]{};:\x27"\\|,.<>\/?]',
                         ).hasMatch(val);
                         if (!hasLetter || !hasNumber || !hasSpecial) {
-                          return 'Cần có chữ cái, số và ký tự đặc biệt.';
+                          return 'Must include letters, numbers and special characters.';
                         }
                         return null;
                       },
@@ -249,7 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       controller: confirmPasswordController,
                       obscureText: obscureConfirm,
                       decoration: InputDecoration(
-                        labelText: 'Xác nhận mật khẩu mới',
+                        labelText: 'Confirm new password',
                         prefixIcon: const Icon(Icons.lock_reset_outlined),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
@@ -265,10 +267,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       validator: (val) {
                         if (val == null || val.isEmpty) {
-                          return 'Vui lòng xác nhận mật khẩu.';
+                          return 'Please confirm your password.';
                         }
                         if (val != newPasswordController.text) {
-                          return 'Mật khẩu không trùng khớp.';
+                          return 'Passwords do not match.';
                         }
                         return null;
                       },
@@ -280,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             actions: [
               TextButton(
                 onPressed: updating ? null : () => Navigator.pop(ctx),
-                child: const Text('Hủy'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: updating
@@ -299,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (ctx.mounted) Navigator.pop(ctx);
                           messenger.showSnackBar(
                             const SnackBar(
-                              content: Text('Đổi mật khẩu thành công!'),
+                              content: Text('Password changed successfully!'),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -315,7 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           setDialogState(() => updating = false);
                           messenger.showSnackBar(
                             SnackBar(
-                              content: Text('Lỗi: $e'),
+                              content: Text('Error: $e'),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -330,7 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Cập nhật'),
+                    : const Text('Update'),
               ),
             ],
           );
@@ -347,19 +349,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất không?'),
+        title: const Text('Log out'),
+        content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE24B4A),
+              backgroundColor: AppTheme.brand,
             ),
-            child: const Text('Đăng xuất'),
+            child: const Text('Log out'),
           ),
         ],
       ),
@@ -390,13 +392,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     switch (role) {
       case '0':
       case 'Admin':
-        return 'Quản trị viên';
+        return 'Administrator';
       case '1':
       case 'Staff':
-        return 'Nhân viên';
+        return 'Staff';
       case '2':
       case 'Customer':
-        return 'Khách hàng';
+        return 'Customer';
       default:
         return role;
     }
@@ -406,12 +408,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hồ sơ cá nhân'),
+        title: const Text('My profile'),
         actions: [
           IconButton(
             onPressed: _loading ? null : _loadProfile,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Làm mới',
+            tooltip: 'Refresh',
           ),
         ],
       ),
@@ -434,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: _loadProfile,
-                      child: const Text('Thử lại'),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -465,7 +467,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 42,
-                            backgroundColor: const Color(0xFFE24B4A),
+                            backgroundColor: AppTheme.brand,
                             child: Text(
                               _profile!.fullName.isNotEmpty
                                   ? _profile!.fullName[0].toUpperCase()
@@ -496,7 +498,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 8),
                           Chip(
                             label: Text(
-                              'Vai trò: ${_formatRole(widget.role)}',
+                              'Role: ${_formatRole(widget.role)}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -521,7 +523,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         ListTile(
                           leading: const Icon(Icons.person_outline),
-                          title: const Text('Họ và tên'),
+                          title: const Text('Full name'),
                           subtitle: Text(_profile!.fullName),
                         ),
                         const Divider(height: 1),
@@ -535,7 +537,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.phone_outlined),
-                            title: const Text('Số điện thoại'),
+                            title: const Text('Phone number'),
                             subtitle: Text(_profile!.phoneNumber!),
                           ),
                         ],
@@ -546,15 +548,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Icons.stars_outlined,
                               color: Colors.amber,
                             ),
-                            title: const Text('Điểm tích lũy'),
-                            subtitle: Text('${_profile!.points} điểm'),
+                            title: const Text('Reward points'),
+                            subtitle: Text('${_profile!.points} points'),
                           ),
                         ],
                         if (_profile!.createdAt != null) ...[
                           const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.calendar_today_outlined),
-                            title: const Text('Ngày tham gia'),
+                            title: const Text('Joined'),
                             subtitle: Text(
                               '${_profile!.createdAt!.day}/${_profile!.createdAt!.month}/${_profile!.createdAt!.year}',
                             ),
@@ -572,7 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: OutlinedButton.icon(
                           onPressed: _showEditProfileDialog,
                           icon: const Icon(Icons.edit_outlined),
-                          label: const Text('Sửa hồ sơ'),
+                          label: const Text('Edit profile'),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
@@ -583,7 +585,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: OutlinedButton.icon(
                           onPressed: _showChangePasswordDialog,
                           icon: const Icon(Icons.key_outlined),
-                          label: const Text('Đổi mật khẩu'),
+                          label: const Text('Change password'),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
@@ -593,11 +595,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Nút Đăng xuất
+                  // Nút Log out
                   FilledButton.icon(
                     onPressed: _handleLogout,
                     icon: const Icon(Icons.logout),
-                    label: const Text('Đăng xuất'),
+                    label: const Text('Log out'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.red.shade700,
                       minimumSize: const Size.fromHeight(48),

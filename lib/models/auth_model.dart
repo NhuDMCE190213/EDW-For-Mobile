@@ -52,15 +52,15 @@ class LoginResponse {
     switch (role) {
       case '0':
       case 'Admin':
-        return 'Quản trị viên';
+        return 'Administrator';
       case '1':
       case 'Staff':
-        return 'Nhân viên';
+        return 'Staff';
       case '2':
       case 'Customer':
-        return 'Khách hàng';
+        return 'Customer';
       default:
-        return role.isNotEmpty ? role : 'Khách hàng';
+        return role.isNotEmpty ? role : 'Customer';
     }
   }
 }

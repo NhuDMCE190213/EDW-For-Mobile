@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:frontend_flutter/services/api_exception.dart';
 import 'package:http/http.dart' as http;
@@ -88,4 +88,3 @@ class PromotionApi {
     };
   }
 }
-

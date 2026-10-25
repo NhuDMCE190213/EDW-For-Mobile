@@ -1,3 +1,5 @@
+import '../core/format.dart';
+
 //Tiêu Gia Huy
 class ShopProduct {
   const ShopProduct({
@@ -136,5 +138,4 @@ num _numberValue(Map<String, dynamic>? json, String key, {num fallback = 0}) {
       : num.tryParse(value?.toString() ?? '') ?? fallback;
 }
 
-String shoppingMoney(double amount) =>
-    '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]},')} VND';
+String shoppingMoney(double amount) => formatVnd(amount);

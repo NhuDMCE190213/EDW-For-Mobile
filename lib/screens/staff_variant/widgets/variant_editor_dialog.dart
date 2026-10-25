@@ -61,6 +61,41 @@ class _VariantEditorDialogState extends State<VariantEditorDialog> {
     }
   }
 
+  /// Builds the promotion dropdown safely:
+  /// - promotions are de-duplicated by id (a duplicate id breaks DropdownButton)
+  /// - the selected id is always present in the items, even before the
+  ///   promotion list finishes loading or when the promotion is no longer
+  ///   returned by the API (expired/deleted).
+  Widget _promotionDropdown() {
+    final byId = <String, String>{};
+    for (final promotion in _promotions) {
+      byId.putIfAbsent(promotion.id, () => promotion.name);
+    }
+    final selected = _promotionId;
+    if (selected != null && !byId.containsKey(selected)) {
+      byId[selected] = widget.variant?.promotionName ?? 'Current promotion';
+    }
+
+    return DropdownButtonFormField<String?>(
+      key: ValueKey('promo-${byId.length}-$selected'),
+      initialValue: selected,
+      isExpanded: true,
+      decoration: const InputDecoration(labelText: 'Promotion'),
+      items: [
+        const DropdownMenuItem<String?>(
+          value: null,
+          child: Text('No promotion'),
+        ),
+        for (final entry in byId.entries)
+          DropdownMenuItem<String?>(
+            value: entry.key,
+            child: Text(entry.value, overflow: TextOverflow.ellipsis),
+          ),
+      ],
+      onChanged: _saving ? null : (v) => setState(() => _promotionId = v),
+    );
+  }
+
   @override
   void dispose() {
     for (final controller in _controllers.values) {
@@ -177,26 +212,7 @@ class _VariantEditorDialogState extends State<VariantEditorDialog> {
                 ],
               ),
               _field('imageUrl', 'Image URL', hint: 'https://...'),
-              DropdownButtonFormField<String?>(
-                initialValue: _promotionId,
-                decoration: const InputDecoration(
-                  labelText: 'Promotion',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('No promotion'),
-                  ),
-                  ..._promotions.map(
-                    (promotion) => DropdownMenuItem<String?>(
-                      value: promotion.id,
-                      child: Text(promotion.name),
-                    ),
-                  ),
-                ],
-                onChanged: _saving ? null : (value) => setState(() => _promotionId = value),
-              ),
+              _promotionDropdown(),
             ],
           ),
         ),

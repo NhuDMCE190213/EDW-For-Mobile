@@ -1,0 +1,37 @@
+# Tệp đầu ra của chính Repomix
+repomix-output.*
+
+# Các thư mục hệ thống & công cụ của Dart/Flutter
+.dart_tool/
+.pub-cache/
+.pub/
+build/
+
+# Các tệp tự động sinh ra bởi Build Runner (Freezed, Riverpod, Isar, v.v.)
+# Bật các dòng này nếu bạn muốn AI tập trung vào logic gốc, thay vì đọc code tự sinh
+*.g.dart
+*.freezed.dart
+*.generated.dart
+
+# Android và iOS build/metadata (Rất tốn token)
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+
+# Web & Desktop build artifacts
+build/web/
+linux/flutter/
+ephemeral/
+windows/flutter/
+
+# Mã nguồn định dạng hoặc thư mục phụ thuộc của bên thứ ba
+.packages
+pubspec.lock
+
+# Tệp nhật ký và bộ nhớ tạm
+*.log
+*.crash
+.tmp/
