@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 
@@ -7,19 +7,15 @@ import '../core/product_image.dart';
 
 import '../models/cart_item.dart';
 import '../services/cart_api.dart';
-import '../services/order_api.dart';
-import 'customer_orders_page.dart';
 
 class CustomerCartPage extends StatefulWidget {
   const CustomerCartPage({
     super.key,
     required this.api,
-    this.orderApi,
     required this.customerId,
   });
 
   final CartApi api;
-  final OrderApi? orderApi;
   final int customerId;
 
   @override
@@ -28,9 +24,7 @@ class CustomerCartPage extends StatefulWidget {
 
 class _CustomerCartPageState extends State<CustomerCartPage> {
   List<CartItem> _cartItems = [];
-  final Set<int> _selectedItemIds = {};
   bool _isLoading = true;
-  bool _isCheckingOut = false;
   final Set<int> _updatingItemIds = {};
 
   @override
@@ -45,11 +39,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       final items = await widget.api.getCartItems(widget.customerId);
       setState(() {
         _cartItems = items;
-        // By default select all items
-        _selectedItemIds.clear();
-        for (var item in items) {
-          _selectedItemIds.add(item.cartItemId);
-        }
+
         _isLoading = false;
       });
     } catch (e) {
@@ -108,22 +98,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       builder: (ctx) => AlertDialog(
         title: const Text('Remove item'),
         content: const Text('Are you sure you want to remove this item from your cart?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _removeItem(cartItemId);
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Remove'),
-          ),
-        ],
+
       ),
     );
   }
@@ -147,226 +122,14 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     }
   }
 
-  double _calculateSelectedTotal() {
-    double total = 0;
-    for (var item in _cartItems) {
-      if (_selectedItemIds.contains(item.cartItemId)) {
-        total += item.productVariant.price * item.quantity;
-      }
-    }
-    return total;
-  }
-
-  Future<void> _handleCheckout() async {
-    if (widget.orderApi == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order service is unavailable')),
-      );
-      return;
-    }
-
-    if (_selectedItemIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one item to checkout'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    final total = _calculateSelectedTotal();
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.shopping_bag_outlined, color: AppTheme.brand),
-            SizedBox(width: 8),
-            Text('Confirm Checkout'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Selected Items: ${_selectedItemIds.length}'),
-            const SizedBox(height: 8),
-            Text(
-              'Total Amount: ${formatVnd(total)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: AppTheme.brand,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Would you like to place this order now?',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.brand,
-            ),
-            child: const Text('Place Order'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true || !mounted) return;
-
-    setState(() => _isCheckingOut = true);
-    try {
-      final result = await widget.orderApi!.checkoutCart(
-        widget.customerId,
-        _selectedItemIds.toList(),
-      );
-
-      if (!mounted) return;
-      setState(() => _isCheckingOut = false);
-
-      // Show Checkout Success Dialog
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          icon: const Icon(
-            Icons.check_circle,
-            color: Colors.green,
-            size: 56,
-          ),
-          title: const Text('Checkout Successful!'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Order ID: #${result.order.orderId.length > 8 ? result.order.orderId.substring(0, 8) : result.order.orderId}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              Text('Subtotal: ${formatVnd(result.subtotal)}'),
-              if (result.discount > 0)
-                Text(
-                  'Discount: -${formatVnd(result.discount)}',
-                  style: const TextStyle(color: Colors.green),
-                ),
-              Text('Shipping: ${formatVnd(result.shipping)}'),
-              const Divider(),
-              Text(
-                'Total Paid: ${formatVnd(result.total)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: AppTheme.brand,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
-                ),
-                child: Text(
-                  'Status: ${result.order.status}',
-                  style: TextStyle(
-                    color: Colors.orange.shade800,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _fetchCart();
-              },
-              child: const Text('Continue Shopping'),
-            ),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CustomerOrdersPage(
-                      api: widget.orderApi!,
-                      customerId: widget.customerId,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.receipt_long),
-              label: const Text('View Orders'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.brand,
-              ),
-            ),
-          ],
-        ),
-      );
-
-      _fetchCart();
-    } catch (e) {
-      setState(() => _isCheckingOut = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Checkout failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final allSelected = _cartItems.isNotEmpty &&
-        _selectedItemIds.length == _cartItems.length;
-    final selectedTotal = _calculateSelectedTotal();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Cart'),
-        actions: [
-          if (_cartItems.isNotEmpty)
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  if (allSelected) {
-                    _selectedItemIds.clear();
-                  } else {
-                    _selectedItemIds.clear();
-                    for (var i in _cartItems) {
-                      _selectedItemIds.add(i.cartItemId);
-                    }
-                  }
-                });
-              },
-              icon: Icon(
-                allSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                size: 20,
-              ),
-              label: Text(allSelected ? 'Deselect All' : 'Select All'),
-            ),
-        ],
+
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -410,7 +173,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     if (variant.storage != null && variant.storage!.isNotEmpty)
                       variant.storage,
                     if (variant.color.isNotEmpty) variant.color,
-                  ].join(' • ');
+                  ].join(' ΓÇó ');
 
                   return Card(
                     margin: const EdgeInsets.symmetric(
@@ -432,18 +195,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Checkbox(
-                            value: isSelected,
-                            onChanged: (val) {
-                              setState(() {
-                                if (val == true) {
-                                  _selectedItemIds.add(item.cartItemId);
-                                } else {
-                                  _selectedItemIds.remove(item.cartItemId);
-                                }
-                              });
-                            },
-                          ),
+
                           ProductImage(
                             urls: [variant.imageUrl],
                             size: 68,
@@ -577,81 +329,6 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     ),
                   );
                 },
-              ),
-            ),
-      bottomSheet: _cartItems.isEmpty
-          ? null
-          : Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, -3),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selected (${_selectedItemIds.length})',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          '${formatVnd(selectedTotal)}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.brand,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: _isCheckingOut || _selectedItemIds.isEmpty
-                          ? null
-                          : _handleCheckout,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.brand,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: _isCheckingOut
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.shopping_cart_checkout),
-                      label: Text(
-                        _isCheckingOut ? 'Processing...' : 'Checkout',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
     );
