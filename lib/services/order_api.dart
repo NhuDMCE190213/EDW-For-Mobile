@@ -37,6 +37,10 @@ class OrderApi {
   }
 
 
+  // ===========================================================================
+  // STAFF / ADMIN ORDERS
+  // ===========================================================================
+
 
   /// UC-35: Order Management - View Order Dashboard (Admin)
   /// Fetches statistical overview KPIs (totals, revenue, statuses).
@@ -47,16 +51,6 @@ class OrderApi {
     return OrderDashboard.fromJson(json);
   }
 
-  /// UC-37: Order Management - Change Order Status (Admin/Staff)
-  /// Updates the lifecycle status of an order (e.g. Processing, Shipped, Completed, Cancelled).
-  Future<void> updateOrderStatus(String orderId, String status) async {
-    final response = await _client.put(
-      _uri('/api/staff/orders/$orderId/status'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(status),
-    );
-    _ensureSuccess(response);
-  }
 
   void _ensureSuccess(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
