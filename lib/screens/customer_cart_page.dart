@@ -7,15 +7,25 @@ import '../core/product_image.dart';
 
 import '../models/cart_item.dart';
 import '../services/cart_api.dart';
+import '../services/order_api.dart';
+import 'customer_orders_page.dart';
+
+// =============================================================================
+// UC-27: My Cart - Transfer to Order (Customer)
+// UC-39: My Order / Cart - Remove Product (Customer)
+// UC-41: My Order - Checkout (Customer)
+// =============================================================================
 
 class CustomerCartPage extends StatefulWidget {
   const CustomerCartPage({
     super.key,
     required this.api,
+    this.orderApi,
     required this.customerId,
   });
 
   final CartApi api;
+  final OrderApi? orderApi;
   final int customerId;
 
   @override
@@ -24,7 +34,9 @@ class CustomerCartPage extends StatefulWidget {
 
 class _CustomerCartPageState extends State<CustomerCartPage> {
   List<CartItem> _cartItems = [];
+  final Set<int> _selectedItemIds = {};
   bool _isLoading = true;
+  bool _isCheckingOut = false;
   final Set<int> _updatingItemIds = {};
 
   @override
@@ -39,7 +51,11 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       final items = await widget.api.getCartItems(widget.customerId);
       setState(() {
         _cartItems = items;
-
+        // By default select all items
+        _selectedItemIds.clear();
+        for (var item in items) {
+          _selectedItemIds.add(item.cartItemId);
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -92,13 +108,32 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-39: My Order / Cart - Remove Product (Customer)
+  // ===========================================================================
+
   void _confirmRemoveItem(int cartItemId) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove item'),
         content: const Text('Are you sure you want to remove this item from your cart?'),
-
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _removeItem(cartItemId);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
       ),
     );
   }
@@ -122,14 +157,98 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-27: My Cart - Transfer to Order (Customer)
+  // UC-41: My Order - Checkout (Customer)
+  // ===========================================================================
+
+  double _calculateSelectedTotal() {
+    double total = 0;
+    for (var item in _cartItems) {
+      if (_selectedItemIds.contains(item.cartItemId)) {
+        total += item.productVariant.price * item.quantity;
+      }
+    }
+    return total;
+  }
+
+  Future<void> _handleCheckout() async {
+    if (widget.orderApi == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order service is unavailable')),
+      );
+      return;
+    }
+
+    if (_selectedItemIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one item to checkout'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final total = _calculateSelectedTotal();
+
+
+    setState(() => _isCheckingOut = true);
+    try {
+      final result = await widget.orderApi!.checkoutCart(
+        widget.customerId,
+        _selectedItemIds.toList(),
+      );
+
+      if (!mounted) return;
+      setState(() => _isCheckingOut = false);
+
+
+      _fetchCart();
+    } catch (e) {
+      setState(() => _isCheckingOut = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Checkout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final allSelected = _cartItems.isNotEmpty &&
+        _selectedItemIds.length == _cartItems.length;
+    final selectedTotal = _calculateSelectedTotal();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Cart'),
-
+        actions: [
+          if (_cartItems.isNotEmpty)
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  if (allSelected) {
+                    _selectedItemIds.clear();
+                  } else {
+                    _selectedItemIds.clear();
+                    for (var i in _cartItems) {
+                      _selectedItemIds.add(i.cartItemId);
+                    }
+                  }
+                });
+              },
+              icon: Icon(
+                allSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                size: 20,
+              ),
+              label: Text(allSelected ? 'Deselect All' : 'Select All'),
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -173,7 +292,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     if (variant.storage != null && variant.storage!.isNotEmpty)
                       variant.storage,
                     if (variant.color.isNotEmpty) variant.color,
-                  ].join(' ΓÇó ');
+                  ].join(' • ');
 
                   return Card(
                     margin: const EdgeInsets.symmetric(
@@ -195,7 +314,19 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
+                          // UC-27: Item selection checkbox to transfer items to order
+                          Checkbox(
+                            value: isSelected,
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _selectedItemIds.add(item.cartItemId);
+                                } else {
+                                  _selectedItemIds.remove(item.cartItemId);
+                                }
+                              });
+                            },
+                          ),
                           ProductImage(
                             urls: [variant.imageUrl],
                             size: 68,
@@ -329,6 +460,82 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     ),
                   );
                 },
+              ),
+            ),
+      bottomSheet: _cartItems.isEmpty
+          ? null
+          : Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected (${_selectedItemIds.length})',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${formatVnd(selectedTotal)}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.brand,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    // UC-27: My Cart - Transfer to Order & UC-41: Checkout Action Button
+                    FilledButton.icon(
+                      onPressed: _isCheckingOut || _selectedItemIds.isEmpty
+                          ? null
+                          : _handleCheckout,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.brand,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: _isCheckingOut
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.shopping_cart_checkout),
+                      label: Text(
+                        _isCheckingOut ? 'Processing...' : 'Checkout',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
     );
