@@ -41,6 +41,15 @@ class OrderApi {
   // STAFF / ADMIN ORDERS
   // ===========================================================================
 
+  /// UC-36: Order Management - View Orders (Admin/Staff)
+  /// Fetches all customer orders across the platform for management.
+  Future<List<Order>> getAllOrders() async {
+    final response = await _client.get(_uri('/api/staff/orders'));
+    _ensureSuccess(response);
+    return (jsonDecode(response.body) as List)
+        .map((item) => Order.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
 
   /// UC-35: Order Management - View Order Dashboard (Admin)
   /// Fetches statistical overview KPIs (totals, revenue, statuses).
