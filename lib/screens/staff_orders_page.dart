@@ -89,6 +89,57 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
 
   Future<void> refresh() => _fetchDashboardAndOrders();
 
+  // ===========================================================================
+  // UC-37: Order Management - Change Order Status (Admin/Staff)
+  // ===========================================================================
+  Future<void> _updateStatus(String orderId, String status) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Update Order Status'),
+        content: Text(
+          'Change status of Order #${orderId.length > 8 ? orderId.substring(0, 8) : orderId} to "$status"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.brand,
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await widget.api.updateOrderStatus(orderId, status);
+      await _fetchDashboardAndOrders();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order status updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
