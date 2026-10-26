@@ -88,6 +88,36 @@ class OrderItem {
   }
 }
 
+// =============================================================================
+// UC-35: Order Management - View Order Dashboard (Admin)
+// Model for Order Dashboard Statistics and KPIs
+// =============================================================================
+
+class OrderDashboard {
+  final int totalOrders;
+  final double totalRevenue;
+  final int pendingOrders;
+  final int completedOrders;
+  final int cancelledOrders;
+
+  OrderDashboard({
+    required this.totalOrders,
+    required this.totalRevenue,
+    required this.pendingOrders,
+    required this.completedOrders,
+    required this.cancelledOrders,
+  });
+
+  factory OrderDashboard.fromJson(Map<String, dynamic> json) {
+    return OrderDashboard(
+      totalOrders: (json['totalOrders'] ?? json['TotalOrders'] ?? 0) as int,
+      totalRevenue: ((json['totalRevenue'] ?? json['TotalRevenue'] ?? 0) as num).toDouble(),
+      pendingOrders: (json['pendingOrders'] ?? json['PendingOrders'] ?? 0) as int,
+      completedOrders: (json['completedOrders'] ?? json['CompletedOrders'] ?? 0) as int,
+      cancelledOrders: (json['cancelledOrders'] ?? json['CancelledOrders'] ?? 0) as int,
+    );
+  }
+}
 
 // =============================================================================
 // UC-27: My Cart - Transfer to Order (Customer)
