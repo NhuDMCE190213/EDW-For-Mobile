@@ -47,6 +47,14 @@ class OrderApi {
     return CheckoutResult.fromJson(json);
   }
 
+  /// UC-39: My Order - Remove Product / Cancel Order (Customer)
+  /// Cancels an existing order (removing/releasing ordered products).
+  Future<void> cancelOrder(String orderId) async {
+    final response = await _client.post(
+      _uri('/api/customer/orders/$orderId/cancel'),
+    );
+    _ensureSuccess(response);
+  }
 
   // ===========================================================================
   // STAFF / ADMIN ORDERS
