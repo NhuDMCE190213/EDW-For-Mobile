@@ -252,6 +252,91 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       if (!mounted) return;
       setState(() => _isCheckingOut = false);
 
+      // UC-41: Checkout Successful Dialog with order summary and navigation to My Orders
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(
+            Icons.check_circle,
+            color: Colors.green,
+            size: 56,
+          ),
+          title: const Text('Checkout Successful!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Order ID: #${result.order.orderId.length > 8 ? result.order.orderId.substring(0, 8) : result.order.orderId}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              Text('Subtotal: ${formatVnd(result.subtotal)}'),
+              if (result.discount > 0)
+                Text(
+                  'Discount: -${formatVnd(result.discount)}',
+                  style: const TextStyle(color: Colors.green),
+                ),
+              Text('Shipping: ${formatVnd(result.shipping)}'),
+              const Divider(),
+              Text(
+                'Total Paid: ${formatVnd(result.total)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppTheme.brand,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Text(
+                  'Status: ${result.order.status}',
+                  style: TextStyle(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _fetchCart();
+              },
+              child: const Text('Continue Shopping'),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CustomerOrdersPage(
+                      api: widget.orderApi!,
+                      customerId: widget.customerId,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.receipt_long),
+              label: const Text('View Orders'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.brand,
+              ),
+            ),
+          ],
+        ),
+      );
 
       _fetchCart();
     } catch (e) {
