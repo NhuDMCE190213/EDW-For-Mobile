@@ -82,6 +82,54 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-40: My Order - Transfer Product to Cart (Customer)
+  // ===========================================================================
+  Future<void> _transferToCart(String orderId) async {
+    setState(() => _transferringOrderIds.add(orderId));
+    try {
+      await widget.api.transferToCart(orderId, widget.customerId);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Items transferred to cart successfully!'),
+          backgroundColor: Colors.green,
+          action: widget.cartApi != null
+              ? SnackBarAction(
+                  label: 'Go to Cart',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CustomerCartPage(
+                          api: widget.cartApi!,
+                          orderApi: widget.api,
+                          customerId: widget.customerId,
+                        ),
+                      ),
+                    );
+                  },
+                )
+              : null,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error transferring to cart: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _transferringOrderIds.remove(orderId));
+      }
+    }
+  }
 
   // ===========================================================================
   // UC-39: My Order - Remove Product / Cancel Order (Customer)

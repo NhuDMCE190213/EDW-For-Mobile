@@ -29,6 +29,16 @@ class OrderApi {
         .toList();
   }
 
+  /// UC-40: My Order - Transfer Product to Cart (Customer)
+  /// Transfers items from an existing order back into the shopping cart.
+  Future<void> transferToCart(String orderId, int customerId) async {
+    final response = await _client.post(
+      _uri('/api/customer/orders/$orderId/transfer'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(customerId),
+    );
+    _ensureSuccess(response);
+  }
 
   /// UC-27: My Cart - Transfer to Order (Customer)
   /// UC-41: My Order - Checkout (Customer)
