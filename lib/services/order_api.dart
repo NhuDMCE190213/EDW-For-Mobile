@@ -17,6 +17,17 @@ class OrderApi {
   // CUSTOMER ORDERS
   // ===========================================================================
 
+  /// UC-38: My Order - View My Orders (Customer)
+  /// Fetches the list of orders belonging to the specified customer.
+  Future<List<Order>> getMyOrders(int customerId) async {
+    final response = await _client.get(
+      _uri('/api/customer/orders/$customerId'),
+    );
+    _ensureSuccess(response);
+    return (jsonDecode(response.body) as List)
+        .map((item) => Order.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
 
 
   /// UC-27: My Cart - Transfer to Order (Customer)
