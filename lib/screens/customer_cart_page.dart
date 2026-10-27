@@ -108,6 +108,54 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-39: My Order / Cart - Remove Product (Customer)
+  // ===========================================================================
+
+  void _confirmRemoveItem(int cartItemId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove item'),
+        content: const Text('Are you sure you want to remove this item from your cart?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _removeItem(cartItemId);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _removeItem(int cartItemId) async {
+    try {
+      await widget.api.removeFromCart(cartItemId, widget.customerId);
+      _selectedItemIds.remove(cartItemId);
+      await _fetchCart();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Item removed from cart')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error removing item: $e')),
+        );
+      }
+    }
+  }
 
   // ===========================================================================
   // UC-27: My Cart - Transfer to Order (Customer)
