@@ -1,3 +1,9 @@
+﻿// =============================================================================
+// UC-36: Order Management - View Orders (Admin/Staff)
+// UC-38: My Order - View My Orders (Customer)
+// Models for Orders and Order Items
+// =============================================================================
+
 class Order {
   final String orderId;
   final int customerId;
@@ -82,6 +88,11 @@ class OrderItem {
   }
 }
 
+// =============================================================================
+// UC-35: Order Management - View Order Dashboard (Admin)
+// Model for Order Dashboard Statistics and KPIs
+// =============================================================================
+
 class OrderDashboard {
   final int totalOrders;
   final double totalRevenue;
@@ -107,6 +118,12 @@ class OrderDashboard {
     );
   }
 }
+
+// =============================================================================
+// UC-27: My Cart - Transfer to Order (Customer)
+// UC-41: My Order - Checkout (Customer)
+// Model for Checkout and Transfer to Order Result
+// =============================================================================
 
 class CheckoutResult {
   final Order order;

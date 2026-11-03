@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 
@@ -9,6 +9,12 @@ import '../models/cart_item.dart';
 import '../services/cart_api.dart';
 import '../services/order_api.dart';
 import 'customer_orders_page.dart';
+
+// =============================================================================
+// UC-27: My Cart - Transfer to Order (Customer)
+// UC-39: My Order / Cart - Remove Product (Customer)
+// UC-41: My Order - Checkout (Customer)
+// =============================================================================
 
 class CustomerCartPage extends StatefulWidget {
   const CustomerCartPage({
@@ -102,6 +108,10 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-39: My Order / Cart - Remove Product (Customer)
+  // ===========================================================================
+
   void _confirmRemoveItem(int cartItemId) {
     showDialog(
       context: context,
@@ -147,6 +157,11 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-27: My Cart - Transfer to Order (Customer)
+  // UC-41: My Order - Checkout (Customer)
+  // ===========================================================================
+
   double _calculateSelectedTotal() {
     double total = 0;
     for (var item in _cartItems) {
@@ -177,6 +192,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
 
     final total = _calculateSelectedTotal();
 
+    // UC-41: Confirm Checkout Dialog (Review items and total)
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -236,7 +252,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       if (!mounted) return;
       setState(() => _isCheckingOut = false);
 
-      // Show Checkout Success Dialog
+      // UC-41: Checkout Successful Dialog with order summary and navigation to My Orders
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -432,6 +448,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // UC-27: Item selection checkbox to transfer items to order
                           Checkbox(
                             value: isSelected,
                             onChanged: (val) {
@@ -618,6 +635,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       ],
                     ),
                     const Spacer(),
+                    // UC-27: My Cart - Transfer to Order & UC-41: Checkout Action Button
                     FilledButton.icon(
                       onPressed: _isCheckingOut || _selectedItemIds.isEmpty
                           ? null

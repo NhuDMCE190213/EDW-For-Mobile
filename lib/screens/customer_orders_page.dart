@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 
@@ -12,6 +12,12 @@ import '../services/order_api.dart';
 import '../services/review_api.dart';
 import '../services/staff_variant_api.dart';
 import 'write_review_page.dart';
+
+// =============================================================================
+// UC-38: My Order - View My Orders (Customer)
+// UC-39: My Order - Remove Product / Cancel Order (Customer)
+// UC-40: My Order - Transfer Product to Cart (Customer)
+// =============================================================================
 
 class CustomerOrdersPage extends StatefulWidget {
   const CustomerOrdersPage({
@@ -55,6 +61,9 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-38: My Order - View My Orders (Customer)
+  // ===========================================================================
   Future<void> _fetchOrders() async {
     setState(() => _isLoading = true);
     try {
@@ -73,6 +82,9 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-40: My Order - Transfer Product to Cart (Customer)
+  // ===========================================================================
   Future<void> _transferToCart(String orderId) async {
     setState(() => _transferringOrderIds.add(orderId));
     try {
@@ -119,6 +131,9 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage> {
     }
   }
 
+  // ===========================================================================
+  // UC-39: My Order - Remove Product / Cancel Order (Customer)
+  // ===========================================================================
   Future<void> _cancelOrder(String orderId) async {
     final confirm = await showDialog<bool>(
       context: context,

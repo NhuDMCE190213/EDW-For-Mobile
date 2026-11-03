@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 
@@ -6,6 +6,12 @@ import '../core/format.dart';
 
 import '../models/order.dart';
 import '../services/order_api.dart';
+
+// =============================================================================
+// UC-35: Order Management - View Order Dashboard (Admin)
+// UC-36: Order Management - View Orders (Admin/Staff)
+// UC-37: Order Management - Change Order Status (Admin/Staff)
+// =============================================================================
 
 class StaffOrdersPage extends StatefulWidget {
   const StaffOrdersPage({super.key, required this.api});
@@ -44,6 +50,10 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
     super.dispose();
   }
 
+  // ===========================================================================
+  // UC-35: View Order Dashboard (Admin) & UC-36: View Orders (Admin/Staff)
+  // Loads dashboard statistics and retrieves all orders
+  // ===========================================================================
   Future<void> _fetchDashboardAndOrders() async {
     setState(() => _isLoading = true);
     try {
@@ -79,6 +89,9 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
 
   Future<void> refresh() => _fetchDashboardAndOrders();
 
+  // ===========================================================================
+  // UC-37: Order Management - Change Order Status (Admin/Staff)
+  // ===========================================================================
   Future<void> _updateStatus(String orderId, String status) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -221,7 +234,10 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
       onRefresh: _fetchDashboardAndOrders,
       child: CustomScrollView(
         slivers: [
-          // Dashboard KPIs
+          // ===================================================================
+          // UC-35: Order Management - View Order Dashboard (Admin)
+          // Dashboard Overview KPIs
+          // ===================================================================
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -302,6 +318,10 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // ===================================================================
+                  // UC-36: Order Management - View Orders (Admin/Staff)
+                  // Search Bar and Status Filters
+                  // ===================================================================
                   // Search Bar
                   TextField(
                     controller: _searchController,
@@ -536,6 +556,7 @@ class StaffOrdersPageState extends State<StaffOrdersPage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
+                                        // UC-37: Order Management - Change Order Status (Admin/Staff)
                                         'Change Status:',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
