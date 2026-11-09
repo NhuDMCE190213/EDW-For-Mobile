@@ -62,6 +62,67 @@ class AuthApi {
     _ensureSuccess(response);
   }
 
+  /// UC-04: Send OTP to Email for Password Reset
+  Future<String> sendForgotPasswordOtp({
+    required String email,
+    required bool isCustomer,
+  }) async {
+    final endpoint = isCustomer
+        ? '/api/auth/customer/forgot-password'
+        : '/api/auth/staff/forgot-password';
+    final response = await _client.post(
+      _uri(endpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    _ensureSuccess(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['message']?.toString() ?? 'OTP sent to email';
+  }
+
+  /// UC-04: Verify OTP code and retrieve ResetToken
+  Future<String> verifyForgotPasswordOtp({
+    required String email,
+    required String otp,
+    required bool isCustomer,
+  }) async {
+    final endpoint = isCustomer
+        ? '/api/auth/customer/verify-otp'
+        : '/api/auth/staff/verify-otp';
+    final response = await _client.post(
+      _uri(endpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'otp': otp}),
+    );
+    _ensureSuccess(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['resetToken']?.toString() ?? '';
+  }
+
+  /// UC-04: Reset Password using validated ResetToken
+  Future<String> resetPasswordWithOtp({
+    required String email,
+    required String resetToken,
+    required String newPassword,
+    required bool isCustomer,
+  }) async {
+    final endpoint = isCustomer
+        ? '/api/auth/customer/reset-password-otp'
+        : '/api/auth/staff/reset-password-otp';
+    final response = await _client.post(
+      _uri(endpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'resetToken': resetToken,
+        'newPassword': newPassword,
+      }),
+    );
+    _ensureSuccess(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['message']?.toString() ?? 'Password reset successfully';
+  }
+
   /// UC-04: Verify Customer Email for Password Reset
   Future<void> verifyCustomerEmail(String email) async {
     final response = await _client.post(
