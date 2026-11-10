@@ -53,9 +53,15 @@ class ReviewApi {
         .toList();
   }
 
-  Future<List<ReviewItem>> getProductReviews(int productId) async {
+  Future<List<ReviewItem>> getProductReviews(
+    int productId, {
+    String status = 'Published',
+  }) async {
     final response = await _client.get(
-      _uri('/api/staff/reviews', {'productId': productId}),
+      _uri('/api/staff/reviews', {
+        'productId': productId,
+        if (status.isNotEmpty) 'status': status,
+      }),
     );
     _ensureSuccess(response);
     final decoded = jsonDecode(response.body) as List;
