@@ -81,7 +81,9 @@ class _CustomerProductDetailScreenState
       if (!mounted) return;
       setState(() {
         _product = results[0] as ShopProduct;
-        _reviews = results[1] as List<ReviewItem>;
+        _reviews = (results[1] as List<ReviewItem>)
+            .where((r) => !r.isHidden && !r.isLockedByAdmin)
+            .toList();
       });
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
